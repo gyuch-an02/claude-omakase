@@ -5,6 +5,7 @@
 
 import type { Entry } from "../types.js";
 import { fetch as fetchHandpicked } from "./handpicked.js";
+import { fetch as fetchSkillsmp } from "./skillsmp.js";
 
 export interface Adapter {
   name: string;
@@ -17,6 +18,12 @@ export const adapters: Adapter[] = [
     name: "handpicked",
     description: "Local overlay: verified entries, blocklist, command overrides.",
     fetch: fetchHandpicked,
+  },
+  {
+    name: "skillsmp",
+    description:
+      "Public agent-skills marketplace at skillsmp.com (the source behind ByteDance's find-skills SKILL).",
+    fetch: fetchSkillsmp,
   },
 ];
 

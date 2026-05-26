@@ -43,6 +43,7 @@ export async function handle(args: z.infer<typeof findSkillInput>) {
   };
 }
 
-function renderInstallCommand(install: { command: string; args?: string[] }): string {
+function renderInstallCommand(install: { command?: string; args?: string[] }): string | null {
+  if (!install.command) return null;
   return [install.command, ...(install.args ?? [])].join(" ");
 }

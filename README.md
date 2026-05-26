@@ -84,6 +84,7 @@ The catalog is **federated** from upstream sources at build time. `handpicked/` 
 Currently active sources:
 
 - `handpicked/` — manually-audited overlay (seeds pending; see `handpicked/README.md`).
+- `skillsmp` — the public agent-skills marketplace at [skillsmp.com](https://skillsmp.com) (the source behind ByteDance's `find-skills` SKILL). Adapter at `src/adapters/skillsmp.ts`.
 
 Planned: `anthropic-skills-repo` (when the upstream repo is identified), community skill aggregators.
 

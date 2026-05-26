@@ -26,7 +26,9 @@ export interface SkillFile {
 }
 
 export interface Install {
-  command: string;
+  // Legacy field kept for adapters that still emit it. Skills are installed
+  // entirely from `skill_files`; the MCP server does not execute `command`.
+  command?: string;
   args?: string[];
   env?: Record<string, string>;
   user_params?: UserParam[];

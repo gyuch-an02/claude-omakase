@@ -26,7 +26,7 @@
     "dev": "tsc -w -p tsconfig.json",
     "start": "node dist/server.js",
     "lint": "eslint src",
-    "test": "node --test --import tsx 'src/**/*.test.ts'",
+    "test": "bash -c \"shopt -s globstar; node --test --import tsx --test-reporter=spec src/**/*.test.ts\"",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
