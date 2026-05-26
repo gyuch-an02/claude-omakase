@@ -1,0 +1,5 @@
+{
+  "role": "frontend-dev",
+  "match": ["frontend", "front-end", "web developer", "react", "vue", "ui engineer"],
+  "recommend": ["filesystem", "github", "fetch"]
+}

@@ -1,0 +1,76 @@
+import { mkdirSync } from "node:fs";
+import { writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { z } from "zod";
+import { load } from "../catalog/cache.js";
+import * as codeSkills from "../installer/code-skills.js";
+import { installedRecordsDir } from "../paths.js";
+import type { InstalledRecord, UserParam } from "../types.js";
+
+export const installSkillInput = z.object({
+  id: z.string().min(1).describe("Catalog entry id to install (from find_skill results)."),
+  inputs: z
+    .record(z.string())
+    .default({})
+    .describe(
+      "Values for the entry's `requires_user_params`. Keys must match each param's `key`."
+    ),
+});
+
+export const installSkillDescription = `Install a Claude skill by id from the catalog.
+
+When to call:
+  - Only AFTER the user has explicitly approved the install. Never call speculatively.
+  - You must have collected values for any \`requires_user_params\` returned by find_skill.
+
+Behavior:
+  - claude_code_skill / claude_skill → drops files into ~/.claude/skills/<id>/, effective next Claude session.
+  - Writes an install receipt under ~/.local/share/claude-omakase/installed/<id>.json.
+
+Returns a human-readable summary plus the receipt path.`;
+
+export async function handle(args: z.infer<typeof installSkillInput>) {
+  const catalog = await load();
+  const entry = catalog.entries.find((e) => e.id === args.id);
+  if (!entry) {
+    throw new Error(`unknown catalog entry: ${args.id}`);
+  }
+
+  validateInputs(entry.install.user_params ?? [], args.inputs);
+
+  const record: InstalledRecord = {
+    id: entry.id,
+    kind: entry.type,
+    installed_at: new Date().toISOString(),
+    source_version: entry.version,
+    entry_snapshot: entry,
+  };
+
+  const { skillDir } = await codeSkills.install(entry);
+  record.skill_dir = skillDir;
+  const summary = `Installed skill "${entry.name}" at ${skillDir}. Claude will pick it up next session.`;
+
+  await writeReceipt(record);
+
+  return {
+    ok: true,
+    summary,
+    id: entry.id,
+    skill_dir: record.skill_dir ?? null,
+  };
+}
+
+function validateInputs(params: UserParam[], inputs: Record<string, string>): void {
+  for (const p of params) {
+    if (p.required && (inputs[p.key]?.trim() ?? "") === "") {
+      throw new Error(`missing required user param: ${p.key} (${p.label})`);
+    }
+  }
+}
+
+async function writeReceipt(record: InstalledRecord): Promise<void> {
+  const dir = installedRecordsDir();
+  mkdirSync(dir, { recursive: true });
+  const path = join(dir, `${record.id}.json`);
+  await writeFile(path, JSON.stringify(record, null, 2) + "\n", "utf8");
+}

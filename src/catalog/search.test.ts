@@ -1,0 +1,49 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { search } from "./search.js";
+import type { Entry } from "../types.js";
+
+const entry = (over: Partial<Entry>): Entry => ({
+  id: "x",
+  name: "X",
+  type: "claude_code_skill",
+  description: "",
+  tags: [],
+  verified: false,
+  author: { name: "n/a" },
+  install: { command: "npx" },
+  source: { adapter: "test" },
+  ...over,
+});
+
+test("exact id wins", () => {
+  const results = search(
+    [
+      entry({ id: "github", name: "GitHub", tags: ["github"] }),
+      entry({ id: "fs", name: "Filesystem", tags: ["files"] }),
+    ],
+    "github"
+  );
+  assert.equal(results[0]?.entry.id, "github");
+});
+
+test("verified breaks ties", () => {
+  const results = search(
+    [
+      entry({ id: "a", name: "A", description: "fetches urls", tags: [] }),
+      entry({
+        id: "b",
+        name: "B",
+        description: "fetches urls",
+        tags: [],
+        verified: true,
+      }),
+    ],
+    "fetches urls"
+  );
+  assert.equal(results[0]?.entry.id, "b");
+});
+
+test("empty query yields nothing", () => {
+  assert.deepEqual(search([entry({ id: "x" })], ""), []);
+});

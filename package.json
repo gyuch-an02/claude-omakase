@@ -1,0 +1,56 @@
+{
+  "name": "claude-omakase",
+  "version": "0.1.0",
+  "description": "Skill Suggester MCP for Claude — proactive omakase-style skill discovery, installation, and generation.",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/server.js",
+  "bin": {
+    "claude-omakase": "dist/server.js",
+    "claude-omakase-install": "dist/cli/install.js"
+  },
+  "files": [
+    "dist",
+    "omakase-chef",
+    "templates",
+    "profiles",
+    "handpicked",
+    "catalog.json",
+    "install.sh",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "build:catalog": "node --enable-source-maps scripts/build-catalog.mjs",
+    "dev": "tsc -w -p tsconfig.json",
+    "start": "node dist/server.js",
+    "lint": "eslint src",
+    "test": "node --test --import tsx 'src/**/*.test.ts'",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "eslint": "^9.17.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gyuch-an02/claude-omakase.git"
+  },
+  "keywords": [
+    "claude",
+    "mcp",
+    "model-context-protocol",
+    "skill",
+    "anthropic"
+  ]
+}

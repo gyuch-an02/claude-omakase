@@ -1,0 +1,5 @@
+{
+  "role": "researcher",
+  "match": ["researcher", "phd", "academic", "graduate student", "professor"],
+  "recommend": ["filesystem", "fetch"]
+}

@@ -1,0 +1,5 @@
+{
+  "role": "data-scientist",
+  "match": ["data scientist", "data science", "ml", "machine learning", "research", "analyst"],
+  "recommend": ["filesystem", "fetch", "github"]
+}

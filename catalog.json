@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "generated_at": "2026-05-26T00:00:00.000Z",
+  "generated_note": "Seed catalog. Populate handpicked/*.json (type=claude_code_skill) and run `npm run build:catalog`.",
+  "entries": []
+}
