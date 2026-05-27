@@ -9,13 +9,17 @@ test("load: remote catalog failure falls back to bundled catalog", async () => {
   const cacheDir = await mkdtemp(join(tmpdir(), "omakase-cache-"));
   const originalCache = process.env["XDG_CACHE_HOME"];
   const originalRemote = process.env["CLAUDE_OMAKASE_CATALOG_URL"];
+  const originalFetch = globalThis.fetch;
   const originalError = console.error;
   const logged: string[] = [];
   console.error = (message?: unknown) => {
     logged.push(String(message));
   };
+  globalThis.fetch = async () => {
+    throw new TypeError("network failure");
+  };
   process.env["XDG_CACHE_HOME"] = cacheDir;
-  process.env["CLAUDE_OMAKASE_CATALOG_URL"] = "http://127.0.0.1:9/catalog.json";
+  process.env["CLAUDE_OMAKASE_CATALOG_URL"] = "https://example.invalid/catalog.json";
 
   try {
     const catalog = await load();
@@ -24,6 +28,7 @@ test("load: remote catalog failure falls back to bundled catalog", async () => {
     assert.ok(Array.isArray(catalog.entries));
     assert.ok(logged.some((line) => /remote fetch failed, falling back/.test(line)));
   } finally {
+    globalThis.fetch = originalFetch;
     console.error = originalError;
     if (originalCache === undefined) {
       delete process.env["XDG_CACHE_HOME"];
