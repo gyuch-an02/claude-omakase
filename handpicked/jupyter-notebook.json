@@ -1,0 +1,37 @@
+{
+  "id": "jupyter-notebook",
+  "name": "Jupyter Notebook",
+  "type": "claude_code_skill",
+  "description": "Work with Jupyter notebooks using a repeatable inspect, edit, execute, and verify workflow.",
+  "category": "data-science",
+  "tags": ["jupyter", "notebook", "python", "data-science", "research"],
+  "verified": true,
+  "author": {
+    "name": "OpenAI",
+    "url": "https://github.com/openai/skills"
+  },
+  "homepage": "https://github.com/openai/skills/tree/main/skills/.curated/jupyter-notebook",
+  "license": "MIT",
+  "install": {
+    "skill_files": [
+      {
+        "source": "https://raw.githubusercontent.com/openai/skills/main/skills/.curated/jupyter-notebook/SKILL.md",
+        "target": "SKILL.md"
+      }
+    ]
+  },
+  "source": {
+    "adapter": "handpicked",
+    "origin": "https://github.com/openai/skills/tree/main/skills/.curated/jupyter-notebook"
+  },
+  "audit": {
+    "audited_by": "Changwook Lee",
+    "audited_at": "2026-05-27",
+    "checks": [
+      "Publisher is the public openai/skills repository.",
+      "Install source is HTTPS and returned HTTP 200 during audit.",
+      "Install target is a single relative SKILL.md file.",
+      "No install command or post-install script is executed by Omakase."
+    ]
+  }
+}
