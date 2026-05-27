@@ -18,7 +18,13 @@ const cachePath = () => join(omakaseCacheDir(), "catalog.json");
 export async function load(): Promise<Catalog> {
   const remote = process.env["CLAUDE_OMAKASE_CATALOG_URL"];
   if (remote) {
-    return loadRemote(remote);
+    try {
+      return await loadRemote(remote);
+    } catch (e) {
+      console.error(
+        `catalog: remote fetch failed, falling back to local catalog: ${(e as Error).message}`
+      );
+    }
   }
 
   const cached = readFreshCache();
