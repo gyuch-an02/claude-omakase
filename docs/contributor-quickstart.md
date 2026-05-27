@@ -24,17 +24,20 @@ You need:
 - a source URL that lists or describes Claude skills
 - enough confidence that the source is safe to index
 
-Clone and install:
+Clone, branch, and install:
 
 ```bash
 git clone https://github.com/gyuch-an02/claude-omakase
 cd claude-omakase
+git switch -c <your-name>/<source>-adapter
 npm install
 npm run typecheck
 npm test
 ```
 
 Expected result: typecheck passes and tests pass. On some macOS shells, `npm test` may print `shopt: globstar: invalid shell option name` before passing; that warning is known and harmless.
+
+Timing-run note: branch before editing. It is easy to lose time later separating unrelated files if you begin on `main` or on another issue branch.
 
 ## 1. Pick a Source
 
@@ -111,6 +114,14 @@ Do not execute upstream commands. Do not write files. Do not set `verified: true
 
 Tests must not hit the live network. Put the parser or normalizer behind a small exported function, then test that function with recorded input.
 
+Place the test beside the adapter:
+
+```text
+src/adapters/<source>.test.ts
+```
+
+Do not create a separate `__tests__/` directory for adapters. The current test runner discovers `src/**/*.test.ts`.
+
 Pattern:
 
 ```ts
@@ -179,6 +190,8 @@ node -e "const c=require('./catalog.json'); console.log(c.entries.length, c.entr
 
 If your adapter needs network and the network is unavailable, document that in the PR. The adapter registry catches failures so one broken source does not abort the whole refresh.
 
+If `build:catalog` logs warnings from an unrelated adapter, do not hide them. Include the warning in your PR notes and explain whether your intended catalog entries still appeared. If the command exits successfully and your diff is expected, the warning may be follow-up work rather than a blocker for your adapter PR.
+
 ## 6. Run the Full Local Check
 
 Run:
@@ -187,6 +200,7 @@ Run:
 npm run typecheck
 npm run build
 npm test
+npm run build:catalog
 ```
 
 Before opening a PR, also inspect your diff:
@@ -196,7 +210,7 @@ git diff --stat
 git diff -- src/adapters/<source>.ts src/adapters/<source>.test.ts src/adapters/index.ts
 ```
 
-The diff should be boring: one adapter, one test, one registry line, and `catalog.json`.
+The diff should be boring: one adapter, one test, one registry line, and `catalog.json` if adapter output changed. Revert generated catalog timestamp churn if the catalog entries did not actually change.
 
 ## 7. PR Checklist
 
@@ -259,3 +273,14 @@ Use this pacing for the cold-start exercise:
 - 25-30 min: register adapter, refresh catalog, run checks
 
 If you miss 30 minutes, write down exactly where you got stuck. That friction is valuable: it should become either a docs patch or a code-side DX fix.
+
+## C6 Timing-Pass Fixes
+
+The first contributor timing pass found four avoidable slowdowns. This v1 quickstart bakes those fixes in:
+
+- **Branch first:** the setup command now creates a feature branch before edits.
+- **Test location:** adapter tests are explicitly placed at `src/adapters/<source>.test.ts`.
+- **Catalog warnings:** contributors are told how to report unrelated adapter warnings without treating every warning as their own failure.
+- **Diff hygiene:** contributors are told to revert generated `catalog.json` churn when entries did not change.
+
+These notes are intentionally specific. If a future timing run finds new friction, update this section with the exact mistake and the doc or code change that prevents it.
