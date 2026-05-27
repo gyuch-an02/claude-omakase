@@ -59,7 +59,17 @@ Write down the source assumptions at the top of the adapter file. Future maintai
 
 ## 2. Create the Adapter
 
-Create `src/adapters/<source>.ts`:
+Scaffold the adapter and its beside-file test:
+
+```bash
+npm run scaffold:adapter -- <source>
+```
+
+The source name must be kebab-case, for example `awesome-skills` or `company-docs`.
+The command refuses to overwrite existing files, so it is safe to run before you
+start editing.
+
+It creates `src/adapters/<source>.ts` with this starting shape:
 
 ```ts
 import type { Entry } from "../types.js";
@@ -111,6 +121,10 @@ const entry: Entry = {
 Do not execute upstream commands. Do not write files. Do not set `verified: true` unless the PR also explains the audit.
 
 ## 3. Add a Fixture-Style Test
+
+The scaffold command already creates `src/adapters/<source>.test.ts` with a
+passing fixture-style normalizer test. Replace the placeholder fixture with
+recorded upstream input from your source.
 
 Tests must not hit the live network. Put the parser or normalizer behind a small exported function, then test that function with recorded input.
 
@@ -268,11 +282,25 @@ Use this pacing for the cold-start exercise:
 
 - 0-5 min: clone, install, run baseline checks
 - 5-10 min: inspect upstream source and write parsing assumptions
-- 10-20 min: implement adapter and normalizer
+- 10-12 min: run `npm run scaffold:adapter -- <source>` and register the adapter
+- 12-20 min: implement adapter and normalizer
 - 20-25 min: add fixture tests
 - 25-30 min: register adapter, refresh catalog, run checks
 
 If you miss 30 minutes, write down exactly where you got stuck. That friction is valuable: it should become either a docs patch or a code-side DX fix.
+
+## G10 Timing-Pass Fixes
+
+The second contributor timing pass found that first-time authors lose time
+copying the adapter shape, picking a test location, and remembering required
+`Entry` fields. The `scaffold:adapter` command now creates the adapter and
+beside-file test in one step, including:
+
+- a source-assumptions header
+- a normalizer stub
+- an HTTPS `SKILL.md` guard
+- duplicate-tag cleanup
+- a fixture-style passing test
 
 ## C6 Timing-Pass Fixes
 

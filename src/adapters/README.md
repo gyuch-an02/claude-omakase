@@ -4,11 +4,11 @@ Each adapter is a TypeScript module exporting `fetch(): Promise<Entry[]>`. The a
 
 ## Adding a new adapter
 
-1. Drop a new file: `<source-name>.ts`.
+1. Run `npm run scaffold:adapter -- <source-name>` to create `<source-name>.ts` and `<source-name>.test.ts`.
 2. Implement `export async function fetch(): Promise<Entry[]>`. Throw on network errors — the registry catches and logs them per-adapter without aborting the whole build.
 3. Register it in `index.ts`'s `adapters` array, placed according to its trust level (verified registry > community list > raw search).
 4. Add the source URL and any parsing assumptions to `<source-name>.ts`'s header comment.
-5. Add a unit test under `__tests__/<source-name>.test.ts` that pins a known input to an expected entry list. Do not hit the network in tests — use a recorded fixture.
+5. Keep the generated beside-file unit test at `<source-name>.test.ts` and pin a known input to an expected entry list. Do not hit the network in tests — use a recorded fixture.
 
 ## Required fields on `Entry`
 

@@ -10,7 +10,7 @@ PR template asks one thing: explain what you actually ran to verify. For `verifi
 
 ## 2. Write a new adapter
 
-You know a source of Claude skills that we don't federate yet. Create `src/adapters/<source-name>.ts` implementing `export async function fetch(): Promise<Entry[]>`. See `src/adapters/README.md` for the full contract.
+You know a source of Claude skills that we don't federate yet. Start with `npm run scaffold:adapter -- <source-name>`, then implement `export async function fetch(): Promise<Entry[]>`. See `src/adapters/README.md` for the full contract.
 
 Each adapter PR should include:
 
