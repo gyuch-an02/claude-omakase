@@ -9,6 +9,12 @@ import type { InstalledRecord, UserParam } from "../types.js";
 
 export const installSkillInput = z.object({
   id: z.string().min(1).describe("Catalog entry id to install (from find_skill results)."),
+  force: z
+    .boolean()
+    .default(false)
+    .describe(
+      "Replace an existing ~/.claude/skills/<id>/ directory. Only set this after explicit user approval."
+    ),
   inputs: z
     .record(z.string())
     .default({})
@@ -22,6 +28,7 @@ export const installSkillDescription = `Install a Claude skill by id from the ca
 When to call:
   - Only AFTER the user has explicitly approved the install. Never call speculatively.
   - You must have collected values for any \`requires_user_params\` returned by find_skill.
+  - If a previous install already exists, ask before retrying with \`force: true\`.
 
 Behavior:
   - claude_code_skill / claude_skill → drops files into ~/.claude/skills/<id>/, effective next Claude session.
@@ -46,7 +53,7 @@ export async function handle(args: z.infer<typeof installSkillInput>) {
     entry_snapshot: entry,
   };
 
-  const { skillDir } = await codeSkills.install(entry);
+  const { skillDir } = await codeSkills.install(entry, { force: args.force });
   record.skill_dir = skillDir;
   const summary = `Installed skill "${entry.name}" at ${skillDir}. Claude will pick it up next session.`;
 

@@ -21,16 +21,23 @@ export async function fetch(): Promise<Entry[]> {
   }
   const out: Entry[] = [];
   for (const file of files) {
-    const raw = await readFile(join(dir, file), "utf8");
-    const entry = JSON.parse(raw) as Entry;
-    entry.source ??= { adapter: "handpicked" };
-    if (entry.source.adapter === undefined) entry.source.adapter = "handpicked";
-    out.push(entry);
+    try {
+      const raw = await readFile(join(dir, file), "utf8");
+      const entry = JSON.parse(raw) as Entry;
+      entry.source ??= { adapter: "handpicked" };
+      if (entry.source.adapter === undefined) entry.source.adapter = "handpicked";
+      out.push(entry);
+    } catch (e) {
+      console.error(`handpicked: skipping ${file}: ${(e as Error).message}`);
+    }
   }
   return out;
 }
 
 function handpickedDir(): string {
+  if (process.env["CLAUDE_OMAKASE_HANDPICKED_DIR"]) {
+    return process.env["CLAUDE_OMAKASE_HANDPICKED_DIR"];
+  }
   // dist/adapters/handpicked.js → ../../handpicked at runtime,
   // src/adapters/handpicked.ts → ../../handpicked during build.
   return join(dirname(fileURLToPath(import.meta.url)), "..", "..", "handpicked");

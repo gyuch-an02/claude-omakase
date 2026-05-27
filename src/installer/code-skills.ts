@@ -8,9 +8,20 @@ import { dirname, join } from "node:path";
 import { claudeCodeSkillsDir } from "../paths.js";
 import type { Entry } from "../types.js";
 
-export async function install(entry: Entry): Promise<{ skillDir: string }> {
+export async function install(
+  entry: Entry,
+  options: { force?: boolean } = {}
+): Promise<{ skillDir: string }> {
   const root = claudeCodeSkillsDir();
   const dest = join(root, entry.id);
+  if (existsSync(dest)) {
+    if (!options.force) {
+      throw new Error(
+        `skill "${entry.id}" already exists at ${dest}; pass force: true to replace it`
+      );
+    }
+    rmSync(dest, { recursive: true, force: true });
+  }
   mkdirSync(dest, { recursive: true });
 
   if (!entry.install.skill_files || entry.install.skill_files.length === 0) {

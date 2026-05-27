@@ -12,6 +12,9 @@ export function currentPlatform(): Platform {
 }
 
 export function claudeCodeSkillsDir(): string {
+  if (process.env["CLAUDE_OMAKASE_SKILLS_DIR"]) {
+    return process.env["CLAUDE_OMAKASE_SKILLS_DIR"];
+  }
   return join(homedir(), ".claude", "skills");
 }
 
