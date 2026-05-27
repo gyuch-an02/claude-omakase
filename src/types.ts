@@ -41,6 +41,12 @@ export interface Source {
   fetched_at?: string; // ISO 8601
 }
 
+export interface Audit {
+  audited_by?: string;
+  audited_at?: string;
+  checks?: string[];
+}
+
 export interface Entry {
   id: string;
   name: string;
@@ -57,6 +63,7 @@ export interface Entry {
   install: Install;
   requirements?: string[];
   source: Source;
+  audit?: Audit;
 }
 
 export interface Catalog {
