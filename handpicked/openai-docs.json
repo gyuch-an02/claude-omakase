@@ -15,7 +15,7 @@
   "install": {
     "skill_files": [
       {
-        "source": "https://raw.githubusercontent.com/openai/skills/main/skills/.curated/openai-docs/SKILL.md",
+        "source": "https://raw.githubusercontent.com/openai/skills/da7611f0ddb078b641407842473e4fa308988516/skills/.curated/openai-docs/SKILL.md",
         "target": "SKILL.md"
       }
     ]
