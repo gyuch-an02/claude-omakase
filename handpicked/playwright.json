@@ -15,7 +15,7 @@
   "install": {
     "skill_files": [
       {
-        "source": "https://raw.githubusercontent.com/openai/skills/main/skills/.curated/playwright/SKILL.md",
+        "source": "https://raw.githubusercontent.com/openai/skills/a5119697b819090e00e5d11ee1d86834d7c1043a/skills/.curated/playwright/SKILL.md",
         "target": "SKILL.md"
       }
     ]
