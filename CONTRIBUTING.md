@@ -64,7 +64,6 @@ Notes from the first contributor timing pass:
 - Create a branch before making issue-specific edits, e.g. `git switch -c changwook/<issue-slug>`.
 - Keep one issue per PR. If you discover a blocker, open or use a separate blocker PR instead of mixing scopes.
 - Adapter tests live beside adapter code in `src/adapters/*.test.ts`; do not use `__tests__/`.
-- If `npm test` prints `shopt: globstar: invalid shell option name` on macOS but still reports passing tests, treat it as a known script portability warning.
 - `npm run build:catalog` may log adapter warnings in restricted or schema-drift environments. The important questions are whether the command exits successfully and whether the intended catalog diff is expected.
 
 ## PR flow
