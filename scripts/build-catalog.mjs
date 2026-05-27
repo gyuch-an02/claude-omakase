@@ -19,16 +19,21 @@ console.log("Fetching from all adapters …");
 const entries = await fetchAll();
 const outPath = join(repoRoot, "catalog.json");
 const previous = await readPreviousCatalog(outPath);
+const previousEntries = Array.isArray(previous?.entries) ? previous.entries : null;
+const previousGeneratedAtValid = typeof previous?.generated_at === "string";
 const entriesChanged =
   !previous ||
-  JSON.stringify(stableEntries(previous.entries ?? [])) !==
+  previous?.version !== 1 ||
+  !previousEntries ||
+  !previousGeneratedAtValid ||
+  JSON.stringify(stableEntries(previousEntries)) !==
     JSON.stringify(stableEntries(entries));
-const catalogEntries = entriesChanged ? entries : previous.entries;
+const catalogEntries = entriesChanged ? entries : previousEntries;
 
 const catalog = {
   version: 1,
   generated_at:
-    entriesChanged || previous?.version !== 1
+    entriesChanged
       ? new Date().toISOString()
       : previous.generated_at,
   entries: catalogEntries,
