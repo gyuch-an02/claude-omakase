@@ -1,0 +1,37 @@
+{
+  "id": "openai-docs",
+  "name": "OpenAI Docs",
+  "type": "claude_code_skill",
+  "description": "Use current official OpenAI documentation when building with OpenAI APIs, choosing models, or upgrading prompts.",
+  "category": "developer-tools",
+  "tags": ["openai", "docs", "api", "models", "developer-tools"],
+  "verified": true,
+  "author": {
+    "name": "OpenAI",
+    "url": "https://github.com/openai/skills"
+  },
+  "homepage": "https://github.com/openai/skills/tree/main/skills/.curated/openai-docs",
+  "license": "MIT",
+  "install": {
+    "skill_files": [
+      {
+        "source": "https://raw.githubusercontent.com/openai/skills/main/skills/.curated/openai-docs/SKILL.md",
+        "target": "SKILL.md"
+      }
+    ]
+  },
+  "source": {
+    "adapter": "handpicked",
+    "origin": "https://github.com/openai/skills/tree/main/skills/.curated/openai-docs"
+  },
+  "audit": {
+    "audited_by": "Changwook Lee",
+    "audited_at": "2026-05-27",
+    "checks": [
+      "Publisher is the public openai/skills repository.",
+      "Install source is HTTPS and returned HTTP 200 during audit.",
+      "Install target is a single relative SKILL.md file.",
+      "No install command or post-install script is executed by Omakase."
+    ]
+  }
+}

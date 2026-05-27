@@ -1,0 +1,37 @@
+{
+  "id": "playwright",
+  "name": "Playwright",
+  "type": "claude_code_skill",
+  "description": "Use Playwright for browser automation, web app testing, screenshots, and interaction debugging.",
+  "category": "testing",
+  "tags": ["playwright", "browser", "testing", "frontend", "automation"],
+  "verified": true,
+  "author": {
+    "name": "OpenAI",
+    "url": "https://github.com/openai/skills"
+  },
+  "homepage": "https://github.com/openai/skills/tree/main/skills/.curated/playwright",
+  "license": "MIT",
+  "install": {
+    "skill_files": [
+      {
+        "source": "https://raw.githubusercontent.com/openai/skills/main/skills/.curated/playwright/SKILL.md",
+        "target": "SKILL.md"
+      }
+    ]
+  },
+  "source": {
+    "adapter": "handpicked",
+    "origin": "https://github.com/openai/skills/tree/main/skills/.curated/playwright"
+  },
+  "audit": {
+    "audited_by": "Changwook Lee",
+    "audited_at": "2026-05-27",
+    "checks": [
+      "Publisher is the public openai/skills repository.",
+      "Install source is HTTPS and returned HTTP 200 during audit.",
+      "Install target is a single relative SKILL.md file.",
+      "No install command or post-install script is executed by Omakase."
+    ]
+  }
+}
