@@ -9,4 +9,6 @@ adapter-smoke-report.json
 .idea/
 docs/*
 !docs/contributor-quickstart.md
+!docs/distribution/
+!docs/distribution/*.md
 .agents/
