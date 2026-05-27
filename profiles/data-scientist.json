@@ -1,5 +1,36 @@
 {
   "role": "data-scientist",
-  "match": ["data scientist", "data science", "ml", "machine learning", "research", "analyst"],
-  "recommend": ["filesystem", "fetch", "github"]
+  "match": [
+    "data scientist",
+    "data science",
+    "ml",
+    "machine learning",
+    "analyst",
+    "python",
+    "sql",
+    "jupyter"
+  ],
+  "recommend": ["jupyter-notebook", "openai-docs"],
+  "evidence": [
+    {
+      "match": ["data scientist", "data science", "ml", "machine learning"],
+      "source": "https://storage.googleapis.com/kaggle-media/surveys/Kaggle%20State%20of%20Machine%20Learning%20and%20Data%20Science%20Report%202022.pdf",
+      "note": "Kaggle's State of Data Science and Machine Learning survey names the data-science and ML audience directly."
+    },
+    {
+      "match": ["python", "sql"],
+      "source": "https://survey.stackoverflow.co/2024/technology",
+      "note": "Stack Overflow's 2024 technology results identify Python and SQL as highly desired and admired languages."
+    },
+    {
+      "match": ["jupyter"],
+      "source": "https://arxiv.org/abs/2308.07333",
+      "note": "Large-scale reproducibility work studies Jupyter notebooks as a common research and computational workflow artifact."
+    },
+    {
+      "match": ["analyst"],
+      "source": "https://www.pewresearch.org/decoded/2024/03/reproducibility-as-part-of-code-quality-control/",
+      "note": "Pew describes code review and reproducibility practices for analysis workflows."
+    }
+  ]
 }

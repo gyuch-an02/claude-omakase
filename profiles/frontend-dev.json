@@ -1,5 +1,36 @@
 {
   "role": "frontend-dev",
-  "match": ["frontend", "front-end", "web developer", "react", "vue", "ui engineer"],
-  "recommend": ["filesystem", "github", "fetch"]
+  "match": [
+    "frontend",
+    "front-end",
+    "web developer",
+    "react",
+    "typescript",
+    "javascript",
+    "ui engineer",
+    "playwright"
+  ],
+  "recommend": ["playwright", "openai-docs"],
+  "evidence": [
+    {
+      "match": ["javascript", "typescript", "web developer"],
+      "source": "https://survey.stackoverflow.co/2024/technology",
+      "note": "Stack Overflow's 2024 technology results place JavaScript and TypeScript among widely used developer technologies."
+    },
+    {
+      "match": ["react", "frontend", "front-end"],
+      "source": "https://survey.stackoverflow.co/2024/technology",
+      "note": "The same survey tracks React among major web frameworks and technologies."
+    },
+    {
+      "match": ["ui engineer"],
+      "source": "https://frontendmasters.com/guides/front-end-handbook/2024/",
+      "note": "The Front-End Developer Handbook frames frontend work around UI implementation, web platform skills, and user-facing engineering."
+    },
+    {
+      "match": ["playwright"],
+      "source": "https://playwright.dev/",
+      "note": "Playwright is a mainstream browser automation and end-to-end testing tool for web apps."
+    }
+  ]
 }
