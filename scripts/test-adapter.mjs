@@ -210,7 +210,7 @@ async function checkRegistryJson({ kind, command, packageName, url }) {
       command,
       packageName,
       url,
-      message: `${packageName} registry lookup failed: ${(e).message}`,
+      message: `${packageName} registry lookup failed: ${e instanceof Error ? e.message : String(e)}`,
     };
   }
 }
