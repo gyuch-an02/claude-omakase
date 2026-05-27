@@ -5,10 +5,20 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { handle } from "./find-skill.js";
 
-test("find_skill: empty catalog returns zero matches without throwing", async () => {
+test("find_skill: empty catalog returns zero matches without throwing", async (t) => {
   const cacheDir = await mkdtemp(join(tmpdir(), "omakase-cache-"));
   const originalCache = process.env["XDG_CACHE_HOME"];
+  const originalRemote = process.env["CLAUDE_OMAKASE_CATALOG_URL"];
+  t.after(() => {
+    if (originalRemote === undefined) {
+      delete process.env["CLAUDE_OMAKASE_CATALOG_URL"];
+    } else {
+      process.env["CLAUDE_OMAKASE_CATALOG_URL"] = originalRemote;
+    }
+  });
+
   process.env["XDG_CACHE_HOME"] = cacheDir;
+  delete process.env["CLAUDE_OMAKASE_CATALOG_URL"];
   await writeFile(
     join(cacheDir, "claude-omakase", "catalog.json"),
     JSON.stringify({
