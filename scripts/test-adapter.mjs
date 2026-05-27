@@ -129,6 +129,9 @@ function parseArgs(argv) {
 function requireValue(argv, index, flag) {
   const value = argv[index];
   if (!value) throw new Error(`${flag} requires a value`);
+  if (value.startsWith("-")) {
+    throw new Error(`${flag} requires a value, got ${value}`);
+  }
   return value;
 }
 
