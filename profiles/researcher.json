@@ -1,5 +1,36 @@
 {
   "role": "researcher",
-  "match": ["researcher", "phd", "academic", "graduate student", "professor"],
-  "recommend": ["filesystem", "fetch"]
+  "match": [
+    "researcher",
+    "phd",
+    "academic",
+    "graduate student",
+    "professor",
+    "reproducible research",
+    "jupyter",
+    "python"
+  ],
+  "recommend": ["jupyter-notebook", "openai-docs"],
+  "evidence": [
+    {
+      "match": ["researcher", "academic", "graduate student", "professor"],
+      "source": "https://software-carpentry.org/",
+      "note": "Software Carpentry targets researchers learning computational skills for research work."
+    },
+    {
+      "match": ["reproducible research"],
+      "source": "https://book.the-turing-way.org/reproducible-research/overview/overview-resources/",
+      "note": "The Turing Way collects reproducible research practices and resources for research communities."
+    },
+    {
+      "match": ["jupyter"],
+      "source": "https://arxiv.org/abs/1810.08055",
+      "note": "Jupyter notebooks are discussed as a computational notebook system used in scientific workflows."
+    },
+    {
+      "match": ["python", "phd"],
+      "source": "https://software-carpentry.org/lessons/",
+      "note": "Software Carpentry lessons include Python and are aimed at research learners, including graduate-level audiences."
+    }
+  ]
 }
