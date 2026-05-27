@@ -51,6 +51,7 @@ Tools, types, install pipeline, catalog cache. Standard TypeScript contribution.
 
 ```bash
 npm install
+npm run lint
 npm run typecheck
 npm run build
 npm test
