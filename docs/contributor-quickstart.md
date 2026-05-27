@@ -35,7 +35,7 @@ npm run typecheck
 npm test
 ```
 
-Expected result: typecheck passes and tests pass. On some macOS shells, `npm test` may print `shopt: globstar: invalid shell option name` before passing; that warning is known and harmless.
+Expected result: typecheck passes and tests pass.
 
 Timing-run note: branch before editing. It is easy to lose time later separating unrelated files if you begin on `main` or on another issue branch.
 
