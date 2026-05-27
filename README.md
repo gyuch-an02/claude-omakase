@@ -19,8 +19,8 @@
                                           ▼
             ┌────────────────────────────────────────────┐
             │ Federated catalog                          │
-            │  - anthropic-skills-repo (planned)         │
-            │  - handpicked overlay  (verified flags)    │
+            │  - handpicked verified seeds               │
+            │  - skillsmp adapter                        │
             └────────────────────────────────────────────┘
 ```
 
@@ -38,6 +38,11 @@ curl -fsSL https://raw.githubusercontent.com/gyuch-an02/claude-omakase/main/inst
 ```
 
 Requirements: Node.js 20+ and Claude Code (or another MCP host) installed.
+
+Release note: the installer prints an `npx -y claude-omakase` MCP snippet. The
+npm package publication path is tracked in
+[issue #48](https://github.com/gyuch-an02/claude-omakase/issues/48); until that
+is resolved, use a local checkout with `npm link` for development and demos.
 
 The script:
 
@@ -83,12 +88,17 @@ The catalog is **federated** from upstream sources at build time. `handpicked/` 
 
 Currently active sources:
 
-- `handpicked/` — manually-audited overlay (seeds pending; see `handpicked/README.md`).
+- `handpicked/` — manually-audited verified seed entries and overrides. Current bundled seeds include `jupyter-notebook`, `openai-docs`, and `playwright`.
 - `skillsmp` — the public agent-skills marketplace at [skillsmp.com](https://skillsmp.com) (the source behind ByteDance's `find-skills` SKILL). Adapter at `src/adapters/skillsmp.ts`.
 
-Planned: `anthropic-skills-repo` (when the upstream repo is identified), community skill aggregators.
+Planned: more community skill aggregators as stable, inspectable sources are identified.
 
-Adapter authoring contract: `src/adapters/README.md`.
+Adapter authoring contract: `src/adapters/README.md`. First-time adapter
+contributors can start with:
+
+```bash
+npm run scaffold:adapter -- <source-name>
+```
 
 ## Privacy
 
@@ -108,6 +118,7 @@ cd claude-omakase
 npm install
 npm run build           # tsc compile
 npm run build:catalog   # federate adapters → catalog.json
+npm run scaffold:adapter -- <source-name>
 npm run typecheck
 npm test
 ```
