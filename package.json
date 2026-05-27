@@ -23,6 +23,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "build:catalog": "node --enable-source-maps scripts/build-catalog.mjs",
+    "test:adapter": "node --enable-source-maps scripts/test-adapter.mjs",
     "dev": "tsc -w -p tsconfig.json",
     "start": "node dist/server.js",
     "lint": "eslint src",
