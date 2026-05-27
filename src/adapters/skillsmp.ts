@@ -101,7 +101,11 @@ async function searchOnce(query: string, headers: Record<string, string>): Promi
     throw new Error(`HTTP ${res.status}`);
   }
   const body = (await res.json()) as SkillsmpResponse;
-  return body.results ?? body.data ?? body.skills ?? [];
+  const hits = body.results ?? body.data ?? body.skills ?? [];
+  if (!Array.isArray(hits)) {
+    throw new Error("unexpected response shape: results/data/skills must be arrays");
+  }
+  return hits;
 }
 
 function buildHeaders(): Record<string, string> {
