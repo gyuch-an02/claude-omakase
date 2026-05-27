@@ -44,6 +44,16 @@ npm package publication path is tracked in
 [issue #48](https://github.com/gyuch-an02/claude-omakase/issues/48); until that
 is resolved, use a local checkout with `npm link` for development and demos.
 
+Fallback MCP config for the local `npm link` path:
+
+```json
+{
+  "mcpServers": {
+    "omakase": { "command": "claude-omakase" }
+  }
+}
+```
+
 The script:
 
 1. Drops `omakase-chef/SKILL.md` into `~/.claude/skills/omakase-chef/`.
