@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalize } from "./skillsmp.js";
+import { fetch as fetchSkillsmp, normalize } from "./skillsmp.js";
 
 test("normalize: full hit with explicit skill_md_url", () => {
   const entry = normalize({
@@ -86,4 +86,32 @@ test("normalize: string author falls through", () => {
     skill_md_url: "https://example.com/SKILL.md",
   });
   assert.equal(entry?.author.name, "bob");
+});
+
+test("fetch: unexpected response shape is logged and skipped", async () => {
+  const originalFetch = globalThis.fetch;
+  const originalError = console.error;
+  const logged: string[] = [];
+  globalThis.fetch = async () =>
+    new Response(JSON.stringify({ results: { not: "an array" } }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  console.error = (message?: unknown) => {
+    logged.push(String(message));
+  };
+
+  try {
+    const entries = await fetchSkillsmp();
+
+    assert.deepEqual(entries, []);
+    assert.ok(
+      logged.some((line) =>
+        /unexpected response shape: results\/data\/skills must be arrays/.test(line)
+      )
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.error = originalError;
+  }
 });
