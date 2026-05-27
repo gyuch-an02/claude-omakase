@@ -20,47 +20,78 @@ const catalogPath = args.catalog ?? join(repoRoot, "catalog.json");
 const outPath = args.out ?? join(repoRoot, "adapter-smoke-report.json");
 
 const startedAt = new Date().toISOString();
-const catalog = JSON.parse(await readFile(catalogPath, "utf8"));
 const results = [];
+let catalogGeneratedAt = null;
+let fatalError = null;
 
-for (const entry of catalog.entries ?? []) {
-  const checks = [];
+try {
+  const catalog = JSON.parse(await readFile(catalogPath, "utf8"));
+  catalogGeneratedAt = catalog.generated_at ?? null;
 
-  if (entry.install?.command) {
-    checks.push(await checkInstallCommand(entry));
-  }
+  for (const entry of catalog.entries ?? []) {
+    const checks = [];
 
-  for (const file of entry.install?.skill_files ?? []) {
-    checks.push(await checkSkillFile(entry, file));
-  }
+    if (entry.install?.command) {
+      checks.push(await checkInstallCommand(entry));
+    }
 
-  if (checks.length === 0) {
-    checks.push({
-      kind: "metadata",
-      ok: false,
-      message: "entry has neither install.command nor install.skill_files",
+    for (const file of entry.install?.skill_files ?? []) {
+      checks.push(await checkSkillFile(entry, file));
+    }
+
+    if (checks.length === 0) {
+      checks.push({
+        kind: "metadata",
+        ok: false,
+        message: "entry has neither install.command nor install.skill_files",
+      });
+    }
+
+    results.push({
+      id: entry.id,
+      name: entry.name,
+      source: entry.source?.adapter ?? "unknown",
+      verified: Boolean(entry.verified),
+      checks,
     });
   }
-
+} catch (error) {
+  fatalError = error;
   results.push({
-    id: entry.id,
-    name: entry.name,
-    source: entry.source?.adapter ?? "unknown",
-    verified: Boolean(entry.verified),
-    checks,
+    id: null,
+    name: "catalog-load",
+    source: "catalog",
+    verified: false,
+    checks: [
+      {
+        kind: "catalog",
+        ok: false,
+        message: error instanceof Error ? error.message : String(error),
+      },
+    ],
   });
 }
 
 const summary = summarize(results);
 const report = {
-  ok: summary.failed === 0,
+  ok: fatalError === null && summary.failed === 0,
   started_at: startedAt,
   finished_at: new Date().toISOString(),
   catalog_path: catalogPath,
-  catalog_generated_at: catalog.generated_at ?? null,
+  catalog_generated_at: catalogGeneratedAt,
   total_entries: results.length,
   summary,
   results,
+  ...(fatalError
+    ? {
+        error: {
+          name: fatalError instanceof Error ? fatalError.name : "Error",
+          message:
+            fatalError instanceof Error ? fatalError.message : String(fatalError),
+          stack: fatalError instanceof Error ? fatalError.stack : undefined,
+        },
+      }
+    : {}),
 };
 
 await mkdir(dirname(outPath), { recursive: true });
