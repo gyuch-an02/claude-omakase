@@ -1,6 +1,7 @@
 node_modules/
 dist/
 *.log
+adapter-smoke-report.json
 .DS_Store
 .env
 .env.local
