@@ -1,0 +1,16 @@
+# Source code & build
+src/**              @gyuch-an02
+scripts/**          @gyuch-an02
+install.sh          @gyuch-an02
+package.json        @gyuch-an02
+tsconfig.json       @gyuch-an02
+
+# Content & docs
+handpicked/**       @changwook
+profiles/**         @changwook
+omakase-chef/**     @changwook
+CONTRIBUTING.md     @changwook
+docs/**             @changwook
+
+# Workflow automation
+.github/workflows/** @minkyoung
