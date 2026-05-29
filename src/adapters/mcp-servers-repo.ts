@@ -38,7 +38,7 @@ export function parseReadme(text: string): Entry[] {
     // Track H2/H3 headers for section context.
     const hdr = /^#{2,3}\s+(.+)/.exec(line);
     if (hdr) {
-      currentSection = hdr[1]!.replace(/^[🌐✅🔒📁🔧🌍 ]+/, "").trim().toLowerCase();
+      currentSection = hdr[1]!.replace(/^[\u{1F300}-\u{1FAFF} ]+/u, "").trim().toLowerCase();
       continue;
     }
 
