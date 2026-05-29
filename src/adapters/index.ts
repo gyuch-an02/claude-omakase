@@ -5,6 +5,8 @@
 
 import type { Entry } from "../types.js";
 import { fetch as fetchHandpicked } from "./handpicked.js";
+import { fetch as fetchMcpServersRepo } from "./mcp-servers-repo.js";
+import { fetch as fetchAwesomeMcp } from "./awesome-mcp.js";
 import { fetch as fetchSkillsmp } from "./skillsmp.js";
 
 export interface Adapter {
@@ -18,6 +20,18 @@ export const adapters: Adapter[] = [
     name: "handpicked",
     description: "Local overlay: verified entries, blocklist, command overrides.",
     fetch: fetchHandpicked,
+  },
+  {
+    name: "mcp-servers-repo",
+    description:
+      "Official Anthropic MCP reference servers from github.com/modelcontextprotocol/servers.",
+    fetch: fetchMcpServersRepo,
+  },
+  {
+    name: "awesome-mcp",
+    description:
+      "Community-curated MCP server list from github.com/punkpeye/awesome-mcp-servers.",
+    fetch: fetchAwesomeMcp,
   },
   {
     name: "skillsmp",
