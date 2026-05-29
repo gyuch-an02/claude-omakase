@@ -1,7 +1,951 @@
 {
   "version": 1,
-  "generated_at": "2026-05-27T00:02:13.271Z",
+  "generated_at": "2026-05-29T07:50:31.084Z",
   "entries": [
+    {
+      "id": "a2ajava",
+      "name": "A2A-MCP Java Bridge",
+      "type": "claude_code_skill",
+      "description": "A2AJava brings powerful A2A-MCP integration directly into your Java applications. It enables developers to annotate standard Java methods and instantly expose them as MCP Server, A2A-discoverable actions — with no boilerplate or service registration overhead.",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "a2a",
+        "java",
+        "bridge",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/vishalmysore/a2ajava",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/vishalmysore/a2ajava/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/vishalmysore/a2ajava",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "agentinterviews-mcp",
+      "name": "thinkchainai/agentinterviews_mcp",
+      "type": "claude_code_skill",
+      "description": "Conduct AI-powered qualitative research interviews and surveys at scale with [Agent Interviews](https://agentinterviews.com). Create interviewers, manage research projects, recruit participants, and analyze interview data through MCP.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"research\"><",
+        "a>research",
+        "thinkchainai",
+        "agentinterviews"
+      ],
+      "verified": false,
+      "author": {
+        "name": "thinkchainai",
+        "url": "https://github.com/thinkchainai"
+      },
+      "homepage": "https://github.com/thinkchainai/agentinterviews_mcp",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/thinkchainai/agentinterviews_mcp/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/thinkchainai/agentinterviews_mcp",
+        "fetched_at": "2026-05-29T07:50:16.735Z"
+      }
+    },
+    {
+      "id": "ai-counsel",
+      "name": "harrison/ai-counsel",
+      "type": "claude_code_skill",
+      "description": "🐍 🏠 🍎 🪟 🐧 - Deliberative consensus engine enabling multi-round debate between AI models with structured voting, convergence detection, and persistent decision graph memory.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"knowledge",
+        "memory\"><",
+        "a>knowledge",
+        "memory",
+        "harrison",
+        "ai",
+        "counsel"
+      ],
+      "verified": false,
+      "author": {
+        "name": "harrison",
+        "url": "https://github.com/harrison"
+      },
+      "homepage": "https://github.com/harrison/ai-counsel",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/harrison/ai-counsel/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/harrison/ai-counsel",
+        "fetched_at": "2026-05-29T07:50:16.734Z"
+      }
+    },
+    {
+      "id": "ai-vision-mcp",
+      "name": "tan-yong-sheng/ai-vision-mcp",
+      "type": "claude_code_skill",
+      "description": "📇 🏠 🍎 🪟 🐧 - Multimodal AI vision MCP server for image, video, and object detection analysis. Enables UI/UX evaluation, visual regression testing, and interface understanding using Google Gemini and Vertex AI.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "tan",
+        "yong",
+        "sheng",
+        "ai",
+        "vision"
+      ],
+      "verified": false,
+      "author": {
+        "name": "tan-yong-sheng",
+        "url": "https://github.com/tan-yong-sheng"
+      },
+      "homepage": "https://github.com/tan-yong-sheng/ai-vision-mcp",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/tan-yong-sheng/ai-vision-mcp/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/tan-yong-sheng/ai-vision-mcp",
+        "fetched_at": "2026-05-29T07:50:16.736Z"
+      }
+    },
+    {
+      "id": "aimcp",
+      "name": "AiMCP",
+      "type": "claude_code_skill",
+      "description": "A collection of MCP clients&servers to find the right mcp tools by **[Hekmon](https://github.com/hekmon8)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "aimcp",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://www.aimcp.info",
+      "install": {
+        "skill_files": []
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://www.aimcp.info",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "any-chat-completions-mcp",
+      "name": "pyroprompts/any-chat-completions-mcp",
+      "type": "claude_code_skill",
+      "description": "Chat with any other OpenAI SDK Compatible Chat Completions API, like Perplexity, Groq, xAI and more",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "pyroprompts",
+        "any",
+        "chat",
+        "completions"
+      ],
+      "verified": false,
+      "author": {
+        "name": "pyroprompts",
+        "url": "https://github.com/pyroprompts"
+      },
+      "homepage": "https://github.com/pyroprompts/any-chat-completions-mcp",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/pyroprompts/any-chat-completions-mcp/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/pyroprompts/any-chat-completions-mcp",
+        "fetched_at": "2026-05-29T07:50:16.736Z"
+      }
+    },
+    {
+      "id": "attio-mcp-server",
+      "name": "hmk/attio-mcp-server",
+      "type": "claude_code_skill",
+      "description": "📇 ☁️ Allows AI clients to manage records and notes in Attio CRM",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "hmk",
+        "attio",
+        "server"
+      ],
+      "verified": false,
+      "author": {
+        "name": "hmk",
+        "url": "https://github.com/hmk"
+      },
+      "homepage": "https://github.com/hmk/attio-mcp-server",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/hmk/attio-mcp-server/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/hmk/attio-mcp-server",
+        "fetched_at": "2026-05-29T07:50:16.735Z"
+      }
+    },
+    {
+      "id": "awesome-crypto-mcp-servers",
+      "name": "Awesome Crypto MCP Servers by badkk",
+      "type": "claude_code_skill",
+      "description": "A curated list of MCP servers by **[Luke Fan](https://github.com/badkk)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "awesome",
+        "crypto",
+        "servers",
+        "by",
+        "badkk",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/badkk/awesome-crypto-mcp-servers",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/badkk/awesome-crypto-mcp-servers/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/badkk/awesome-crypto-mcp-servers",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "awesome-mcp-servers",
+      "name": "Awesome MCP Servers by appcypher",
+      "type": "claude_code_skill",
+      "description": "A curated list of MCP servers by **[Stephen Akinyemi](https://github.com/appcypher)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "awesome",
+        "servers",
+        "by",
+        "appcypher",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/appcypher/awesome-mcp-servers",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/appcypher/awesome-mcp-servers/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/appcypher/awesome-mcp-servers",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "awesome-remote-mcp-servers",
+      "name": "Awesome Remote MCP Servers by JAW9C",
+      "type": "claude_code_skill",
+      "description": "A curated list of **remote** MCP servers, including their authentication support by **[JAW9C](https://github.com/jaw9c)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "awesome",
+        "remote",
+        "servers",
+        "by",
+        "jaw9c",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/jaw9c/awesome-remote-mcp-servers",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/jaw9c/awesome-remote-mcp-servers/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/jaw9c/awesome-remote-mcp-servers",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "azure-cli-mcp",
+      "name": "jdubois/azure-cli-mcp",
+      "type": "claude_code_skill",
+      "description": "A wrapper around the Azure CLI command line that allows you to talk directly to Azure",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "☁️",
+        "<a",
+        "name=\"cloud",
+        "platforms\"><",
+        "a>cloud",
+        "platforms",
+        "jdubois",
+        "azure",
+        "cli"
+      ],
+      "verified": false,
+      "author": {
+        "name": "jdubois",
+        "url": "https://github.com/jdubois"
+      },
+      "homepage": "https://github.com/jdubois/azure-cli-mcp",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/jdubois/azure-cli-mcp/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/jdubois/azure-cli-mcp",
+        "fetched_at": "2026-05-29T07:50:16.733Z"
+      }
+    },
+    {
+      "id": "azure-mcp",
+      "name": "Azure/azure-mcp",
+      "type": "claude_code_skill",
+      "description": "Official Microsoft MCP server for Azure services including Storage, Cosmos DB, and Azure Monitor.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "azure"
+      ],
+      "verified": false,
+      "author": {
+        "name": "Azure",
+        "url": "https://github.com/Azure"
+      },
+      "homepage": "https://github.com/Azure/azure-mcp",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/Azure/azure-mcp/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/Azure/azure-mcp",
+        "fetched_at": "2026-05-29T07:50:16.735Z"
+      }
+    },
+    {
+      "id": "baserow",
+      "name": "bram2w/baserow",
+      "type": "claude_code_skill",
+      "description": "Baserow database integration with table search, list, and row create, read, update, and delete capabilities.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"databases\"><",
+        "a>databases",
+        "bram2w",
+        "baserow"
+      ],
+      "verified": false,
+      "author": {
+        "name": "bram2w",
+        "url": "https://github.com/bram2w"
+      },
+      "homepage": "https://github.com/bram2w/baserow",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/bram2w/baserow/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/bram2w/baserow",
+        "fetched_at": "2026-05-29T07:50:16.733Z"
+      }
+    },
+    {
+      "id": "bear-mcp-server",
+      "name": "akseyh/bear-mcp-server",
+      "type": "claude_code_skill",
+      "description": "Allows the AI to read from your Bear Notes (macOS only)",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "akseyh",
+        "bear",
+        "server"
+      ],
+      "verified": false,
+      "author": {
+        "name": "akseyh",
+        "url": "https://github.com/akseyh"
+      },
+      "homepage": "https://github.com/akseyh/bear-mcp-server",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/akseyh/bear-mcp-server/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/akseyh/bear-mcp-server",
+        "fetched_at": "2026-05-29T07:50:16.735Z"
+      }
+    },
+    {
+      "id": "bitcoin-mcp",
+      "name": "AbdelStark/bitcoin-mcp",
+      "type": "claude_code_skill",
+      "description": "₿ A Model Context Protocol (MCP) server that enables AI models to interact with Bitcoin, allowing them to generate keys, validate addresses, decode transactions, query the blockchain, and more.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "abdelstark",
+        "bitcoin"
+      ],
+      "verified": false,
+      "author": {
+        "name": "AbdelStark",
+        "url": "https://github.com/AbdelStark"
+      },
+      "homepage": "https://github.com/AbdelStark/bitcoin-mcp",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/AbdelStark/bitcoin-mcp/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/AbdelStark/bitcoin-mcp",
+        "fetched_at": "2026-05-29T07:50:16.735Z"
+      }
+    },
+    {
+      "id": "cal-mcp",
+      "name": "pwh-pwh/cal-mcp",
+      "type": "claude_code_skill",
+      "description": "An MCP server for Mathematical expression calculation",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "pwh",
+        "cal"
+      ],
+      "verified": false,
+      "author": {
+        "name": "pwh-pwh",
+        "url": "https://github.com/pwh-pwh"
+      },
+      "homepage": "https://github.com/pwh-pwh/cal-mcp",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/pwh-pwh/cal-mcp/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/pwh-pwh/cal-mcp",
+        "fetched_at": "2026-05-29T07:50:16.736Z"
+      }
+    },
+    {
+      "id": "capsulecrm-mcp",
+      "name": "MonadsAG/capsulecrm-mcp",
+      "type": "claude_code_skill",
+      "description": "📇 ☁️ Allows AI clients to manage contacts, opportunities and tasks in Capsule CRM including Claude Desktop ready DTX-file",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "monadsag",
+        "capsulecrm"
+      ],
+      "verified": false,
+      "author": {
+        "name": "MonadsAG",
+        "url": "https://github.com/MonadsAG"
+      },
+      "homepage": "https://github.com/MonadsAG/capsulecrm-mcp",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/MonadsAG/capsulecrm-mcp/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/MonadsAG/capsulecrm-mcp",
+        "fetched_at": "2026-05-29T07:50:16.736Z"
+      }
+    },
+    {
+      "id": "cli",
+      "name": "planetscale/mcp",
+      "type": "claude_code_skill",
+      "description": "The PlanetScale CLI includes an MCP server that provides AI tools direct access to your PlanetScale databases.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"databases\"><",
+        "a>databases",
+        "planetscale"
+      ],
+      "verified": false,
+      "author": {
+        "name": "planetscale",
+        "url": "https://github.com/planetscale"
+      },
+      "homepage": "https://github.com/planetscale/cli",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/planetscale/cli/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/planetscale/cli",
+        "fetched_at": "2026-05-29T07:50:16.733Z"
+      }
+    },
+    {
+      "id": "contracts-wizard",
+      "name": "OpenZeppelin/contracts-wizard",
+      "type": "claude_code_skill",
+      "description": "A Model Context Protocol (MCP) server that allows AI agents to generate secure smart contracts in multiples languages based on [OpenZeppelin Wizard templates](https://wizard.openzeppelin.com/).",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"developer",
+        "tools\"><",
+        "a>developer",
+        "tools",
+        "openzeppelin",
+        "contracts",
+        "wizard"
+      ],
+      "verified": false,
+      "author": {
+        "name": "OpenZeppelin",
+        "url": "https://github.com/OpenZeppelin"
+      },
+      "homepage": "https://github.com/OpenZeppelin/contracts-wizard",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/OpenZeppelin/contracts-wizard/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/OpenZeppelin/contracts-wizard",
+        "fetched_at": "2026-05-29T07:50:16.734Z"
+      }
+    },
+    {
+      "id": "discord-server",
+      "name": "Discord Server",
+      "type": "claude_code_skill",
+      "description": "A community discord server dedicated to MCP by **[Frank Fiegel](https://github.com/punkpeye)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "discord",
+        "server",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://glama.ai/mcp/discord",
+      "install": {
+        "skill_files": []
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://glama.ai/mcp/discord",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "everything",
+      "name": "Everything",
+      "type": "claude_code_skill",
+      "description": "Reference / test server with prompts, resources, and tools.",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "everything",
+        "reference",
+        "servers"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/modelcontextprotocol/servers/tree/main/src/everything",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/modelcontextprotocol/servers/main/src/everything/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/modelcontextprotocol/servers/tree/main/src/everything",
+        "fetched_at": "2026-05-29T07:50:16.467Z"
+      }
+    },
+    {
+      "id": "fetch",
+      "name": "Fetch",
+      "type": "claude_code_skill",
+      "description": "Web content fetching and conversion for efficient LLM usage.",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "fetch",
+        "reference",
+        "servers"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/modelcontextprotocol/servers/tree/main/src/fetch",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/modelcontextprotocol/servers/main/src/fetch/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/modelcontextprotocol/servers/tree/main/src/fetch",
+        "fetched_at": "2026-05-29T07:50:16.468Z"
+      }
+    },
+    {
+      "id": "filesystem",
+      "name": "Filesystem",
+      "type": "claude_code_skill",
+      "description": "Secure file operations with configurable access controls.",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "filesystem",
+        "reference",
+        "servers"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/modelcontextprotocol/servers/main/src/filesystem/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem",
+        "fetched_at": "2026-05-29T07:50:16.468Z"
+      }
+    },
+    {
+      "id": "git",
+      "name": "Git",
+      "type": "claude_code_skill",
+      "description": "Tools to read, search, and manipulate Git repositories.",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "git",
+        "reference",
+        "servers"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/modelcontextprotocol/servers/tree/main/src/git",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/modelcontextprotocol/servers/main/src/git/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/modelcontextprotocol/servers/tree/main/src/git",
+        "fetched_at": "2026-05-29T07:50:16.468Z"
+      }
+    },
+    {
+      "id": "hn-server",
+      "name": "pskill9/hn-server",
+      "type": "claude_code_skill",
+      "description": "📇 ☁️ Parses the HTML content from news.ycombinator.com (Hacker News) and provides structured data for different types of stories (top, new, ask, show, jobs).",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "pskill9",
+        "hn",
+        "server"
+      ],
+      "verified": false,
+      "author": {
+        "name": "pskill9",
+        "url": "https://github.com/pskill9"
+      },
+      "homepage": "https://github.com/pskill9/hn-server",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/pskill9/hn-server/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/pskill9/hn-server",
+        "fetched_at": "2026-05-29T07:50:16.736Z"
+      }
+    },
+    {
+      "id": "install-this-mcp",
+      "name": "Install This MCP",
+      "type": "claude_code_skill",
+      "description": "Reduce Installation Friction with beautiful installation guides",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "install",
+        "this",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://installthismcp.com",
+      "install": {
+        "skill_files": []
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://installthismcp.com",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "jira-github-mcp",
+      "name": "TamarEngel/jira-github-mcp",
+      "type": "claude_code_skill",
+      "description": "MCP server that integrates Jira and GitHub to automate end-to-end developer workflows, from issue tracking to branches, commits, pull requests, and merges inside the IDE.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"developer",
+        "tools\"><",
+        "a>developer",
+        "tools",
+        "tamarengel",
+        "jira",
+        "github"
+      ],
+      "verified": false,
+      "author": {
+        "name": "TamarEngel",
+        "url": "https://github.com/TamarEngel"
+      },
+      "homepage": "https://github.com/TamarEngel/jira-github-mcp",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/TamarEngel/jira-github-mcp/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/TamarEngel/jira-github-mcp",
+        "fetched_at": "2026-05-29T07:50:16.734Z"
+      }
+    },
     {
       "id": "jupyter-notebook",
       "name": "Jupyter Notebook",
@@ -46,6 +990,1738 @@
       }
     },
     {
+      "id": "last9-mcp-server",
+      "name": "last9/last9-mcp-server",
+      "type": "claude_code_skill",
+      "description": "Seamlessly bring real-time production context—logs, metrics, and traces—into your local environment to auto-fix code faster",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"monitoring\"><",
+        "a>monitoring",
+        "last9",
+        "server"
+      ],
+      "verified": false,
+      "author": {
+        "name": "last9",
+        "url": "https://github.com/last9"
+      },
+      "homepage": "https://github.com/last9/last9-mcp-server",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/last9/last9-mcp-server/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/last9/last9-mcp-server",
+        "fetched_at": "2026-05-29T07:50:16.735Z"
+      }
+    },
+    {
+      "id": "latex-mcp-server",
+      "name": "latex-mcp-server",
+      "type": "claude_code_skill",
+      "description": "An MCP Server to compile latex, download/organize/read cited papers, run visualization scripts and add figures/tables to latex.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "latex",
+        "server"
+      ],
+      "verified": false,
+      "author": {
+        "name": "Yeok-c",
+        "url": "https://github.com/Yeok-c"
+      },
+      "homepage": "https://github.com/Yeok-c/latex-mcp-server",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/Yeok-c/latex-mcp-server/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/Yeok-c/latex-mcp-server",
+        "fetched_at": "2026-05-29T07:50:16.735Z"
+      }
+    },
+    {
+      "id": "lnbits-mcp-server",
+      "name": "lnbits/LNbits-MCP-Server",
+      "type": "claude_code_skill",
+      "description": "Am MCP server for LNbits Lightning Network wallet integration.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"finance",
+        "fintech\"><",
+        "a>finance",
+        "fintech",
+        "lnbits",
+        "server"
+      ],
+      "verified": false,
+      "author": {
+        "name": "lnbits",
+        "url": "https://github.com/lnbits"
+      },
+      "homepage": "https://github.com/lnbits/LNbits-MCP-Server",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/lnbits/LNbits-MCP-Server/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/lnbits/LNbits-MCP-Server",
+        "fetched_at": "2026-05-29T07:50:16.734Z"
+      }
+    },
+    {
+      "id": "macrocosmos-mcp",
+      "name": "macrocosm-os/macrocosmos-mcp",
+      "type": "claude_code_skill",
+      "description": "🎖️ 🐍 ☁️ Access real-time X/Reddit/YouTube data directly in your LLM applications with search phrases, users, and date filtering.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"social",
+        "media\"><",
+        "a>social",
+        "media",
+        "macrocosm",
+        "os",
+        "macrocosmos"
+      ],
+      "verified": false,
+      "author": {
+        "name": "macrocosm-os",
+        "url": "https://github.com/macrocosm-os"
+      },
+      "homepage": "https://github.com/macrocosm-os/macrocosmos-mcp",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/macrocosm-os/macrocosmos-mcp/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/macrocosm-os/macrocosmos-mcp",
+        "fetched_at": "2026-05-29T07:50:16.735Z"
+      }
+    },
+    {
+      "id": "magic-mcp",
+      "name": "21st-dev/Magic-MCP",
+      "type": "claude_code_skill",
+      "description": "Create crafted UI components inspired by the best 21st.dev design engineers.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"developer",
+        "tools\"><",
+        "a>developer",
+        "tools",
+        "21st",
+        "dev",
+        "magic"
+      ],
+      "verified": false,
+      "author": {
+        "name": "21st-dev",
+        "url": "https://github.com/21st-dev"
+      },
+      "homepage": "https://github.com/21st-dev/magic-mcp",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/21st-dev/magic-mcp/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/21st-dev/magic-mcp",
+        "fetched_at": "2026-05-29T07:50:16.733Z"
+      }
+    },
+    {
+      "id": "mcp-aiven",
+      "name": "Aiven-Open/mcp-aiven",
+      "type": "claude_code_skill",
+      "description": "🐍 ☁️ 🎖️ - Navigate your [Aiven projects](https://go.aiven.io/mcp-server) and interact with the PostgreSQL®, Apache Kafka®, ClickHouse® and OpenSearch® services",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"databases\"><",
+        "a>databases",
+        "aiven",
+        "open"
+      ],
+      "verified": false,
+      "author": {
+        "name": "Aiven-Open",
+        "url": "https://github.com/Aiven-Open"
+      },
+      "homepage": "https://github.com/Aiven-Open/mcp-aiven",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/Aiven-Open/mcp-aiven/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/Aiven-Open/mcp-aiven",
+        "fetched_at": "2026-05-29T07:50:16.733Z"
+      }
+    },
+    {
+      "id": "mcp-badges",
+      "name": "MCP Badges",
+      "type": "claude_code_skill",
+      "description": "Quickly highlight your MCP project with clear, eye-catching badges, by **[Ironben](https://github.com/nanbingxyz)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "badges",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/mcpx-dev/mcp-badges",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/mcpx-dev/mcp-badges/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/mcpx-dev/mcp-badges",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcp-cli",
+      "name": "mcp-cli",
+      "type": "claude_code_skill",
+      "description": "A CLI inspector for the Model Context Protocol by **[wong2](https://github.com/wong2)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "cli",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/wong2/mcp-cli",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/wong2/mcp-cli/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/wong2/mcp-cli",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcp-datetime",
+      "name": "ZeparHyfar/mcp-datetime",
+      "type": "claude_code_skill",
+      "description": "MCP server providing date and time functions in various formats",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "zeparhyfar",
+        "datetime"
+      ],
+      "verified": false,
+      "author": {
+        "name": "ZeparHyfar",
+        "url": "https://github.com/ZeparHyfar"
+      },
+      "homepage": "https://github.com/ZeparHyfar/mcp-datetime",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/ZeparHyfar/mcp-datetime/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/ZeparHyfar/mcp-datetime",
+        "fetched_at": "2026-05-29T07:50:16.736Z"
+      }
+    },
+    {
+      "id": "mcp-difyworkflow-server",
+      "name": "gotoolkits/DifyWorkflow",
+      "type": "claude_code_skill",
+      "description": "🏎️ ☁️ Tools to the query and execute of Dify workflows",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "gotoolkits",
+        "difyworkflow"
+      ],
+      "verified": false,
+      "author": {
+        "name": "gotoolkits",
+        "url": "https://github.com/gotoolkits"
+      },
+      "homepage": "https://github.com/gotoolkits/mcp-difyworkflow-server",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/gotoolkits/mcp-difyworkflow-server/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/gotoolkits/mcp-difyworkflow-server",
+        "fetched_at": "2026-05-29T07:50:16.735Z"
+      }
+    },
+    {
+      "id": "mcp-directory",
+      "name": "Open-Sourced MCP Servers Directory",
+      "type": "claude_code_skill",
+      "description": "A curated list of MCP servers by **[mcpso](https://mcp.so)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "open",
+        "sourced",
+        "servers",
+        "directory",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/chatmcp/mcp-directory",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/chatmcp/mcp-directory/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/chatmcp/mcp-directory",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcp-dockmaster",
+      "name": "mcp-dockmaster",
+      "type": "claude_code_skill",
+      "description": "An Open-Sourced UI to install and manage MCP servers for Windows, Linux and macOS.",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "dockmaster",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://mcp-dockmaster.com",
+      "install": {
+        "skill_files": []
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://mcp-dockmaster.com",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcp-get",
+      "name": "mcp-get",
+      "type": "claude_code_skill",
+      "description": "Command line tool for installing and managing MCP servers by **[Michael Latman](https://github.com/michaellatman)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "get",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://mcp-get.com",
+      "install": {
+        "skill_files": []
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://mcp-get.com",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcp-guardian",
+      "name": "mcp-guardian",
+      "type": "claude_code_skill",
+      "description": "GUI application + tools for proxying / managing control of MCP servers by **[EQTY Lab](https://eqtylab.io)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "guardian",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/eqtylab/mcp-guardian",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/eqtylab/mcp-guardian/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/eqtylab/mcp-guardian",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcp-hunt",
+      "name": "MCP Hunt",
+      "type": "claude_code_skill",
+      "description": "Realtime platform for discovering trending MCP servers with momentum tracking, upvoting, and community discussions - like Product Hunt meets Reddit for MCP",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "hunt",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://mcp-hunt.com",
+      "install": {
+        "skill_files": []
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://mcp-hunt.com",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcp-ing",
+      "name": "MCP.ing",
+      "type": "claude_code_skill",
+      "description": "A list of MCP services for discovering MCP servers in the community and providing a convenient search function for MCP services by **[iiiusky](https://github.com/iiiusky)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "mcp.ing",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://mcp.ing/",
+      "install": {
+        "skill_files": []
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://mcp.ing/",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcp-kibela",
+      "name": "kj455/mcp-kibela",
+      "type": "claude_code_skill",
+      "description": "📇 ☁️ Allows AI models to interact with [Kibela](https://kibe.la/)",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "kj455",
+        "kibela"
+      ],
+      "verified": false,
+      "author": {
+        "name": "kj455",
+        "url": "https://github.com/kj455"
+      },
+      "homepage": "https://github.com/kj455/mcp-kibela",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/kj455/mcp-kibela/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/kj455/mcp-kibela",
+        "fetched_at": "2026-05-29T07:50:16.735Z"
+      }
+    },
+    {
+      "id": "mcp-kibela-server",
+      "name": "kiwamizamurai/mcp-kibela-server",
+      "type": "claude_code_skill",
+      "description": "📇 ☁️ Powerfully interact with Kibela API.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "kiwamizamurai",
+        "kibela",
+        "server"
+      ],
+      "verified": false,
+      "author": {
+        "name": "kiwamizamurai",
+        "url": "https://github.com/kiwamizamurai"
+      },
+      "homepage": "https://github.com/kiwamizamurai/mcp-kibela-server",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/kiwamizamurai/mcp-kibela-server/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/kiwamizamurai/mcp-kibela-server",
+        "fetched_at": "2026-05-29T07:50:16.735Z"
+      }
+    },
+    {
+      "id": "mcp-linker",
+      "name": "MCP Linker",
+      "type": "claude_code_skill",
+      "description": "A cross-platform Tauri GUI tool for one-click setup and management of MCP servers, supporting Claude Desktop, Cursor, Windsurf, VS Code, Cline, and Neovim.",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "linker",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/milisp/mcp-linker",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/milisp/mcp-linker/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/milisp/mcp-linker",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcp-manager",
+      "name": "mcp-manager",
+      "type": "claude_code_skill",
+      "description": "Simple Web UI to install and manage MCP servers for Claude Desktop by **[Zue](https://github.com/zueai)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "manager",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/zueai/mcp-manager",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/zueai/mcp-manager/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/zueai/mcp-manager",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcp-natoma-ai",
+      "name": "mcp.natoma.ai",
+      "type": "claude_code_skill",
+      "description": "A Hosted MCP Platform to discover, install, manage and deploy MCP servers by **[Natoma Labs](https://www.natoma.ai)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "mcp.natoma.ai",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://mcp.natoma.ai",
+      "install": {
+        "skill_files": []
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://mcp.natoma.ai",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcp-paperswithcode",
+      "name": "hbg/mcp-paperswithcode",
+      "type": "claude_code_skill",
+      "description": "🐍 ☁️ MCP to search through PapersWithCode API",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"search\"><",
+        "a>search",
+        "data",
+        "extraction",
+        "hbg",
+        "paperswithcode"
+      ],
+      "verified": false,
+      "author": {
+        "name": "hbg",
+        "url": "https://github.com/hbg"
+      },
+      "homepage": "https://github.com/hbg/mcp-paperswithcode",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/hbg/mcp-paperswithcode/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/hbg/mcp-paperswithcode",
+        "fetched_at": "2026-05-29T07:50:16.735Z"
+      }
+    },
+    {
+      "id": "mcp-router",
+      "name": "MCP Router",
+      "type": "claude_code_skill",
+      "description": "Free Windows and macOS app that simplifies MCP management while providing seamless app authentication and powerful log visualization by **[MCP Router](https://github.com/mcp-router/mcp-router)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "router",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://mcp-router.net",
+      "install": {
+        "skill_files": []
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://mcp-router.net",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcp-run",
+      "name": "mcp.run",
+      "type": "claude_code_skill",
+      "description": "A hosted registry and control plane to install & run secure + portable MCP Servers.",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "mcp.run",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://mcp.run",
+      "install": {
+        "skill_files": []
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://mcp.run",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcp-safe-local-python-executor",
+      "name": "maxim-saplin/mcp_safe_local_python_executor",
+      "type": "claude_code_skill",
+      "description": "Safe Python interpreter based on HF Smolagents `LocalPythonExecutor`",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"coding",
+        "agents\"><",
+        "a>coding",
+        "agents",
+        "maxim",
+        "saplin",
+        "safe",
+        "local",
+        "python",
+        "executor"
+      ],
+      "verified": false,
+      "author": {
+        "name": "maxim-saplin",
+        "url": "https://github.com/maxim-saplin"
+      },
+      "homepage": "https://github.com/maxim-saplin/mcp_safe_local_python_executor",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/maxim-saplin/mcp_safe_local_python_executor/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/maxim-saplin/mcp_safe_local_python_executor",
+        "fetched_at": "2026-05-29T07:50:16.733Z"
+      }
+    },
+    {
+      "id": "mcp-server",
+      "name": "finmap-org/mcp-server",
+      "type": "claude_code_skill",
+      "description": "[finmap.org](https://finmap.org/) MCP server provides comprehensive historical data from the US, UK, Russian and Turkish stock exchanges. Access sectors, tickers, company profiles, market cap, volume, value, and trade counts, as well as treemap and histogram visualizations.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"finance",
+        "fintech\"><",
+        "a>finance",
+        "fintech",
+        "finmap",
+        "org",
+        "server"
+      ],
+      "verified": false,
+      "author": {
+        "name": "finmap-org",
+        "url": "https://github.com/finmap-org"
+      },
+      "homepage": "https://github.com/finmap-org/mcp-server",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/finmap-org/mcp-server/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/finmap-org/mcp-server",
+        "fetched_at": "2026-05-29T07:50:16.734Z"
+      }
+    },
+    {
+      "id": "mcp-server-asana",
+      "name": "roychri/mcp-server-asana",
+      "type": "claude_code_skill",
+      "description": "📇 ☁️ This Model Context Protocol server implementation of Asana allows you to talk to Asana API from MCP Client such as Anthropic's Claude Desktop Application, and many more.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "roychri",
+        "server",
+        "asana"
+      ],
+      "verified": false,
+      "author": {
+        "name": "roychri",
+        "url": "https://github.com/roychri"
+      },
+      "homepage": "https://github.com/roychri/mcp-server-asana",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/roychri/mcp-server-asana/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/roychri/mcp-server-asana",
+        "fetched_at": "2026-05-29T07:50:16.736Z"
+      }
+    },
+    {
+      "id": "mcp-server-chatsum",
+      "name": "chatmcp/mcp-server-chatsum",
+      "type": "claude_code_skill",
+      "description": "Query and summarize your chat messages with AI prompts.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"knowledge",
+        "memory\"><",
+        "a>knowledge",
+        "memory",
+        "chatmcp",
+        "server",
+        "chatsum"
+      ],
+      "verified": false,
+      "author": {
+        "name": "chatmcp",
+        "url": "https://github.com/chatmcp"
+      },
+      "homepage": "https://github.com/chatmcp/mcp-server-chatsum",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/chatmcp/mcp-server-chatsum/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/chatmcp/mcp-server-chatsum",
+        "fetched_at": "2026-05-29T07:50:16.734Z"
+      }
+    },
+    {
+      "id": "mcp-servers-rating-and-user-reviews",
+      "name": "MCP Servers Rating and User Reviews",
+      "type": "claude_code_skill",
+      "description": "Website to rate MCP servers, write authentic user reviews, and [search engine for agent & mcp](http://www.deepnlp.org/search/agent)",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "servers",
+        "rating",
+        "and",
+        "user",
+        "reviews",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "http://www.deepnlp.org/store/ai-agent/mcp-server",
+      "install": {
+        "skill_files": []
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "http://www.deepnlp.org/store/ai-agent/mcp-server",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcp-servers-search",
+      "name": "MCP Servers Search",
+      "type": "claude_code_skill",
+      "description": "An MCP server that provides tools for querying and discovering available MCP servers from this list.",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "servers",
+        "search",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/atonomus/mcp-servers-search",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/atonomus/mcp-servers-search/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/atonomus/mcp-servers-search",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcp-shell",
+      "name": "sonirico/mcp-shell",
+      "type": "claude_code_skill",
+      "description": "🏎️ 🏠 🍎 🪟 🐧 Give hands to AI. MCP server to run shell commands securely, auditably, and on demand on isolated environments like docker.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"coding",
+        "agents\"><",
+        "a>coding",
+        "agents",
+        "sonirico",
+        "shell"
+      ],
+      "verified": false,
+      "author": {
+        "name": "sonirico",
+        "url": "https://github.com/sonirico"
+      },
+      "homepage": "https://github.com/sonirico/mcp-shell",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/sonirico/mcp-shell/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/sonirico/mcp-shell",
+        "fetched_at": "2026-05-29T07:50:16.733Z"
+      }
+    },
+    {
+      "id": "mcp-shell-server",
+      "name": "tumf/mcp-shell-server",
+      "type": "claude_code_skill",
+      "description": "A secure shell command execution server implementing the Model Context Protocol (MCP)",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"coding",
+        "agents\"><",
+        "a>coding",
+        "agents",
+        "tumf",
+        "shell",
+        "server"
+      ],
+      "verified": false,
+      "author": {
+        "name": "tumf",
+        "url": "https://github.com/tumf"
+      },
+      "homepage": "https://github.com/tumf/mcp-shell-server",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/tumf/mcp-shell-server/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/tumf/mcp-shell-server",
+        "fetched_at": "2026-05-29T07:50:16.733Z"
+      }
+    },
+    {
+      "id": "mcp-simple-arxiv",
+      "name": "andybrandt/mcp-simple-arxiv",
+      "type": "claude_code_skill",
+      "description": "🐍 ☁️ MCP for LLM to search and read papers from arXiv",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"search\"><",
+        "a>search",
+        "data",
+        "extraction",
+        "andybrandt",
+        "simple",
+        "arxiv"
+      ],
+      "verified": false,
+      "author": {
+        "name": "andybrandt",
+        "url": "https://github.com/andybrandt"
+      },
+      "homepage": "https://github.com/andybrandt/mcp-simple-arxiv",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/andybrandt/mcp-simple-arxiv/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/andybrandt/mcp-simple-arxiv",
+        "fetched_at": "2026-05-29T07:50:16.735Z"
+      }
+    },
+    {
+      "id": "mcp-simple-openai-assistant",
+      "name": "andybrandt/mcp-simple-openai-assistant",
+      "type": "claude_code_skill",
+      "description": "🐍 ☁️ MCP to talk to OpenAI assistants (Claude can use any GPT model as his assitant)",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "andybrandt",
+        "simple",
+        "openai",
+        "assistant"
+      ],
+      "verified": false,
+      "author": {
+        "name": "andybrandt",
+        "url": "https://github.com/andybrandt"
+      },
+      "homepage": "https://github.com/andybrandt/mcp-simple-openai-assistant",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/andybrandt/mcp-simple-openai-assistant/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/andybrandt/mcp-simple-openai-assistant",
+        "fetched_at": "2026-05-29T07:50:16.735Z"
+      }
+    },
+    {
+      "id": "mcp-simple-pubmed",
+      "name": "andybrandt/mcp-simple-pubmed",
+      "type": "claude_code_skill",
+      "description": "🐍 ☁️ MCP to search and read medical / life sciences papers from PubMed.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"search\"><",
+        "a>search",
+        "data",
+        "extraction",
+        "andybrandt",
+        "simple",
+        "pubmed"
+      ],
+      "verified": false,
+      "author": {
+        "name": "andybrandt",
+        "url": "https://github.com/andybrandt"
+      },
+      "homepage": "https://github.com/andybrandt/mcp-simple-pubmed",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/andybrandt/mcp-simple-pubmed/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/andybrandt/mcp-simple-pubmed",
+        "fetched_at": "2026-05-29T07:50:16.735Z"
+      }
+    },
+    {
+      "id": "mcp-sky",
+      "name": "MCP Sky",
+      "type": "claude_code_skill",
+      "description": "Bluesky feed for MCP related news and discussion by **[@brianell.in](https://bsky.app/profile/brianell.in)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "sky",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://bsky.app/profile/brianell.in/feed/mcp",
+      "install": {
+        "skill_files": []
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://bsky.app/profile/brianell.in/feed/mcp",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcp-stockfish",
+      "name": "sonirico/mcp-stockfish",
+      "type": "claude_code_skill",
+      "description": "🏎️ 🏠 🍎 🪟 🐧️ MCP server connecting AI systems to Stockfish chess engine.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"gaming\"><",
+        "a>gaming",
+        "sonirico",
+        "stockfish"
+      ],
+      "verified": false,
+      "author": {
+        "name": "sonirico",
+        "url": "https://github.com/sonirico"
+      },
+      "homepage": "https://github.com/sonirico/mcp-stockfish",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/sonirico/mcp-stockfish/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/sonirico/mcp-stockfish",
+        "fetched_at": "2026-05-29T07:50:16.734Z"
+      }
+    },
+    {
+      "id": "mcp-watch",
+      "name": "MCPWatch",
+      "type": "claude_code_skill",
+      "description": "A comprehensive security scanner for Model Context Protocol (MCP) servers that detects vulnerabilities and security issues in your MCP server implementations.",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "mcpwatch",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/kapilduraphe/mcp-watch",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/kapilduraphe/mcp-watch/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/kapilduraphe/mcp-watch",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcp-x-community",
+      "name": "MCP X Community",
+      "type": "claude_code_skill",
+      "description": "A X community for MCP by **[Xiaoyi](https://x.com/chxy)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "community",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://x.com/i/communities/1861891349609603310",
+      "install": {
+        "skill_files": []
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://x.com/i/communities/1861891349609603310",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcpbundles",
+      "name": "thinkchainai/mcpbundles",
+      "type": "claude_code_skill",
+      "description": "MCP Bundles: Create custom bundles of tools and connect providers with OAuth or API keys. Use one MCP server across thousands of integrations, with programmatic tool calling and MCP UI for managing bundles and credentials.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"aggregators\"><",
+        "a>aggregators",
+        "thinkchainai",
+        "mcpbundles"
+      ],
+      "verified": false,
+      "author": {
+        "name": "thinkchainai",
+        "url": "https://github.com/thinkchainai"
+      },
+      "homepage": "https://github.com/thinkchainai/mcpbundles",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/thinkchainai/mcpbundles/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/thinkchainai/mcpbundles",
+        "fetched_at": "2026-05-29T07:50:16.732Z"
+      }
+    },
+    {
+      "id": "mcphub",
+      "name": "MCPHub",
+      "type": "claude_code_skill",
+      "description": "Website to list high quality MCP servers and reviews by real users. Also provide online chatbot for popular LLM models with MCP server support.",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "mcphub",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://www.mcphub.com",
+      "install": {
+        "skill_files": []
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://www.mcphub.com",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcphub-desktop",
+      "name": "MCPHub",
+      "type": "claude_code_skill",
+      "description": "An Open Source macOS & Windows GUI Desktop app for discovering, installing and managing MCP servers by **[Jeamee](https://github.com/jeamee)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "mcphub",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/Jeamee/MCPHub-Desktop",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/Jeamee/MCPHub-Desktop/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/Jeamee/MCPHub-Desktop",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcprepository-com",
+      "name": "MCPRepository.com",
+      "type": "claude_code_skill",
+      "description": "A repository that indexes and organizes all MCP servers for easy discovery.",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "mcprepository.com",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://mcprepository.com/",
+      "install": {
+        "skill_files": []
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://mcprepository.com/",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcpservers-com",
+      "name": "MCPServers.com",
+      "type": "claude_code_skill",
+      "description": "A growing directory of high-quality MCP servers with clear setup guides for a variety of MCP clients. Built by the team behind the **[Highlight MCP client](https://highlightai.com/)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "mcpservers.com",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://mcpservers.com",
+      "install": {
+        "skill_files": []
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://mcpservers.com",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcptools",
+      "name": "R mcptools",
+      "type": "claude_code_skill",
+      "description": "An R SDK for creating R-based MCP servers and retrieving functionality from third-party MCP servers as R functions.",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "mcptools",
+        "for",
+        "servers"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/posit-dev/mcptools",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/posit-dev/mcptools/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/posit-dev/mcptools",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "mcpverse",
+      "name": "MCPVerse",
+      "type": "claude_code_skill",
+      "description": "A portal for creating & hosting authenticated MCP servers and connecting to them securely.",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "mcpverse",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://mcpverse.dev",
+      "install": {
+        "skill_files": []
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://mcpverse.dev",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "memory",
+      "name": "Memory",
+      "type": "claude_code_skill",
+      "description": "Knowledge graph-based persistent memory system.",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "memory",
+        "reference",
+        "servers"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/modelcontextprotocol/servers/tree/main/src/memory",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/modelcontextprotocol/servers/main/src/memory/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/modelcontextprotocol/servers/tree/main/src/memory",
+        "fetched_at": "2026-05-29T07:50:16.468Z"
+      }
+    },
+    {
+      "id": "metorial",
+      "name": "metorial/metorial",
+      "type": "claude_code_skill",
+      "description": "🎖️ 📇 ☁️ Connect AI agents to 600+ integrations with a single interface - OAuth, scaling, and monitoring included",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "metorial"
+      ],
+      "verified": false,
+      "author": {
+        "name": "metorial",
+        "url": "https://github.com/metorial"
+      },
+      "homepage": "https://github.com/metorial/metorial",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/metorial/metorial/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/metorial/metorial",
+        "fetched_at": "2026-05-29T07:50:16.736Z"
+      }
+    },
+    {
+      "id": "mindsdb",
+      "name": "mindsdb/mindsdb",
+      "type": "claude_code_skill",
+      "description": "Connect and unify data across various platforms and databases with [MindsDB as a single MCP server](https://docs.mindsdb.com/mcp/overview).",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"aggregators\"><",
+        "a>aggregators",
+        "mindsdb"
+      ],
+      "verified": false,
+      "author": {
+        "name": "mindsdb",
+        "url": "https://github.com/mindsdb"
+      },
+      "homepage": "https://github.com/mindsdb/mindsdb",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/mindsdb/mindsdb/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/mindsdb/mindsdb",
+        "fetched_at": "2026-05-29T07:50:16.732Z"
+      }
+    },
+    {
+      "id": "netmind",
+      "name": "NetMind",
+      "type": "claude_code_skill",
+      "description": "Access powerful AI services via simple APIs or MCP servers to supercharge your productivity.",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "netmind",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://www.netmind.ai/AIServices",
+      "install": {
+        "skill_files": []
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://www.netmind.ai/AIServices",
+        "fetched_at": "2026-05-29T07:50:16.470Z"
+      }
+    },
+    {
+      "id": "ntfy-mcp",
+      "name": "teddyzxcv/ntfy-mcp",
+      "type": "claude_code_skill",
+      "description": "The MCP server that keeps you informed by sending the notification on phone using ntfy",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"communication\"><",
+        "a>communication",
+        "teddyzxcv",
+        "ntfy"
+      ],
+      "verified": false,
+      "author": {
+        "name": "teddyzxcv",
+        "url": "https://github.com/teddyzxcv"
+      },
+      "homepage": "https://github.com/teddyzxcv/ntfy-mcp",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/teddyzxcv/ntfy-mcp/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/teddyzxcv/ntfy-mcp",
+        "fetched_at": "2026-05-29T07:50:16.733Z"
+      }
+    },
+    {
+      "id": "omniparser-autogui-mcp",
+      "name": "NON906/omniparser-autogui-mcp",
+      "type": "claude_code_skill",
+      "description": "🐍 Automatic operation of on-screen GUI.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "non906",
+        "omniparser",
+        "autogui"
+      ],
+      "verified": false,
+      "author": {
+        "name": "NON906",
+        "url": "https://github.com/NON906"
+      },
+      "homepage": "https://github.com/NON906/omniparser-autogui-mcp",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/NON906/omniparser-autogui-mcp/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/NON906/omniparser-autogui-mcp",
+        "fetched_at": "2026-05-29T07:50:16.736Z"
+      }
+    },
+    {
+      "id": "onepassword-mcp-server",
+      "name": "dkvdm/onepassword-mcp-server",
+      "type": "claude_code_skill",
+      "description": "An MCP server that enables secure credential retrieval from 1Password to be used by Agentic AI.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"security\"><",
+        "a>security",
+        "dkvdm",
+        "onepassword",
+        "server"
+      ],
+      "verified": false,
+      "author": {
+        "name": "dkvdm",
+        "url": "https://github.com/dkvdm"
+      },
+      "homepage": "https://github.com/dkvdm/onepassword-mcp-server",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/dkvdm/onepassword-mcp-server/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/dkvdm/onepassword-mcp-server",
+        "fetched_at": "2026-05-29T07:50:16.735Z"
+      }
+    },
+    {
       "id": "openai-docs",
       "name": "OpenAI Docs",
       "type": "claude_code_skill",
@@ -68,7 +2744,7 @@
       "install": {
         "skill_files": [
           {
-            "source": "https://raw.githubusercontent.com/openai/skills/main/skills/.curated/openai-docs/SKILL.md",
+            "source": "https://raw.githubusercontent.com/openai/skills/da7611f0ddb078b641407842473e4fa308988516/skills/.curated/openai-docs/SKILL.md",
             "target": "SKILL.md"
           }
         ]
@@ -86,6 +2762,118 @@
           "Install target is a single relative SKILL.md file.",
           "No install command or post-install script is executed by Omakase."
         ]
+      }
+    },
+    {
+      "id": "openapi",
+      "name": "longportapp/openapi",
+      "type": "claude_code_skill",
+      "description": "🐍 ☁️ - LongPort OpenAPI provides real-time stock market data, provides AI access analysis and trading capabilities through MCP.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"finance",
+        "fintech\"><",
+        "a>finance",
+        "fintech",
+        "longportapp",
+        "openapi"
+      ],
+      "verified": false,
+      "author": {
+        "name": "longportapp",
+        "url": "https://github.com/longportapp"
+      },
+      "homepage": "https://github.com/longportapp/openapi",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/longportapp/openapi/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/longportapp/openapi",
+        "fetched_at": "2026-05-29T07:50:16.734Z"
+      }
+    },
+    {
+      "id": "opentelemetry-mcp-server-git",
+      "name": "traceloop/opentelemetry-mcp-server",
+      "type": "claude_code_skill",
+      "description": "🐍🏠 - An MCP server for connecting to any OpenTelemetry backend (Datadog, Grafana, Dynatrace, Traceloop, etc.).",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"finance",
+        "fintech\"><",
+        "a>finance",
+        "fintech",
+        "traceloop",
+        "opentelemetry",
+        "server"
+      ],
+      "verified": false,
+      "author": {
+        "name": "traceloop",
+        "url": "https://github.com/traceloop"
+      },
+      "homepage": "https://github.com/traceloop/opentelemetry-mcp-server.git",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/traceloop/opentelemetry-mcp-server.git/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/traceloop/opentelemetry-mcp-server.git",
+        "fetched_at": "2026-05-29T07:50:16.734Z"
+      }
+    },
+    {
+      "id": "plane-mcp-server",
+      "name": "kelvin6365/plane-mcp-server",
+      "type": "claude_code_skill",
+      "description": "🏎️ 🏠 This MCP Server will help you to manage projects and issues through [Plane's](https://plane.so) API",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "kelvin6365",
+        "plane",
+        "server"
+      ],
+      "verified": false,
+      "author": {
+        "name": "kelvin6365",
+        "url": "https://github.com/kelvin6365"
+      },
+      "homepage": "https://github.com/kelvin6365/plane-mcp-server",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/kelvin6365/plane-mcp-server/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/kelvin6365/plane-mcp-server",
+        "fetched_at": "2026-05-29T07:50:16.735Z"
       }
     },
     {
@@ -111,7 +2899,7 @@
       "install": {
         "skill_files": [
           {
-            "source": "https://raw.githubusercontent.com/openai/skills/main/skills/.curated/playwright/SKILL.md",
+            "source": "https://raw.githubusercontent.com/openai/skills/a5119697b819090e00e5d11ee1d86834d7c1043a/skills/.curated/playwright/SKILL.md",
             "target": "SKILL.md"
           }
         ]
@@ -129,6 +2917,1004 @@
           "Install target is a single relative SKILL.md file.",
           "No install command or post-install script is executed by Omakase."
         ]
+      }
+    },
+    {
+      "id": "playwright-mcp",
+      "name": "microsoft/playwright-mcp",
+      "type": "claude_code_skill",
+      "description": "Official Microsoft Playwright MCP server, enabling LLMs to interact with web pages through structured accessibility snapshots",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"browser",
+        "automation\"><",
+        "a>browser",
+        "automation",
+        "microsoft",
+        "playwright"
+      ],
+      "verified": false,
+      "author": {
+        "name": "microsoft",
+        "url": "https://github.com/microsoft"
+      },
+      "homepage": "https://github.com/microsoft/playwright-mcp",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/microsoft/playwright-mcp/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/microsoft/playwright-mcp",
+        "fetched_at": "2026-05-29T07:50:16.732Z"
+      }
+    },
+    {
+      "id": "programmatic-mcp-prototype",
+      "name": "Programmatic MCP Prototype",
+      "type": "claude_code_skill",
+      "description": "Experimental agent prototype demonstrating programmatic MCP tool composition, progressive tool discovery, state persistence, and skill building through TypeScript code execution by **[Adam Jones](https://github.com/domdomegg)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "programmatic",
+        "prototype",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/domdomegg/programmatic-mcp-prototype",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/domdomegg/programmatic-mcp-prototype/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/domdomegg/programmatic-mcp-prototype",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "pyats-mcp",
+      "name": "automateyournetwork/pyATS_MCP",
+      "type": "claude_code_skill",
+      "description": "Cisco pyATS server enabling structured, model-driven interaction with network devices.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"coding",
+        "agents\"><",
+        "a>coding",
+        "agents",
+        "automateyournetwork",
+        "pyats"
+      ],
+      "verified": false,
+      "author": {
+        "name": "automateyournetwork",
+        "url": "https://github.com/automateyournetwork"
+      },
+      "homepage": "https://github.com/automateyournetwork/pyATS_MCP",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/automateyournetwork/pyATS_MCP/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/automateyournetwork/pyATS_MCP",
+        "fetched_at": "2026-05-29T07:50:16.733Z"
+      }
+    },
+    {
+      "id": "qgis-mcp",
+      "name": "QGIS MCP",
+      "type": "claude_code_skill",
+      "description": "connects QGIS Desktop to Claude AI through the MCP. This integration enables prompt-assisted project creation, layer loading, code execution, and more.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"location",
+        "services\"><",
+        "a>location",
+        "services",
+        "qgis"
+      ],
+      "verified": false,
+      "author": {
+        "name": "jjsantos01",
+        "url": "https://github.com/jjsantos01"
+      },
+      "homepage": "https://github.com/jjsantos01/qgis_mcp",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/jjsantos01/qgis_mcp/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/jjsantos01/qgis_mcp",
+        "fetched_at": "2026-05-29T07:50:16.734Z"
+      }
+    },
+    {
+      "id": "r-mcp",
+      "name": "r/mcp",
+      "type": "claude_code_skill",
+      "description": "A Reddit community dedicated to MCP by **[Frank Fiegel](https://github.com/punkpeye)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://www.reddit.com/r/mcp",
+      "install": {
+        "skill_files": []
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://www.reddit.com/r/mcp",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "rae-mcp",
+      "name": "rae-api-com/rae-mcp",
+      "type": "claude_code_skill",
+      "description": "🏎️ ☁️ 🍎 🪟 🐧 MCP Server to connect your preferred model with https://rae-api.com, Roya Academy of Spanish Dictionary",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "rae",
+        "api",
+        "com"
+      ],
+      "verified": false,
+      "author": {
+        "name": "rae-api-com",
+        "url": "https://github.com/rae-api-com"
+      },
+      "homepage": "https://github.com/rae-api-com/rae-mcp",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/rae-api-com/rae-mcp/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/rae-api-com/rae-mcp",
+        "fetched_at": "2026-05-29T07:50:16.736Z"
+      }
+    },
+    {
+      "id": "screenpipe",
+      "name": "mediar-ai/screenpipe",
+      "type": "claude_code_skill",
+      "description": "🎖️ 🦀 🏠 🍎 Local-first system capturing screen/audio with timestamped indexing, SQL/embedding storage, semantic search, LLM-powered history analysis, and event-triggered actions - enables building context-aware AI agents through a NextJS plugin ecosystem.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "mediar",
+        "ai",
+        "screenpipe"
+      ],
+      "verified": false,
+      "author": {
+        "name": "mediar-ai",
+        "url": "https://github.com/mediar-ai"
+      },
+      "homepage": "https://github.com/mediar-ai/screenpipe",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/mediar-ai/screenpipe/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/mediar-ai/screenpipe",
+        "fetched_at": "2026-05-29T07:50:16.736Z"
+      }
+    },
+    {
+      "id": "search-console-mcp",
+      "name": "saurabhsharma2u/search-console-mcp",
+      "type": "claude_code_skill",
+      "description": "An MCP server to interact with Google Search Console and Bing Webmasters.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"customer",
+        "data",
+        "platforms\"><",
+        "a>customer",
+        "platforms",
+        "saurabhsharma2u",
+        "search",
+        "console"
+      ],
+      "verified": false,
+      "author": {
+        "name": "saurabhsharma2u",
+        "url": "https://github.com/saurabhsharma2u"
+      },
+      "homepage": "https://github.com/saurabhsharma2u/search-console-mcp",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/saurabhsharma2u/search-console-mcp/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/saurabhsharma2u/search-console-mcp",
+        "fetched_at": "2026-05-29T07:50:16.733Z"
+      }
+    },
+    {
+      "id": "search-mcp-server",
+      "name": "Search MCP Server",
+      "type": "claude_code_skill",
+      "description": "Recommends the most relevant MCP servers based on the client's query by searching this README file.",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "search",
+        "server",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/krzysztofkucmierz/search-mcp-server",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/krzysztofkucmierz/search-mcp-server/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/krzysztofkucmierz/search-mcp-server",
+        "fetched_at": "2026-05-29T07:50:16.469Z"
+      }
+    },
+    {
+      "id": "secure-mcp-gateway",
+      "name": "Webrix MCP Gateway",
+      "type": "claude_code_skill",
+      "description": "Enterprise MCP gateway with SSO, RBAC, audit trails, and token vaults for secure, centralized AI agent access control. Deploy via Helm charts on-premise or in your cloud. [webrix.ai](https://webrix.ai)",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "webrix",
+        "gateway",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/webrix-ai/secure-mcp-gateway",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/webrix-ai/secure-mcp-gateway/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/webrix-ai/secure-mcp-gateway",
+        "fetched_at": "2026-05-29T07:50:16.470Z"
+      }
+    },
+    {
+      "id": "sequentialthinking",
+      "name": "Sequential Thinking",
+      "type": "claude_code_skill",
+      "description": "Dynamic and reflective problem-solving through thought sequences.",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "sequential",
+        "thinking",
+        "reference",
+        "servers"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/modelcontextprotocol/servers/main/src/sequentialthinking/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking",
+        "fetched_at": "2026-05-29T07:50:16.468Z"
+      }
+    },
+    {
+      "id": "servers-archived",
+      "name": "AWS KB Retrieval",
+      "type": "claude_code_skill",
+      "description": "Retrieval from AWS Knowledge Base using Bedrock Agent Runtime.",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "aws",
+        "kb",
+        "retrieval",
+        "archived"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/modelcontextprotocol/servers-archived",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/modelcontextprotocol/servers-archived/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/modelcontextprotocol/servers-archived",
+        "fetched_at": "2026-05-29T07:50:16.468Z"
+      }
+    },
+    {
+      "id": "smithery",
+      "name": "Smithery",
+      "type": "claude_code_skill",
+      "description": "A registry of MCP servers to find the right tools for your LLM agents by **[Henry Mao](https://github.com/calclavia)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "smithery",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://smithery.ai/",
+      "install": {
+        "skill_files": []
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://smithery.ai/",
+        "fetched_at": "2026-05-29T07:50:16.470Z"
+      }
+    },
+    {
+      "id": "spotify-mcp-server",
+      "name": "marcelmarais/Spotify",
+      "type": "claude_code_skill",
+      "description": "📇 🏠 Control Spotify playback and manage playlists.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "marcelmarais",
+        "spotify"
+      ],
+      "verified": false,
+      "author": {
+        "name": "marcelmarais",
+        "url": "https://github.com/marcelmarais"
+      },
+      "homepage": "https://github.com/marcelmarais/spotify-mcp-server",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/marcelmarais/spotify-mcp-server/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/marcelmarais/spotify-mcp-server",
+        "fetched_at": "2026-05-29T07:50:16.735Z"
+      }
+    },
+    {
+      "id": "supabase",
+      "name": "joshuarileydev/supabase-mcp-server",
+      "type": "claude_code_skill",
+      "description": "Supabase MCP Server for managing and creating projects and organisations in Supabase",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"databases\"><",
+        "a>databases",
+        "joshuarileydev",
+        "supabase",
+        "server"
+      ],
+      "verified": false,
+      "author": {
+        "name": "joshuarileydev",
+        "url": "https://github.com/joshuarileydev"
+      },
+      "homepage": "https://github.com/joshuarileydev/supabase",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/joshuarileydev/supabase/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/joshuarileydev/supabase",
+        "fetched_at": "2026-05-29T07:50:16.733Z"
+      }
+    },
+    {
+      "id": "supabase-mcp-server",
+      "name": "alexanderzuev/supabase-mcp-server",
+      "type": "claude_code_skill",
+      "description": "Supabase MCP Server with support for SQL query execution and database exploration tools",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"databases\"><",
+        "a>databases",
+        "alexanderzuev",
+        "supabase",
+        "server"
+      ],
+      "verified": false,
+      "author": {
+        "name": "alexander-zuev",
+        "url": "https://github.com/alexander-zuev"
+      },
+      "homepage": "https://github.com/alexander-zuev/supabase-mcp-server",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/alexander-zuev/supabase-mcp-server/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/alexander-zuev/supabase-mcp-server",
+        "fetched_at": "2026-05-29T07:50:16.733Z"
+      }
+    },
+    {
+      "id": "terraform-mcp-server",
+      "name": "hashicorp/terraform-mcp-server",
+      "type": "claude_code_skill",
+      "description": "🎖️🏎️☁️ - The official Terraform MCP Server seamlessly integrates with the Terraform ecosystem, enabling provider discovery, module analysis, and direct Registry API integration for advanced Infrastructure as Code workflows.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "☁️",
+        "<a",
+        "name=\"cloud",
+        "platforms\"><",
+        "a>cloud",
+        "platforms",
+        "hashicorp",
+        "terraform",
+        "server"
+      ],
+      "verified": false,
+      "author": {
+        "name": "hashicorp",
+        "url": "https://github.com/hashicorp"
+      },
+      "homepage": "https://github.com/hashicorp/terraform-mcp-server",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/hashicorp/terraform-mcp-server/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/hashicorp/terraform-mcp-server",
+        "fetched_at": "2026-05-29T07:50:16.732Z"
+      }
+    },
+    {
+      "id": "tfmcp",
+      "name": "nwiizo/tfmcp",
+      "type": "claude_code_skill",
+      "description": "🦀 🏠 - A Terraform MCP server allowing AI assistants to manage and operate Terraform environments, enabling reading configurations, analyzing plans, applying configurations, and managing Terraform state.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "☁️",
+        "<a",
+        "name=\"cloud",
+        "platforms\"><",
+        "a>cloud",
+        "platforms",
+        "nwiizo",
+        "tfmcp"
+      ],
+      "verified": false,
+      "author": {
+        "name": "nwiizo",
+        "url": "https://github.com/nwiizo"
+      },
+      "homepage": "https://github.com/nwiizo/tfmcp",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/nwiizo/tfmcp/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/nwiizo/tfmcp",
+        "fetched_at": "2026-05-29T07:50:16.733Z"
+      }
+    },
+    {
+      "id": "time",
+      "name": "Time",
+      "type": "claude_code_skill",
+      "description": "Time and timezone conversion capabilities.",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "time",
+        "reference",
+        "servers"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/modelcontextprotocol/servers/tree/main/src/time",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/modelcontextprotocol/servers/main/src/time/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/modelcontextprotocol/servers/tree/main/src/time",
+        "fetched_at": "2026-05-29T07:50:16.468Z"
+      }
+    },
+    {
+      "id": "toolbase",
+      "name": "Toolbase",
+      "type": "claude_code_skill",
+      "description": "Desktop application that manages tools and MCP servers with just a few clicks - no coding required by **[gching](https://github.com/gching)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "toolbase",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://gettoolbase.ai",
+      "install": {
+        "skill_files": []
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://gettoolbase.ai",
+        "fetched_at": "2026-05-29T07:50:16.470Z"
+      }
+    },
+    {
+      "id": "toolhive",
+      "name": "ToolHive",
+      "type": "claude_code_skill",
+      "description": "A lightweight utility designed to simplify the deployment and management of MCP servers, ensuring ease of use, consistency, and security through containerization by **[StacklokLabs](https://github.com/StacklokLabs)**",
+      "tags": [
+        "mcp",
+        "mcp-servers-repo",
+        "toolhive",
+        "resources"
+      ],
+      "verified": true,
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/modelcontextprotocol"
+      },
+      "homepage": "https://github.com/StacklokLabs/toolhive",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/StacklokLabs/toolhive/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "mcp-servers-repo",
+        "origin": "https://github.com/StacklokLabs/toolhive",
+        "fetched_at": "2026-05-29T07:50:16.470Z"
+      }
+    },
+    {
+      "id": "tsgram-mcp",
+      "name": "areweai/tsgram-mcp",
+      "type": "claude_code_skill",
+      "description": "TSgram: Telegram + Claude with local workspace access on your phone in typescript. Read, write, and vibe code on the go!",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"communication\"><",
+        "a>communication",
+        "areweai",
+        "tsgram"
+      ],
+      "verified": false,
+      "author": {
+        "name": "areweai",
+        "url": "https://github.com/areweai"
+      },
+      "homepage": "https://github.com/areweai/tsgram-mcp",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/areweai/tsgram-mcp/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/areweai/tsgram-mcp",
+        "fetched_at": "2026-05-29T07:50:16.733Z"
+      }
+    },
+    {
+      "id": "urlbox-mcp-server",
+      "name": "urlbox/urlbox-mcp-server",
+      "type": "claude_code_skill",
+      "description": "📇 🏠 A reliable MCP server for generating and managing screenshots, PDFs, and videos, performing AI-powered screenshot analysis, and extracting web content (Markdown, metadata, and HTML) via the [Urlbox](https://urlbox.com) API.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"search\"><",
+        "a>search",
+        "data",
+        "extraction",
+        "urlbox",
+        "server"
+      ],
+      "verified": false,
+      "author": {
+        "name": "urlbox",
+        "url": "https://github.com/urlbox"
+      },
+      "homepage": "https://github.com/urlbox/urlbox-mcp-server",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/urlbox/urlbox-mcp-server/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/urlbox/urlbox-mcp-server",
+        "fetched_at": "2026-05-29T07:50:16.735Z"
+      }
+    },
+    {
+      "id": "volatility-mcp",
+      "name": "Gaffx/volatility-mcp",
+      "type": "claude_code_skill",
+      "description": "MCP server for Volatility 3.x, allowing you to perform memory forensics analysis with AI assistant. Experience memory forensics without barriers as plugins like pslist and netscan become accessible through clean REST APIs and LLMs.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"security\"><",
+        "a>security",
+        "gaffx",
+        "volatility"
+      ],
+      "verified": false,
+      "author": {
+        "name": "Gaffx",
+        "url": "https://github.com/Gaffx"
+      },
+      "homepage": "https://github.com/Gaffx/volatility-mcp",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/Gaffx/volatility-mcp/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/Gaffx/volatility-mcp",
+        "fetched_at": "2026-05-29T07:50:16.735Z"
+      }
+    },
+    {
+      "id": "vrchat-mcp",
+      "name": "sawa-zen/vrchat-mcp",
+      "type": "claude_code_skill",
+      "description": "📇 🏠 This is an MCP server for interacting with the VRChat API. You can retrieve information about friends, worlds, avatars, and more in VRChat.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"communication\"><",
+        "a>communication",
+        "sawa",
+        "zen",
+        "vrchat"
+      ],
+      "verified": false,
+      "author": {
+        "name": "sawa-zen",
+        "url": "https://github.com/sawa-zen"
+      },
+      "homepage": "https://github.com/sawa-zen/vrchat-mcp",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/sawa-zen/vrchat-mcp/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/sawa-zen/vrchat-mcp",
+        "fetched_at": "2026-05-29T07:50:16.733Z"
+      }
+    },
+    {
+      "id": "wanaku",
+      "name": "wanaku-ai/wanaku",
+      "type": "claude_code_skill",
+      "description": "☁️ 🏠 The Wanaku MCP Router is a SSE-based MCP server that provides an extensible routing engine that allows integrating your enterprise systems with AI agents.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "wanaku",
+        "ai"
+      ],
+      "verified": false,
+      "author": {
+        "name": "wanaku-ai",
+        "url": "https://github.com/wanaku-ai"
+      },
+      "homepage": "https://github.com/wanaku-ai/wanaku",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/wanaku-ai/wanaku/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/wanaku-ai/wanaku",
+        "fetched_at": "2026-05-29T07:50:16.736Z"
+      }
+    },
+    {
+      "id": "wemo-mcp-server",
+      "name": "apiarya/wemo-mcp-server",
+      "type": "claude_code_skill",
+      "description": "[![wemo-mcp-server MCP server](https://glama.ai/mcp/servers/@apiarya/wemo-mcp-server/badges/score.svg)](https://glama.ai/mcp/servers/@apiarya/wemo-mcp-server) 🐍 🏠 🍎 🪟 🐧 - Control WeMo smart home devices via AI assistants using natural language. Built on pywemo for 100% local control — no cloud dependency. Supports dimmer brightness, device rename, HomeKit codes, and multi-phase discovery.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"home",
+        "automation\"><",
+        "a>home",
+        "automation",
+        "apiarya",
+        "wemo",
+        "server"
+      ],
+      "verified": false,
+      "author": {
+        "name": "apiarya",
+        "url": "https://github.com/apiarya"
+      },
+      "homepage": "https://github.com/apiarya/wemo-mcp-server",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/apiarya/wemo-mcp-server/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/apiarya/wemo-mcp-server",
+        "fetched_at": "2026-05-29T07:50:16.734Z"
+      }
+    },
+    {
+      "id": "ws-mcp",
+      "name": "ws-mcp",
+      "type": "claude_code_skill",
+      "description": "Wrap MCP servers with a WebSocket (for use with [kitbitz](https://github.com/nick1udwig/kibitz))",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "ws"
+      ],
+      "verified": false,
+      "author": {
+        "name": "nick1udwig",
+        "url": "https://github.com/nick1udwig"
+      },
+      "homepage": "https://github.com/nick1udwig/ws-mcp",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/nick1udwig/ws-mcp/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/nick1udwig/ws-mcp",
+        "fetched_at": "2026-05-29T07:50:16.736Z"
+      }
+    },
+    {
+      "id": "yuque-mcp-server",
+      "name": "HenryHaoson/Yuque-MCP-Server",
+      "type": "claude_code_skill",
+      "description": "📇 ☁️ A Model-Context-Protocol (MCP) server for integrating with Yuque API, allowing AI models to manage documents, interact with knowledge bases, search content, and access analytics data from the Yuque platform.",
+      "tags": [
+        "mcp",
+        "awesome-mcp",
+        "<a",
+        "name=\"other",
+        "tools",
+        "and",
+        "integrations\"><",
+        "a>other",
+        "integrations",
+        "henryhaoson",
+        "yuque",
+        "server"
+      ],
+      "verified": false,
+      "author": {
+        "name": "HenryHaoson",
+        "url": "https://github.com/HenryHaoson"
+      },
+      "homepage": "https://github.com/HenryHaoson/Yuque-MCP-Server",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/HenryHaoson/Yuque-MCP-Server/main/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "awesome-mcp",
+        "origin": "https://github.com/HenryHaoson/Yuque-MCP-Server",
+        "fetched_at": "2026-05-29T07:50:16.735Z"
       }
     }
   ]
