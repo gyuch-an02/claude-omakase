@@ -53,3 +53,7 @@ export function bundledCatalogPath(): string {
   // Built by scripts/build-catalog.mjs into the package root.
   return new URL("../catalog.json", import.meta.url).pathname;
 }
+
+export function packageTemplatesDir(): string {
+  return new URL("../templates", import.meta.url).pathname;
+}
