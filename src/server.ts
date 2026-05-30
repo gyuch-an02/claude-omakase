@@ -32,45 +32,45 @@ interface Tool {
   handle: (args: unknown) => Promise<unknown>;
 }
 
-const tools: Tool[] = [
-  {
-    name: "find_skill",
-    description: findSkill.findSkillDescription,
-    inputSchema: findSkill.findSkillInput,
-    handle: (args) => findSkill.handle(findSkill.findSkillInput.parse(args)),
-  },
-  {
-    name: "list_installed_skills",
-    description: listInstalled.listInstalledDescription,
-    inputSchema: listInstalled.listInstalledInput,
-    handle: () => listInstalled.handle(),
-  },
-  {
-    name: "install_skill",
-    description: installSkill.installSkillDescription,
-    inputSchema: installSkill.installSkillInput,
-    handle: (args) => installSkill.handle(installSkill.installSkillInput.parse(args)),
-  },
-  {
-    name: "recommend_skills",
-    description: recommend.recommendDescription,
-    inputSchema: recommend.recommendInput,
-    handle: (args) => recommend.handle(recommend.recommendInput.parse(args)),
-  },
-  {
-    name: "propose_new_skill",
-    description: proposeNewSkill.proposeNewSkillDescription,
-    inputSchema: proposeNewSkill.proposeNewSkillInput,
-    handle: (args) =>
-      proposeNewSkill.handle(proposeNewSkill.proposeNewSkillInput.parse(args)),
-  },
-];
-
 async function main(): Promise<void> {
   const server = new Server(
     { name: "claude-omakase", version: "0.1.0" },
     { capabilities: { tools: {} } }
   );
+
+  const tools: Tool[] = [
+    {
+      name: "find_skill",
+      description: findSkill.findSkillDescription,
+      inputSchema: findSkill.findSkillInput,
+      handle: (args) => findSkill.handle(findSkill.findSkillInput.parse(args)),
+    },
+    {
+      name: "list_installed_skills",
+      description: listInstalled.listInstalledDescription,
+      inputSchema: listInstalled.listInstalledInput,
+      handle: () => listInstalled.handle(),
+    },
+    {
+      name: "install_skill",
+      description: installSkill.installSkillDescription,
+      inputSchema: installSkill.installSkillInput,
+      handle: (args) => installSkill.handle(installSkill.installSkillInput.parse(args)),
+    },
+    {
+      name: "recommend_skills",
+      description: recommend.recommendDescription,
+      inputSchema: recommend.recommendInput,
+      handle: (args) => recommend.handle(recommend.recommendInput.parse(args)),
+    },
+    {
+      name: "propose_new_skill",
+      description: proposeNewSkill.proposeNewSkillDescription,
+      inputSchema: proposeNewSkill.proposeNewSkillInput,
+      handle: (args) =>
+        proposeNewSkill.handle(proposeNewSkill.proposeNewSkillInput.parse(args), server),
+    },
+  ];
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: tools.map((t) => ({
