@@ -2,6 +2,8 @@ import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { z } from "zod";
+import type { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import type { CreateMessageRequestParamsBase } from "@modelcontextprotocol/sdk/types.js";
 import { claudeCodeSkillsDir, packageTemplatesDir } from "../paths.js";
 
 export const proposeNewSkillInput = z.object({
@@ -26,7 +28,7 @@ export const proposeNewSkillInput = z.object({
     .string()
     .optional()
     .describe(
-      "Optional SKILL.md body. If omitted, a type-specific scaffold is generated from task_description."
+      "Optional SKILL.md body. If provided, written as-is (skips both sampling and template)."
     ),
 });
 
@@ -37,9 +39,13 @@ When to call:
   - The user described a workflow novel enough that it deserves its own skill.
 
 Behavior:
-  - Detects task type (python-cli / node-script / shell-automation) from task_description.
-  - Writes a type-specific scaffold to ~/.claude/skills/<slug>/SKILL.md.
-  - The draft is intentionally lightweight — Claude (you) is expected to iterate with the user, edit the file in place, and ultimately encourage them to PR it back to the community.
+  - Uses MCP sampling to ask the LLM to write a tailored SKILL.md from scratch.
+  - Falls back to a type-specific scaffold (python-cli / node-script / shell-automation)
+    only if draft_body is explicitly provided.
+  - Writes the result to ~/.claude/skills/<slug>/SKILL.md.
+  - The draft is intentionally lightweight — Claude (you) is expected to iterate
+    with the user, edit the file in place, and ultimately encourage them to PR it
+    back to the community.
 
 Suggested follow-up after calling:
   1. Tell the user where the file landed.
@@ -48,7 +54,10 @@ Suggested follow-up after calling:
 
 type TaskType = "python-cli" | "node-script" | "shell-automation";
 
-export async function handle(args: z.infer<typeof proposeNewSkillInput>) {
+export async function handle(
+  args: z.infer<typeof proposeNewSkillInput>,
+  server: Server
+) {
   const slug = args.slug ?? slugify(args.task_description);
   const dir = join(claudeCodeSkillsDir(), slug);
   mkdirSync(dir, { recursive: true });
@@ -57,12 +66,12 @@ export async function handle(args: z.infer<typeof proposeNewSkillInput>) {
     ? args.triggers
     : derive_triggers(args.task_description);
 
-  const body = args.draft_body ?? renderTemplate({
-    slug,
-    taskDescription: args.task_description,
-    triggers,
-    type: detectType(args.task_description),
-  });
+  let body: string;
+  if (args.draft_body) {
+    body = args.draft_body;
+  } else {
+    body = await generateWithSampling(server, { slug, taskDescription: args.task_description, triggers });
+  }
 
   const path = join(dir, "SKILL.md");
   await writeFile(path, body, "utf8");
@@ -77,6 +86,79 @@ export async function handle(args: z.infer<typeof proposeNewSkillInput>) {
       "When happy, copy SKILL.md content into a PR under handpicked/ in the claude-omakase repo.",
     ],
   };
+}
+
+async function generateWithSampling(
+  server: Server,
+  params: { slug: string; taskDescription: string; triggers: string[] }
+): Promise<string> {
+  const { slug, taskDescription, triggers } = params;
+  const triggersYaml = triggers.map((t) => `  - "${t}"`).join("\n");
+
+  const prompt = `You are helping write a SKILL.md file for Claude Code.
+
+A SKILL.md is a markdown file that gives Claude a persistent set of instructions for a specific recurring task. It has YAML frontmatter (name, description, triggers) followed by markdown sections.
+
+Write a complete, ready-to-use SKILL.md for the following task:
+
+Task description: ${taskDescription}
+
+Requirements:
+- slug (name field): ${slug}
+- triggers (phrases that activate this skill):
+${triggersYaml}
+- Include sections: "What this skill does", "When to activate", "Steps", "Examples"
+- Steps should be concrete and actionable
+- Examples should show realistic user messages and Claude responses
+- Keep it focused and practical — no fluff
+
+Output ONLY the SKILL.md content, starting with the YAML frontmatter (---).`;
+
+  const samplingParams: CreateMessageRequestParamsBase = {
+    messages: [
+      {
+        role: "user",
+        content: { type: "text", text: prompt },
+      },
+    ],
+    maxTokens: 2048,
+    systemPrompt:
+      "You are a technical writer specializing in Claude Code skill files. Output only valid SKILL.md content with no preamble or commentary.",
+  };
+
+  let result: Awaited<ReturnType<typeof server.createMessage>>;
+  try {
+    result = await server.createMessage(samplingParams);
+  } catch (e) {
+    throw new Error(
+      `sampling/createMessage failed: ${(e as Error).message}. ` +
+        "Ensure your MCP client supports sampling (Claude Code supports it natively). " +
+        "Alternatively, pass draft_body to skip sampling."
+    );
+  }
+
+  const content = result.content;
+  const text =
+    typeof content === "string"
+      ? content
+      : Array.isArray(content)
+        ? content
+            .filter((b): b is { type: "text"; text: string } => b.type === "text")
+            .map((b) => b.text)
+            .join("")
+        : "text" in content && typeof (content as { text?: unknown }).text === "string"
+          ? (content as { text: string }).text
+          : null;
+
+  if (!text) {
+    throw new Error(
+      `sampling returned unexpected content shape: ${JSON.stringify(content)}`
+    );
+  }
+
+  // Strip any leading prose before the frontmatter fence.
+  const fenceIdx = text.indexOf("---");
+  return fenceIdx > 0 ? text.slice(fenceIdx) : text;
 }
 
 function detectType(description: string): TaskType {
@@ -135,3 +217,6 @@ function derive_triggers(s: string): string[] {
     ),
   ];
 }
+
+// renderTemplate kept for potential direct use (e.g. tests, draft_body generation).
+export { renderTemplate, detectType };
