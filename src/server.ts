@@ -23,6 +23,7 @@ import * as findSkill from "./tools/find-skill.js";
 import * as listInstalled from "./tools/list-installed.js";
 import * as installSkill from "./tools/install-skill.js";
 import * as recommend from "./tools/recommend.js";
+import * as setProfile from "./tools/set-profile.js";
 import * as proposeNewSkill from "./tools/propose-new-skill.js";
 
 interface Tool {
@@ -62,6 +63,12 @@ async function main(): Promise<void> {
       description: recommend.recommendDescription,
       inputSchema: recommend.recommendInput,
       handle: (args) => recommend.handle(recommend.recommendInput.parse(args)),
+    },
+    {
+      name: "set_profile",
+      description: setProfile.setProfileDescription,
+      inputSchema: setProfile.setProfileInput,
+      handle: (args) => setProfile.handle(setProfile.setProfileInput.parse(args)),
     },
     {
       name: "propose_new_skill",
