@@ -1,0 +1,19 @@
+{
+  "id": "understand-anything",
+  "name": "Understand Anything",
+  "type": "claude_code_skill",
+  "description": "Deep explanation of any code, concept, system, or error — builds genuine understanding rather than just fixing the surface. Leads with WHY, uses analogies, goes one level deeper than you asked.",
+  "tags": ["starter-pack", "learning", "explanation", "debugging", "productivity"],
+  "verified": true,
+  "author": { "name": "claude-omakase", "url": "https://github.com/gyuch-an02/claude-omakase" },
+  "homepage": "https://github.com/gyuch-an02/claude-omakase/tree/main/skills/understand-anything",
+  "install": {
+    "skill_files": [
+      {
+        "source": "https://raw.githubusercontent.com/gyuch-an02/claude-omakase/main/skills/understand-anything/SKILL.md",
+        "target": "SKILL.md"
+      }
+    ]
+  },
+  "source": { "adapter": "handpicked" }
+}

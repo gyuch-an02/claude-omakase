@@ -1,0 +1,19 @@
+{
+  "id": "write-a-skill",
+  "name": "Write a Skill",
+  "type": "claude_code_skill",
+  "description": "Turn any recurring workflow into a reusable Claude Code skill. Claude interviews you about the task, drafts a SKILL.md, writes the file, and helps you test and iterate.",
+  "tags": ["starter-pack", "skills", "automation", "productivity", "meta"],
+  "verified": true,
+  "author": { "name": "claude-omakase", "url": "https://github.com/gyuch-an02/claude-omakase" },
+  "homepage": "https://github.com/gyuch-an02/claude-omakase/tree/main/skills/write-a-skill",
+  "install": {
+    "skill_files": [
+      {
+        "source": "https://raw.githubusercontent.com/gyuch-an02/claude-omakase/main/skills/write-a-skill/SKILL.md",
+        "target": "SKILL.md"
+      }
+    ]
+  },
+  "source": { "adapter": "handpicked" }
+}

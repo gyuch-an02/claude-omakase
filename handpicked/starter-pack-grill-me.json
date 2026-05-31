@@ -1,0 +1,19 @@
+{
+  "id": "grill-me",
+  "name": "Grill Me",
+  "type": "claude_code_skill",
+  "description": "Stress-test any plan or design by getting interviewed relentlessly. Claude asks one hard question at a time, recommends answers, and resolves decision tree branches until you reach shared understanding.",
+  "tags": ["starter-pack", "planning", "design", "decision-making", "productivity"],
+  "verified": true,
+  "author": { "name": "claude-omakase", "url": "https://github.com/gyuch-an02/claude-omakase" },
+  "homepage": "https://github.com/gyuch-an02/claude-omakase/tree/main/skills/grill-me",
+  "install": {
+    "skill_files": [
+      {
+        "source": "https://raw.githubusercontent.com/gyuch-an02/claude-omakase/main/skills/grill-me/SKILL.md",
+        "target": "SKILL.md"
+      }
+    ]
+  },
+  "source": { "adapter": "handpicked" }
+}
