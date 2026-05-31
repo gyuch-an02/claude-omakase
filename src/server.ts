@@ -22,6 +22,9 @@ import { z } from "zod";
 import * as findSkill from "./tools/find-skill.js";
 import * as listInstalled from "./tools/list-installed.js";
 import * as installSkill from "./tools/install-skill.js";
+import * as uninstallSkill from "./tools/uninstall-skill.js";
+import * as updateSkill from "./tools/update-skill.js";
+import * as doctor from "./tools/doctor.js";
 import * as recommend from "./tools/recommend.js";
 import * as setProfile from "./tools/set-profile.js";
 import * as proposeNewSkill from "./tools/propose-new-skill.js";
@@ -63,6 +66,24 @@ async function main(): Promise<void> {
       description: recommend.recommendDescription,
       inputSchema: recommend.recommendInput,
       handle: (args) => recommend.handle(recommend.recommendInput.parse(args)),
+    },
+    {
+      name: "uninstall_skill",
+      description: uninstallSkill.uninstallSkillDescription,
+      inputSchema: uninstallSkill.uninstallSkillInput,
+      handle: (args) => uninstallSkill.handle(uninstallSkill.uninstallSkillInput.parse(args)),
+    },
+    {
+      name: "update_skill",
+      description: updateSkill.updateSkillDescription,
+      inputSchema: updateSkill.updateSkillInput,
+      handle: (args) => updateSkill.handle(updateSkill.updateSkillInput.parse(args)),
+    },
+    {
+      name: "doctor_skills",
+      description: doctor.doctorDescription,
+      inputSchema: doctor.doctorInput,
+      handle: () => doctor.handle(),
     },
     {
       name: "set_profile",
