@@ -1,110 +1,120 @@
 # Claude Omakase
 
-> *"Skill 설치는 어려워. 우리가 골라줄게."*
-> The chef picks. You approve.
+> *The chef picks. You approve.*
 
-**Claude Omakase** is an MCP server plus a bundled `omakase-chef` skill that turns Claude into a proactive curator of Claude skills. You register it once with your MCP host. After that, when Claude notices you doing similar manual work three times in a row, *Claude itself* offers to install the right skill into `~/.claude/skills/`. You say yes or no. The chef does the rest.
+**Claude Omakase** is an MCP server that turns Claude into a proactive skill curator. Register it once, and Claude will notice when you keep doing the same thing manually — then offer to install the right skill for you. No searching, no reading docs. Just say yes or no.
 
 ```
-┌───────────────────────────────────────────────────────────┐
-│                       Claude Code                         │
-│                                                           │
-│   ┌──────────────────┐         ┌──────────────────────┐   │
-│   │ omakase-chef     │  reads  │  claude-omakase MCP  │   │
-│   │ SKILL.md         │ ───────▶│  server (stdio)      │   │
-│   │ (behavior)       │         │  (registry+install)  │   │
-│   └──────────────────┘         └──────────┬───────────┘   │
-└─────────────────────────────────────────│─────────────────┘
-                                          │ build-time
-                                          ▼
-            ┌────────────────────────────────────────────┐
-            │ Federated catalog                          │
-            │  - handpicked verified seeds               │
-            │  - skillsmp adapter                        │
-            └────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                      Claude Code                         │
+│                                                          │
+│  ┌─────────────────┐         ┌──────────────────────┐   │
+│  │ omakase-chef    │  calls  │ claude-omakase MCP   │   │
+│  │ SKILL.md        │ ──────▶ │ server (stdio)       │   │
+│  │ (the behavior)  │         │ (registry + install) │   │
+│  └─────────────────┘         └──────────┬───────────┘   │
+└────────────────────────────────────────│────────────────┘
+                                         │ fetched at build time
+                                         ▼
+         ┌──────────────────────────────────────────────┐
+         │  Federated catalog (~115 entries)            │
+         │  ├── handpicked/     verified seeds + overlay │
+         │  ├── mcp-servers-repo  Anthropic reference   │
+         │  ├── awesome-mcp       community list        │
+         │  └── skillsmp          public marketplace    │
+         └──────────────────────────────────────────────┘
 ```
 
-## Scope
+## How it works
 
-- **In:** Claude skills (`claude_code_skill`, `claude_skill`) installed into `~/.claude/skills/<id>/`.
-- **Out:** Claude Desktop config edits, MCP-server install destinations. The catalog only carries entries we can install as skill files.
+1. **You install the MCP server** — one `npx` command added to your MCP host config.
+2. **Claude watches** — the bundled `omakase-chef` skill instructs Claude to monitor your workflow in the background.
+3. **Claude notices** — after you repeat the same kind of manual task three times, Claude surfaces the right skill from the catalog.
+4. **You approve** — Claude installs it to `~/.claude/skills/` and it's active next session.
+
+First time? Claude greets you with a **starter pack** of universally useful skills so you're not starting from zero.
 
 ## Install
 
-One line:
-
 ```bash
-curl -fsSL https://raw.githubusercontent.com/gyuch-an02/claude-omakase/main/install.sh | bash
+# 1. Install the omakase-chef skill
+npx claude-omakase-install
+
+# 2. Add the MCP server to your Claude Code config
+claude mcp add omakase -- npx -y claude-omakase
 ```
 
-Requirements: Node.js 20+ and Claude Code (or another MCP host) installed.
+**Requirements:** Node.js 20+, Claude Code (or another MCP host that supports stdio servers).
 
-Release note: the installer prints an `npx -y claude-omakase` MCP snippet. The
-npm package publication path is tracked in
-[issue #48](https://github.com/gyuch-an02/claude-omakase/issues/48); until that
-is resolved, use a local checkout with `npm link` for development and demos.
+That's it. Restart your Claude session and the chef is active.
 
-Fallback MCP config for the local `npm link` path:
+<details>
+<summary>Manual MCP config (Claude Desktop or other hosts)</summary>
+
+Add this to your MCP host config file and restart the host:
 
 ```json
 {
   "mcpServers": {
-    "omakase": { "command": "claude-omakase" }
+    "omakase": {
+      "command": "npx",
+      "args": ["-y", "claude-omakase"]
+    }
   }
 }
 ```
 
-The script:
+</details>
 
-1. Drops `omakase-chef/SKILL.md` into `~/.claude/skills/omakase-chef/`.
-2. Prints an `mcpServers` snippet for you to add to your MCP host config by hand. We deliberately do not edit any host config file automatically.
+## What Claude does for you
 
-That's the only manual step. After this, every install is a conversation.
+Once registered, these things just happen:
 
-## What you can ask Claude
-
-Once registered, the chef is active in every session. Things that "just work":
-
-- "I keep redrafting commit messages by hand — can you help?" → Claude finds a `git-commit-helper` skill, asks to install it.
-- "Summarize this PR for me." → Claude proposes a `pr-summarizer` skill, installs it on approval.
-- *(no prompt at all)* You ask Claude to summarize three PRs in one conversation → Claude says "I noticed you keep asking for PR summaries. Want me to drop in the `pr-summarizer` skill so it's one tool call from now on?"
-- "What can I install?" → `recommend_skills` runs against your profile.
-
-You can also explicitly:
-
-- `I have a recurring task that doesn't have a skill yet.` → Claude scaffolds a new `SKILL.md` you can refine (via `propose_new_skill`).
-
-## Tools the MCP exposes
-
-| Tool | Purpose |
+| Situation | Claude does |
 |---|---|
-| `find_skill` | Search the federated catalog by task description. |
-| `list_installed_skills` | Read install receipts plus the contents of `~/.claude/skills/`. |
-| `install_skill` | Drop skill files into `~/.claude/skills/<id>/` and write a receipt. |
-| `recommend_skills` | Top-N suggestions from profile, recent context, and installed state. |
-| `propose_new_skill` | Scaffold a draft `SKILL.md` when no catalog entry matches. |
+| You summarize three PRs in one session | Offers to install `pr-summarizer` |
+| You mention "I always have to do X by hand" | Searches for a skill that covers X |
+| You ask "what can I install?" | Runs `recommend_skills` against your profile |
+| No skills installed yet | Shows the starter pack |
+| No catalog match found | Drafts a new `SKILL.md` tailored to your task using MCP sampling |
 
-## Why an MCP server (and not a desktop app)?
+You can also be explicit: *"I have a recurring task that doesn't have a skill yet"* → Claude calls `propose_new_skill`, writes a draft SKILL.md to `~/.claude/skills/`, and iterates with you until it's right.
 
-- Discovery should happen **in conversation**, not in a separate window.
-- A chat-native LLM already has the context to make better recommendations than a search box.
-- A TypeScript MCP server is a small, sharp surface — easy to read, easy to extend.
+## Starter pack
 
-The trade-off: there is no clickable catalog browser. If you want to see what's available, ask Claude. If you want raw data, read `catalog.json` directly.
+When you have no skills installed, `recommend_skills` returns four universally useful skills:
 
-## Federation, not curation
+| Skill | What it does |
+|---|---|
+| **Grill Me** | Stress-tests your plans — Claude interviews you relentlessly, one hard question at a time |
+| **Understand Anything** | Deep explanations of code, systems, or concepts — leads with WHY, not HOW |
+| **Write a Skill** | Turns any recurring workflow into a reusable Claude skill |
+| **Quick Review** | Fast, severity-tagged code review (`🔴 bug`, `🟡 perf`, `🔵 style`) — no praise, no fluff |
 
-The catalog is **federated** from upstream sources at build time. `handpicked/` is a small verification overlay — not the primary source of truth. The community contributes by writing **adapters** (one TypeScript file each), not by maintaining a registry by hand.
+Install any of them: *"Install the Grill Me skill"* → Claude calls `install_skill("grill-me")`.
 
-Currently active sources:
+## MCP tools
 
-- `handpicked/` — manually-audited verified seed entries and overrides. Current bundled seeds include `jupyter-notebook`, `openai-docs`, and `playwright`.
-- `skillsmp` — the public agent-skills marketplace at [skillsmp.com](https://skillsmp.com) (the source behind ByteDance's `find-skills` SKILL). Adapter at `src/adapters/skillsmp.ts`.
+| Tool | Description |
+|---|---|
+| `find_skill` | Search the catalog by task description |
+| `list_installed_skills` | List installed skills and install receipts |
+| `install_skill` | Download and install a skill to `~/.claude/skills/<id>/` |
+| `recommend_skills` | Ranked suggestions based on your profile, context, and install state |
+| `propose_new_skill` | Draft a new SKILL.md from scratch using MCP sampling |
 
-Planned: more community skill aggregators as stable, inspectable sources are identified.
+## Catalog
 
-Adapter authoring contract: `src/adapters/README.md`. First-time adapter
-contributors can start with:
+The catalog is federated from multiple sources at build time. Nothing is hand-curated — adapters generate entries, and a daily CI job opens a PR if the catalog drifts.
+
+| Adapter | Source | Notes |
+|---|---|---|
+| `handpicked` | `handpicked/*.json` in this repo | Manually audited, `verified: true` |
+| `mcp-servers-repo` | [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers) | Anthropic reference servers |
+| `awesome-mcp` | [punkpeye/awesome-mcp-servers](https://github.com/punkpeye/awesome-mcp-servers) | Community list |
+| `skillsmp` | [skillsmp.com](https://skillsmp.com) | Public marketplace |
+
+Want to add a source? See `src/adapters/README.md` and run:
 
 ```bash
 npm run scaffold:adapter -- <source-name>
@@ -114,11 +124,14 @@ npm run scaffold:adapter -- <source-name>
 
 Everything Omakase writes stays on your machine:
 
-- `~/.config/claude-omakase/profile.json` — your profile.
-- `~/.local/share/claude-omakase/installed/` — install receipts.
-- `~/.cache/claude-omakase/catalog.json` — cached catalog.
+| Path | Contents |
+|---|---|
+| `~/.claude/skills/<id>/` | Installed skill files |
+| `~/.config/claude-omakase/profile.json` | Your profile (role, languages, tools) |
+| `~/.local/share/claude-omakase/installed/` | Install receipts |
+| `~/.cache/claude-omakase/catalog.json` | Cached catalog (refreshed every 6h) |
 
-No telemetry. No accounts. The MCP server makes outbound calls only for (a) the catalog refresh at first run and (b) downloading skill files when you approve an install.
+No telemetry. No accounts. Outbound calls happen only for catalog refresh and skill file downloads (when you approve an install).
 
 ## Develop
 
@@ -126,25 +139,25 @@ No telemetry. No accounts. The MCP server makes outbound calls only for (a) the 
 git clone https://github.com/gyuch-an02/claude-omakase
 cd claude-omakase
 npm install
-npm run build           # tsc compile
-npm run build:catalog   # federate adapters → catalog.json
-npm run scaffold:adapter -- <source-name>
-npm run typecheck
-npm test
+npm run build           # compile TypeScript
+npm run build:catalog   # fetch all adapters → catalog.json
+npm run typecheck       # type check without emitting
+npm test                # run all tests
 ```
 
-Run the MCP server locally to test against Claude Code:
+Register your local build with Claude Code:
 
 ```bash
-npm link                # symlinks `claude-omakase` bin
-# Then add to your MCP host config:
-# {
-#   "mcpServers": {
-#     "omakase": { "command": "claude-omakase" }
-#   }
-# }
-# Restart the host so it picks up the new server.
+claude mcp add omakase -- node /path/to/claude-omakase/dist/server.js
 ```
+
+## Contributing
+
+- **New adapter:** `npm run scaffold:adapter -- <name>` → implement `fetch(): Promise<Entry[]>` → register in `src/adapters/index.ts` → PR.
+- **New handpicked entry:** add a JSON file to `handpicked/` following the `Entry` shape in `src/types.ts`.
+- **Bug or feature:** open an issue or PR — all contributions welcome.
+
+See `CONTRIBUTING.md` for the full guide.
 
 ## License
 
