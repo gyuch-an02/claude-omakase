@@ -27,8 +27,8 @@ Required fields:
 - `verified` — boolean; only `true` after a real audit (see Gate 2 + the
   `handpicked/README.md` checklist)
 - `author.name`
-- `install.skill_files` — at least one `{ source, target }` pair
-- `source.adapter` — e.g. `"handpicked"`
+- `install` — must include at least one of `skill_files` or `command`
+- `source.adapter` — e.g. "handpicked"
 
 Reject the entry if:
 
