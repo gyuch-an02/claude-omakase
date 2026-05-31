@@ -46,7 +46,7 @@ try {
     "utf8"
   );
 
-  git(["-C", worktree, "checkout", baseRef, "--", "catalog.json"]);
+  git(["-c", "core.autocrlf=false", "-c", "core.eol=lf", "-C", worktree, "checkout", baseRef, "--", "catalog.json"]);
   const restored = await readFile(join(worktree, "catalog.json"), "utf8");
 
   assert.equal(restored, expected);
