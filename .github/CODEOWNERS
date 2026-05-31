@@ -6,11 +6,11 @@ package.json        @gyuch-an02
 tsconfig.json       @gyuch-an02
 
 # Content & docs
-handpicked/**       @changwook
-profiles/**         @changwook
-omakase-chef/**     @changwook
-CONTRIBUTING.md     @changwook
-docs/**             @changwook
+handpicked/**       @changwook06
+profiles/**         @changwook06
+omakase-chef/**     @changwook06
+CONTRIBUTING.md     @changwook06
+docs/**             @changwook06
 
 # Workflow automation
-.github/workflows/** @minkyoung
+.github/workflows/** @present913
