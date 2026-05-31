@@ -17,6 +17,7 @@ jobs:
     if: >
       github.event.pull_request.state == 'open' &&
       github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
       contains(github.event.pull_request.labels.*.name, 'adapter')
     runs-on: ubuntu-latest
     steps:
