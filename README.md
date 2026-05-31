@@ -1,5 +1,7 @@
 # Claude Omakase
 
+[![npm version](https://img.shields.io/npm/v/claude-omakase.svg)](https://www.npmjs.com/package/claude-omakase) [![CI](https://github.com/gyuch-an02/claude-omakase/actions/workflows/ci.yml/badge.svg)](https://github.com/gyuch-an02/claude-omakase/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 > *The chef picks. You approve.*
 
 **Claude Omakase** is an MCP server that turns Claude into a proactive skill curator. Register it once, and Claude will notice when you keep doing the same thing manually — then offer to install the right skill for you. No searching, no reading docs. Just say yes or no.
