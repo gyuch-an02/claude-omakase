@@ -26,7 +26,7 @@ Call `omakase.find_skill` **proactively, without being asked**, when any of thes
    - Manually summarized three emails
 2. **The user describes a recurring workflow** — phrases like "every Monday I…", "I always have to…", "I keep doing X by hand". Even one mention is enough.
 3. **The user mentions an integration** — a service, tool, or data source by name (GitHub, Slack, Notion, Postgres, SQLite, a specific filesystem path they keep returning to). Search for an MCP server that exposes it.
-4. **The user just installed Claude Omakase** — call `omakase.recommend_skills` with no context to surface verified defaults so they see something useful immediately.
+4. **First session / no skills installed** — at the start of the session, call `omakase.list_installed_skills`. If it returns an empty list, immediately call `omakase.recommend_skills` with no context. The response will contain a `starter-pack` of universally useful skills. Present them in a natural, non-pushy way: "Looks like you're just getting started. Here are a few skills most people find useful right away — pick any you'd like to try:"
 
 Call `omakase.recommend_skills` when:
 

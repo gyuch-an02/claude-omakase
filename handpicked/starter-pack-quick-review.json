@@ -1,0 +1,19 @@
+{
+  "id": "quick-review",
+  "name": "Quick Review",
+  "type": "claude_code_skill",
+  "description": "Fast, focused code review: one finding per line, severity-tagged (bug/perf/security/style). No praise, no scope creep. Reads the full diff before commenting.",
+  "tags": ["starter-pack", "code-review", "quality", "productivity"],
+  "verified": true,
+  "author": { "name": "claude-omakase", "url": "https://github.com/gyuch-an02/claude-omakase" },
+  "homepage": "https://github.com/gyuch-an02/claude-omakase/tree/main/skills/quick-review",
+  "install": {
+    "skill_files": [
+      {
+        "source": "https://raw.githubusercontent.com/gyuch-an02/claude-omakase/main/skills/quick-review/SKILL.md",
+        "target": "SKILL.md"
+      }
+    ]
+  },
+  "source": { "adapter": "handpicked" }
+}
