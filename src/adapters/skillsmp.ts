@@ -1,20 +1,18 @@
-// Adapter for skillsmp.com — the public agent-skills marketplace fronted by
-// the find-skills SKILL (bytedance/deer-flow).
+// Adapter for skillsmp.com — the public agent-skills marketplace.
 //
-// The marketplace exposes a single useful endpoint:
-//   GET https://skillsmp.com/api/v1/skills/search?q=<query>
-// There is no "list-all". We hit it with a seed set of broad queries
-// (categories, common task verbs, occupations), dedupe by the returned id,
-// and emit Entry records that point at the upstream SKILL.md URL.
+// Endpoint:
+//   GET https://skillsmp.com/api/v1/skills/search?q=<query>&limit=<n>
 //
-// Anonymous rate limit: 50 requests/day, 10/min. We stay well under that —
-// the seed set caps at ~20 queries, run once per day by the catalog-refresh
-// workflow. If you need more coverage, set CLAUDE_OMAKASE_SKILLSMP_TOKEN
-// to your bearer key (authenticated tier: 500/day, 30/min).
+// Actual response shape (verified 2026-05-31):
+//   { success: true, data: { skills: [...] }, meta: {...} }
 //
-// The marketplace's response schema is not publicly documented at the time
-// this adapter was written, so the parsing is intentionally defensive:
-// every field we touch has a fallback or a guard.
+// Each hit:
+//   { id, name, author, description, githubUrl, skillUrl, stars, updatedAt }
+//
+// githubUrl is a GitHub tree URL (e.g. github.com/owner/repo/tree/main/path).
+// We convert it to a raw SKILL.md URL for install.skill_files.
+//
+// Anonymous rate limit: ~50 req/day. Seed set ≤14 queries → well under limit.
 
 import type { Entry } from "../types.js";
 
@@ -43,33 +41,21 @@ const PER_QUERY_LIMIT = 25; // marketplace max is 100; smaller keeps responses f
 
 interface SkillsmpHit {
   id?: string;
-  slug?: string;
   name?: string;
-  title?: string;
+  author?: string;
   description?: string;
-  summary?: string;
-  tags?: string[];
-  categories?: string[];
-  author?: string | { name?: string; url?: string };
-  owner?: string;
-  repository?: string;
-  repo?: string;
-  source_url?: string;
-  homepage?: string;
-  url?: string;
-  license?: string;
-  version?: string;
-  // The marketplace appears to host SKILL.md content directly. We prefer
-  // a raw URL if exposed; otherwise we derive one from owner/repo/path.
-  skill_md_url?: string;
-  raw_url?: string;
+  githubUrl?: string;   // tree URL: github.com/owner/repo/tree/branch/path
+  skillUrl?: string;    // canonical skillsmp.com page
+  stars?: number;
+  updatedAt?: string;
 }
 
 interface SkillsmpResponse {
+  success?: boolean;
+  data?: { skills?: SkillsmpHit[] } | SkillsmpHit[];
   results?: SkillsmpHit[];
-  data?: SkillsmpHit[];
   skills?: SkillsmpHit[];
-  total?: number;
+  meta?: unknown;
 }
 
 export async function fetch(): Promise<Entry[]> {
@@ -101,10 +87,16 @@ async function searchOnce(query: string, headers: Record<string, string>): Promi
     throw new Error(`HTTP ${res.status}`);
   }
   const body = (await res.json()) as SkillsmpResponse;
-  const hits = body.results ?? body.data ?? body.skills ?? [];
-  if (!Array.isArray(hits)) {
-    throw new Error("unexpected response shape: results/data/skills must be arrays");
+
+  // Handle nested shape: { data: { skills: [...] } }  (current API as of 2026-05)
+  if (body.data && !Array.isArray(body.data) && Array.isArray((body.data as { skills?: unknown }).skills)) {
+    return (body.data as { skills: SkillsmpHit[] }).skills;
   }
+  // Legacy / alternate shapes
+  const hits = Array.isArray(body.data) ? body.data
+    : Array.isArray(body.results) ? body.results
+    : Array.isArray(body.skills) ? body.skills
+    : [];
   return hits;
 }
 
@@ -118,84 +110,61 @@ function buildHeaders(): Record<string, string> {
   return headers;
 }
 
-// Map a hit to our Entry shape. Returns null when we can't construct a
-// safe install (missing SKILL.md URL, missing id, etc.).
+// Map a skillsmp hit to our Entry shape.
+// Returns null when id, description, or a derivable SKILL.md URL is missing.
 export function normalize(hit: SkillsmpHit): Entry | null {
-  const id = (hit.id ?? hit.slug ?? slugify(hit.name ?? hit.title ?? "")).trim();
+  const id = (hit.id ?? slugify(hit.name ?? "")).trim();
   if (!id) return null;
 
-  const name = (hit.name ?? hit.title ?? id).trim();
-  const description = (hit.description ?? hit.summary ?? "").trim();
+  const name = (hit.name ?? id).trim();
+  const description = (hit.description ?? "").trim();
   if (!description) return null;
 
   const skillMdUrl = deriveSkillMdUrl(hit);
   if (!skillMdUrl) return null;
 
-  const tags = dedupe(
-    [
-      ...(hit.tags ?? []),
-      ...(hit.categories ?? []),
-      "skillsmp",
-    ]
-      .map((t) => t.toLowerCase())
-      .filter((t) => t.length > 0)
-  );
-  if (tags.length === 0) tags.push("skillsmp");
+  const homepage = hit.skillUrl ?? skillMdUrl;
 
   return {
     id,
     name,
     type: "claude_code_skill",
     description,
-    tags,
-    verified: false, // marketplace entries are community by default
-    author: normalizeAuthor(hit),
-    homepage: hit.homepage ?? hit.url ?? skillMdUrl,
-    version: hit.version,
-    license: hit.license,
+    tags: ["skillsmp"],
+    verified: false,
+    author: { name: hit.author ?? "skillsmp community" },
+    homepage,
     install: {
-      skill_files: [
-        {
-          source: skillMdUrl,
-          target: "SKILL.md",
-        },
-      ],
+      skill_files: [{ source: skillMdUrl, target: "SKILL.md" }],
     },
     source: {
       adapter: "skillsmp",
-      origin: hit.url ?? hit.homepage ?? skillMdUrl,
+      origin: homepage,
       fetched_at: new Date().toISOString(),
     },
   };
 }
 
+// Convert a GitHub tree URL to a raw SKILL.md URL.
+// Input:  https://github.com/owner/repo/tree/branch/some/path
+// Output: https://raw.githubusercontent.com/owner/repo/branch/some/path/SKILL.md
 function deriveSkillMdUrl(hit: SkillsmpHit): string | null {
-  const direct = hit.skill_md_url ?? hit.raw_url;
-  if (typeof direct === "string" && direct.startsWith("https://")) return direct;
+  const url = hit.githubUrl;
+  if (!url) return null;
 
-  // Try to construct a raw GitHub URL from owner/repo when present.
-  const repo = hit.repository ?? hit.repo;
-  if (typeof repo === "string" && /^https:\/\/github\.com\//.test(repo)) {
-    // Best-effort: assume default branch "main" and a top-level SKILL.md.
-    // If the repo nests skills deeper, the adapter should be extended with
-    // a per-entry path hint — out of scope for the first cut.
-    const m = /^https:\/\/github\.com\/([^/]+)\/([^/]+)(?:\.git)?$/.exec(repo);
-    if (m) {
-      const owner = m[1]!;
-      const name = m[2]!.replace(/\.git$/, "");
-      return `https://raw.githubusercontent.com/${owner}/${name}/main/SKILL.md`;
-    }
+  const m = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/tree\/([^/]+)\/(.+)$/.exec(url);
+  if (m) {
+    const [, owner, repo, branch, path] = m;
+    return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}/SKILL.md`;
   }
+
+  // Plain repo URL (no path) — look for SKILL.md at root
+  const repoM = /^https:\/\/github\.com\/([^/]+)\/([^/#?]+)$/.exec(url);
+  if (repoM) {
+    return `https://raw.githubusercontent.com/${repoM[1]}/${repoM[2]}/main/SKILL.md`;
+  }
+
   return null;
-}
-
-function normalizeAuthor(hit: SkillsmpHit): { name: string; url?: string } {
-  if (typeof hit.author === "string") return { name: hit.author };
-  if (hit.author && typeof hit.author === "object") {
-    return { name: hit.author.name ?? "unknown", url: hit.author.url };
-  }
-  if (hit.owner) return { name: hit.owner };
-  return { name: "skillsmp community" };
 }
 
 function slugify(s: string): string {
@@ -207,6 +176,3 @@ function slugify(s: string): string {
     .slice(0, 60);
 }
 
-function dedupe<T>(arr: T[]): T[] {
-  return [...new Set(arr)];
-}
