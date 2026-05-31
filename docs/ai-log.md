@@ -51,3 +51,11 @@ commit. See [`CLAUDE.md`](../CLAUDE.md) → "Skill: ai-usage-log".
 3. `omakase-chef/SKILL.md`의 `description`을 세션·프로젝트 시작, "뭘 설치/사용할까" 질문, 미설치 상태, 3회 반복 신호에 더 잘 매칭되도록 확장하여 능동 트리거 범위를 넓혔다.
 4. 같은 SKILL.md 첫 세션 절차에 설치 후 같은 세션에서 `~/.claude/skills/<id>/SKILL.md`를 직접 읽어 즉시 사용하는 경로를 명시하여, 다음 세션까지 기다리지 않아도 가치를 얻도록 했다.
 5. `next_step` 힌트는 `_meta`가 아닌 응답 content에 넣어 모델이 실제로 읽도록 했고, build·typecheck·lint(src 0건)·43개 테스트 통과를 확인한 뒤 이 로그 항목과 동일 커밋에 포함한다.
+
+## 2026-06-01 — starter-pack-gap 모드: 미설치 스타터 스킬 자동 추천
+
+1. `src/tools/recommend.ts`에 `starter-pack-gap` 모드를 추가하여, 일부 스킬이 설치된 사용자라도 starter-pack 태그 스킬 중 미설치 항목이 있으면 그중 가장 적합한 하나를 추천하도록 했다.
+2. 설치 식별은 Omakase 영수증 id와 `~/.claude/skills/` 디렉터리명을 합집합한 `installedIdSet` 헬퍼로 계산하고, 모든 추천 경로(verified-defaults·profile-search 포함)에서 이미 설치된 스킬을 제외하도록 수정했다.
+3. `omakase-chef/SKILL.md`에 "incomplete starter pack" 트리거를 추가하여 Claude가 세션 시작 시 조용히 `recommend_skills`를 호출하고 `starter-pack-gap` 응답이면 빠진 스킬 하나만 제안하도록 안내했다.
+4. `src/tools/recommend.test.ts`에 미설치 스타터 스킬 추천과 완비 시 verified-defaults로 폴백하는 두 테스트를 추가했고, 격리 하네스가 설치된 스킬 디렉터리를 시뮬레이션하도록 확장했다.
+5. build·typecheck·lint(src 0건)·45개 테스트 통과를 확인했고 이 로그 항목과 동일 커밋에 포함한다.

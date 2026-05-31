@@ -60,6 +60,9 @@ One mention is enough. Do not wait for three.
 "What can I install?" / "What should I add?" / "What do you recommend?"
 Call `omakase.recommend_skills` with context from the conversation. Return **one recommendation** with a reason, not a list.
 
+**Trigger: incomplete starter pack**
+At the start of a session, you may quietly call `omakase.recommend_skills` (no context). If it returns `mode: "starter-pack-gap"`, the user has installed some skills but is missing a starter-pack staple. Offer the single missing skill once — *"You've got X; the one thing that rounds out your starter pack is Y. Install it?"* — then drop it. Do not nag if they decline.
+
 ---
 
 ## After install — always show the trigger phrase

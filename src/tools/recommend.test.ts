@@ -62,9 +62,64 @@ test("recommend_skills: first-time starter pack honors explicit limit", async (t
   assert.equal(result.recommendations.length, 2);
 });
 
+test("recommend_skills: incomplete starter pack suggests a missing starter skill", async (t) => {
+  await withIsolatedOmakaseState(
+    t,
+    [
+      starterEntry({
+        id: "grill-me",
+        name: "Grill Me",
+        description: "Stress-test your plans.",
+        tags: ["starter-pack", "planning"],
+      }),
+      starterEntry({
+        id: "quick-review",
+        name: "Quick Review",
+        description: "Severity-tagged code review.",
+        tags: ["starter-pack", "review"],
+      }),
+    ],
+    ["grill-me"]
+  );
+
+  const result = await handle(recommendInput.parse({}));
+
+  assert.equal(result.mode, "starter-pack-gap");
+  assert.equal(result.recommendations.length, 1);
+  assert.equal(result.recommendations[0]?.id, "quick-review");
+  assert.deepEqual(result.missing_starter_pack, ["quick-review"]);
+});
+
+test("recommend_skills: complete starter pack falls through to verified-defaults", async (t) => {
+  await withIsolatedOmakaseState(
+    t,
+    [
+      starterEntry({
+        id: "grill-me",
+        name: "Grill Me",
+        description: "Stress-test your plans.",
+        tags: ["starter-pack", "planning"],
+      }),
+      starterEntry({
+        id: "extra-skill",
+        name: "Extra Skill",
+        description: "Some other verified skill.",
+        tags: ["misc"],
+      }),
+    ],
+    ["grill-me"]
+  );
+
+  const result = await handle(recommendInput.parse({}));
+
+  assert.equal(result.mode, "verified-defaults");
+  assert.ok(result.recommendations.every((r) => r.id !== "grill-me"));
+});
+
 async function withIsolatedOmakaseState(
   t: Parameters<typeof test>[1],
-  entries: Entry[]
+  entries: Entry[],
+  installedSkillDirs: string[] = []
 ): Promise<void> {
   const root = await mkdtemp(join(tmpdir(), "omakase-recommend-"));
   const originalCache = process.env["XDG_CACHE_HOME"];
@@ -78,6 +133,10 @@ async function withIsolatedOmakaseState(
   process.env["XDG_DATA_HOME"] = join(root, "data");
   process.env["CLAUDE_OMAKASE_SKILLS_DIR"] = join(root, "skills");
   delete process.env["CLAUDE_OMAKASE_CATALOG_URL"];
+
+  for (const id of installedSkillDirs) {
+    await mkdir(join(root, "skills", id), { recursive: true });
+  }
 
   const catalogDir = join(root, "cache", "claude-omakase");
   await mkdir(catalogDir, { recursive: true });
