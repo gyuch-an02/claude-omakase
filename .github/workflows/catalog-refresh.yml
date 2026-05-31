@@ -24,7 +24,7 @@ jobs:
       - name: Adapter smoke test
         run: npm run test:adapter -- --out adapter-smoke-report.json
         continue-on-error: true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: adapter-smoke-report
