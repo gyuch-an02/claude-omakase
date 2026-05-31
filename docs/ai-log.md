@@ -27,3 +27,11 @@ commit. See [`CLAUDE.md`](../CLAUDE.md) → "Skill: ai-usage-log".
 3. `scripts/verify-catalog-rollback.mjs`와 `npm run verify:catalog-rollback`은 임시 worktree에서 고의로 나쁜 카탈로그를 만든 뒤 기준 브랜치의 카탈로그로 복구되는지 확인한다.
 4. `CONTRIBUTING.md`에는 작은 어댑터 PR이 `adapter` 라벨로 자동 병합 경로를 사용할 수 있다는 안내를 추가했다.
 5. 이 변경은 PR에서 실행되는 CI, 자동화 문서, 롤백 검증 명령을 함께 묶어 #15의 자동화 요구사항을 재현 가능한 형태로 남긴다.
+
+## 2026-05-31 — omakase 추천 UX 리뷰 반영
+
+1. `src/tools/recommend.ts`에서 첫 세션 starter-pack 경로도 사용자의 context와 `limit`을 적용해 한 번에 하나의 추천만 반환하도록 수정했다.
+2. `src/tools/recommend.test.ts`를 추가하여 첫 세션 추천이 브라우저 테스트 context에서 `playwright` 하나만 고르고, 명시적 `limit`도 지키는지 검증했다.
+3. 이 변경은 `omakase-chef/SKILL.md`가 요구하는 메뉴 없는 omakase UX와 실제 도구 반환값이 어긋나지 않도록 맞춘 것이다.
+4. 테스트는 임시 캐시, 설정, 데이터, 스킬 디렉터리를 사용해 사용자의 실제 로컬 상태를 건드리지 않도록 구성했다.
+5. Claude-assisted 리뷰 수정 사항과 이 AI 사용 로그 항목은 같은 커밋에 포함된다.
