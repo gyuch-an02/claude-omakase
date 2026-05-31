@@ -37,6 +37,10 @@ export async function handle(args: z.infer<typeof recommendInput>) {
     profileLib.load(),
     listInstalled(),
   ]);
+  const installedIds = new Set([
+    ...installed.receipts.map((receipt) => receipt.id),
+    ...installed.raw_skills_dir,
+  ]);
 
   const tokens = profileTokens(profile);
   if (args.context) tokens.push(args.context);
@@ -65,24 +69,44 @@ export async function handle(args: z.infer<typeof recommendInput>) {
     };
   }
 
+  const tokens: string[] = [];
+  if (profile.role) tokens.push(profile.role);
+  if (profile.occupation) tokens.push(profile.occupation);
+  if (profile.languages) tokens.push(...profile.languages);
+  if (profile.tools) tokens.push(...profile.tools);
+  if (profile.usecases) tokens.push(...profile.usecases);
+  if (args.context) tokens.push(args.context);
+
+  const query = tokens.join(" ").trim();
+  const availableEntries = catalog.entries.filter((e) => !installedIds.has(e.id));
+
+
   let candidates: Entry[];
   let mode: "profile-search" | "verified-defaults";
   if (query.length === 0) {
     mode = "verified-defaults";
-    candidates = catalog.entries
+    candidates = availableEntries
       .filter((e) => e.verified)
       .sort((a, b) => b.tags.length - a.tags.length)
       .slice(0, args.limit);
+    return {
+      mode,
+      profile_summary: profile,
+      recommendations: candidates.map(format),
+    };
   } else {
     mode = "profile-search";
-    candidates = search(catalog.entries, query, args.limit).map((r) => r.entry);
+    const results = search(availableEntries, query, args.limit);
+    return {
+      mode,
+      profile_summary: profile,
+      recommendations: results.map((r) => ({
+        ...format(r.entry),
+        match_score: r.score,
+        match_reasons: r.reasons,
+      })),
+    };
   }
-
-  return {
-    mode,
-    profile_summary: profile,
-    recommendations: candidates.map(format),
-  };
 }
 
 function profileTokens(profile: Awaited<ReturnType<typeof profileLib.load>>): string[] {
