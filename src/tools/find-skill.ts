@@ -40,6 +40,11 @@ export async function handle(args: z.infer<typeof findSkillInput>) {
     })),
     total_in_catalog: catalog.entries.length,
     catalog_generated_at: catalog.generated_at,
+    next_step:
+      results.length > 0
+        ? `Pick the SINGLE best match (prefer verified: true) and serve it with one sentence of WHY. Do not show a menu. ` +
+          `Ask "install it?" and wait for explicit approval before calling install_skill.`
+        : `No catalog match. If this task recurs for the user, offer once to draft a new skill via propose_new_skill. Otherwise move on.`,
   };
 }
 

@@ -62,6 +62,9 @@ export async function handle(args: z.infer<typeof recommendInput>) {
       onboarding_message:
         "No skills installed yet. Here's the best first skill for your current work — you can always add more later.",
       recommendations: candidates.map(format),
+      next_step:
+        `First-time user. Serve the ONE recommendation above with a one-sentence reason, then ask "install it?". ` +
+        `Do not list the others. On approval, call install_skill and follow its next_step onboarding.`,
     };
   }
 
@@ -82,6 +85,9 @@ export async function handle(args: z.infer<typeof recommendInput>) {
     mode,
     profile_summary: profile,
     recommendations: candidates.map(format),
+    next_step:
+      `Serve the ONE best recommendation with a one-sentence reason, then ask "install it?". ` +
+      `Never show a menu. On approval, call install_skill and follow its next_step onboarding.`,
   };
 }
 

@@ -43,3 +43,11 @@ commit. See [`CLAUDE.md`](../CLAUDE.md) → "Skill: ai-usage-log".
 3. `docs/distribution/hn-post.md`와 `docs/distribution/discord-post.md`를 작성하여 Show HN, Anthropic Discord, Twitter/X 스레드용 배포 초안을 준비했다.
 4. `.gitignore`에 `!docs/demo-script.md` 예외 규칙을 추가하여 `docs/*` 일괄 무시 패턴에서 데모 스크립트가 추적되도록 수정했다.
 5. 변경된 파일은 `.gitignore`, `README.md`, `docs/ai-log.md`, `docs/demo-script.md`, `docs/distribution/hn-post.md`, `docs/distribution/discord-post.md`이며 이 항목과 함께 동일 커밋에 포함된다.
+
+## 2026-06-01 — 능동적 온보딩: tool 응답 next_step 힌트 + SKILL.md 트리거 튜닝
+
+1. `src/tools/find-skill.ts`, `src/tools/recommend.ts`, `src/tools/install-skill.ts`의 반환 객체에 `next_step` 필드를 추가하여 Claude가 검색·추천·설치 직후 무엇을 해야 하는지(단일 추천 제시, 승인 대기, 설치 후 트리거 문구 안내)를 응답 content로 직접 전달하도록 했다.
+2. MCP Prompts·resources·mcpContextUris·spontaneous sampling은 Claude Code CLI에서 세션 시작 시 자동 트리거되지 않음을 claude-code-guide로 검증했고, 검증된 메커니즘인 tool content 힌트와 SKILL.md 자동 로드만 사용했다.
+3. `omakase-chef/SKILL.md`의 `description`을 세션·프로젝트 시작, "뭘 설치/사용할까" 질문, 미설치 상태, 3회 반복 신호에 더 잘 매칭되도록 확장하여 능동 트리거 범위를 넓혔다.
+4. 같은 SKILL.md 첫 세션 절차에 설치 후 같은 세션에서 `~/.claude/skills/<id>/SKILL.md`를 직접 읽어 즉시 사용하는 경로를 명시하여, 다음 세션까지 기다리지 않아도 가치를 얻도록 했다.
+5. `next_step` 힌트는 `_meta`가 아닌 응답 content에 넣어 모델이 실제로 읽도록 했고, build·typecheck·lint(src 0건)·43개 테스트 통과를 확인한 뒤 이 로그 항목과 동일 커밋에 포함한다.
