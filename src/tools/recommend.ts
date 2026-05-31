@@ -12,23 +12,24 @@ export const recommendInput = z.object({
     .describe(
       "Recent user activity in plain text. The most useful input is a 1–3 sentence summary of what the user has been doing in the last few messages."
     ),
-  limit: z.number().int().min(1).max(10).default(3),
+  limit: z.number().int().min(1).max(10).default(1),
 });
 
-export const recommendDescription = `Suggest skills the user probably wants based on their profile + recent activity + what's already installed.
+export const recommendDescription = `Return the single best skill for the user's current context.
 
-When to call PROACTIVELY (without being asked):
-  - The user has done 3+ similar manual operations in a row that map to a known tool.
-  - The user just told you about a recurring task in their workflow.
-  - The user set or updated their profile and hasn't seen suggestions yet.
-  - This is the user's FIRST session with Claude Code (no skills installed yet).
+IMPORTANT: default limit is 1. Do not increase it unless the user explicitly asks to see more options.
+This is an omakase product — you pick one and serve it, not a menu.
 
-When to call REACTIVELY:
-  - The user asks "what should I install?" or similar.
+When to call:
+  - First session (no skills installed): ask what the user works on, then call with that as context.
+  - User mentions a recurring workflow by name.
+  - User asks "what should I install?" — call once, return one result.
 
-Returns a small ranked list. Never silently install — show the recommendations to the user and ask which (if any) to install.
+After getting a result: present ONE recommendation with a one-sentence reason, then ask "install it?".
+Never show a list. Never show more than one option at a time.
 
-Special behavior: if no skills are installed, returns the starter-pack (universally useful skills) regardless of profile or context.`;
+Special behavior: if no skills are installed, returns the starter-pack regardless of context.
+In starter-pack mode: still pick the single best match for the user's stated work, not the full list.`;
 
 export async function handle(args: z.infer<typeof recommendInput>) {
   const [catalog, profile, installed] = await Promise.all([
@@ -37,29 +38,32 @@ export async function handle(args: z.infer<typeof recommendInput>) {
     listInstalled(),
   ]);
 
+  const tokens = profileTokens(profile);
+  if (args.context) tokens.push(args.context);
+  const query = tokens.join(" ").trim();
+
   // First-time user: no skills installed → surface starter-pack
   if (installed.receipts.length === 0 && installed.raw_skills_dir.length === 0) {
     const starterPack = catalog.entries.filter((e) =>
       e.tags.includes("starter-pack")
     );
+    const ranked =
+      query.length > 0
+        ? search(starterPack, query, args.limit).map((r) => r.entry)
+        : starterPack
+            .filter((e) => e.verified)
+            .sort((a, b) => b.tags.length - a.tags.length)
+            .slice(0, args.limit);
+    const candidates = ranked.length > 0 ? ranked : starterPack.slice(0, args.limit);
+
     return {
       mode: "starter-pack" as const,
       profile_summary: profile,
       onboarding_message:
-        "No skills installed yet. Here's a starter pack of universally useful skills — install any that sound helpful and you can always add more later.",
-      recommendations: starterPack.map(format),
+        "No skills installed yet. Here's the best first skill for your current work — you can always add more later.",
+      recommendations: candidates.map(format),
     };
   }
-
-  const tokens: string[] = [];
-  if (profile.role) tokens.push(profile.role);
-  if (profile.occupation) tokens.push(profile.occupation);
-  if (profile.languages) tokens.push(...profile.languages);
-  if (profile.tools) tokens.push(...profile.tools);
-  if (profile.usecases) tokens.push(...profile.usecases);
-  if (args.context) tokens.push(args.context);
-
-  const query = tokens.join(" ").trim();
 
   let candidates: Entry[];
   let mode: "profile-search" | "verified-defaults";
@@ -79,6 +83,16 @@ export async function handle(args: z.infer<typeof recommendInput>) {
     profile_summary: profile,
     recommendations: candidates.map(format),
   };
+}
+
+function profileTokens(profile: Awaited<ReturnType<typeof profileLib.load>>): string[] {
+  const tokens: string[] = [];
+  if (profile.role) tokens.push(profile.role);
+  if (profile.occupation) tokens.push(profile.occupation);
+  if (profile.languages) tokens.push(...profile.languages);
+  if (profile.tools) tokens.push(...profile.tools);
+  if (profile.usecases) tokens.push(...profile.usecases);
+  return tokens;
 }
 
 function format(e: Entry) {
