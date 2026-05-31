@@ -8,6 +8,7 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: npm
     permissions:
       id-token: write
       contents: read
@@ -26,6 +27,6 @@ jobs:
       - run: npm run build
 
       - name: Publish (npm OIDC Trusted Publishing)
-        run: npm publish --access public --provenance --loglevel silly 2>&1
+        run: npm publish --access public --provenance
         env:
           NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
