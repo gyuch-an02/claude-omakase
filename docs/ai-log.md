@@ -19,3 +19,11 @@ commit. See [`CLAUDE.md`](../CLAUDE.md) → "Skill: ai-usage-log".
 3. 초안에 npm, npx, pip, pipx, uvx 설치 명령이 포함된 경우 공개 레지스트리에서 패키지 resolvability를 확인한 뒤에만 쓰기를 허용하도록 했다.
 4. 잘못된 초안이나 해석할 수 없는 설치 명령은 `~/.claude/skills/` 아래에 `SKILL.md`를 남기지 않도록 쓰기 순서를 검증 이후로 옮겼다.
 5. 정상 샘플링, 샘플링 미지원, 잘못된 초안, 해석되지 않는 설치 명령을 각각 확인하는 테스트를 추가했다.
+
+## 2026-05-31 — 어댑터 자동 병합 및 카탈로그 롤백 검증
+
+1. `.github/workflows/adapter-auto-merge.yml`을 추가하여 `adapter` 라벨이 붙은 비초안 PR에 GitHub auto-merge를 설정하도록 했다.
+2. `docs/automation.md`에는 자동 병합의 전제 조건, 검증 절차, 잘못된 `catalog.json` 갱신을 되돌리는 절차를 문서화했고 `.gitignore`에는 이 문서를 추적하도록 예외를 추가했다.
+3. `scripts/verify-catalog-rollback.mjs`와 `npm run verify:catalog-rollback`은 임시 worktree에서 고의로 나쁜 카탈로그를 만든 뒤 기준 브랜치의 카탈로그로 복구되는지 확인한다.
+4. `CONTRIBUTING.md`에는 작은 어댑터 PR이 `adapter` 라벨로 자동 병합 경로를 사용할 수 있다는 안내를 추가했다.
+5. 이 변경은 PR에서 실행되는 CI, 자동화 문서, 롤백 검증 명령을 함께 묶어 #15의 자동화 요구사항을 재현 가능한 형태로 남긴다.

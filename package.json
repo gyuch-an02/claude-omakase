@@ -29,7 +29,8 @@
     "start": "node dist/server.js",
     "lint": "eslint src",
     "test": "node --test --import tsx --test-reporter=spec src/**/*.test.ts scripts/*.test.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "verify:catalog-rollback": "node scripts/verify-catalog-rollback.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
