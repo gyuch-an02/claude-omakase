@@ -35,3 +35,11 @@ commit. See [`CLAUDE.md`](../CLAUDE.md) → "Skill: ai-usage-log".
 3. 이 변경은 `omakase-chef/SKILL.md`가 요구하는 메뉴 없는 omakase UX와 실제 도구 반환값이 어긋나지 않도록 맞춘 것이다.
 4. 테스트는 임시 캐시, 설정, 데이터, 스킬 디렉터리를 사용해 사용자의 실제 로컬 상태를 건드리지 않도록 구성했다.
 5. Claude-assisted 리뷰 수정 사항과 이 AI 사용 로그 항목은 같은 커밋에 포함된다.
+
+## 2026-05-31 — 데모 준비 및 README 정확도 개선
+
+1. `README.md`의 아키텍처 다이어그램에서 오래된 카탈로그 항목 수 "~115 entries"를 실제 수치인 "400+ skills"로 수정하고, MCP 도구 표에서 누락된 `set_profile` 항목을 추가했다.
+2. `docs/demo-script.md`를 신규 작성하여 Day 7 라이브 데모의 setup 절차, Act 1–4 진행 흐름, Q&A 준비 내용을 포함한 5–7분 분량의 데모 스크립트를 정리했다.
+3. `docs/distribution/hn-post.md`와 `docs/distribution/discord-post.md`를 작성하여 Show HN, Anthropic Discord, Twitter/X 스레드용 배포 초안을 준비했다.
+4. `.gitignore`에 `!docs/demo-script.md` 예외 규칙을 추가하여 `docs/*` 일괄 무시 패턴에서 데모 스크립트가 추적되도록 수정했다.
+5. 변경된 파일은 `.gitignore`, `README.md`, `docs/ai-log.md`, `docs/demo-script.md`, `docs/distribution/hn-post.md`, `docs/distribution/discord-post.md`이며 이 항목과 함께 동일 커밋에 포함된다.
