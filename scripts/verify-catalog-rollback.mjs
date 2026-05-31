@@ -19,7 +19,16 @@ function git(args, options = {}) {
 }
 
 try {
-  git(["rev-parse", "--verify", `${baseRef}^{commit}`]);
+  try {
+    git(["rev-parse", "--verify", `${baseRef}^{commit}`]);
+  } catch (error) {
+    if (baseRef === "origin/main") {
+      git(["fetch", "--depth=1", "origin", "main"]);
+      git(["rev-parse", "--verify", `${baseRef}^{commit}`]);
+    } else {
+      throw error;
+    }
+  }
   const expected = git(["show", `${baseRef}:catalog.json`]);
 
   git(["worktree", "add", "--detach", worktree, "HEAD"]);
