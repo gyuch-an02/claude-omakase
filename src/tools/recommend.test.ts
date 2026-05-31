@@ -1,0 +1,140 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+import { recommendInput, handle } from "./recommend.js";
+import type { Entry } from "../types.js";
+
+test("recommend_skills: first-time starter pack returns one context-ranked skill", async (t) => {
+  await withIsolatedOmakaseState(t, [
+    starterEntry({
+      id: "jupyter-notebook",
+      name: "Jupyter Notebook",
+      description: "Work with notebooks and data analysis.",
+      tags: ["starter-pack", "python", "data"],
+    }),
+    starterEntry({
+      id: "playwright",
+      name: "Playwright",
+      description: "Browser automation and frontend testing.",
+      tags: ["starter-pack", "browser", "testing", "frontend"],
+    }),
+    starterEntry({
+      id: "openai-docs",
+      name: "OpenAI Docs",
+      description: "Use current OpenAI API documentation.",
+      tags: ["starter-pack", "openai", "docs"],
+    }),
+  ]);
+
+  const result = await handle(
+    recommendInput.parse({
+      context: "I mostly do browser testing work",
+    })
+  );
+
+  assert.equal(result.mode, "starter-pack");
+  assert.equal(result.recommendations.length, 1);
+  assert.equal(result.recommendations[0]?.id, "playwright");
+  assert.match(result.onboarding_message, /best first skill/);
+});
+
+test("recommend_skills: first-time starter pack honors explicit limit", async (t) => {
+  await withIsolatedOmakaseState(t, [
+    starterEntry({
+      id: "alpha",
+      name: "Alpha",
+      description: "First default.",
+      tags: ["starter-pack", "alpha", "one"],
+    }),
+    starterEntry({
+      id: "beta",
+      name: "Beta",
+      description: "Second default.",
+      tags: ["starter-pack", "beta", "two"],
+    }),
+  ]);
+
+  const result = await handle(recommendInput.parse({ limit: 2 }));
+
+  assert.equal(result.mode, "starter-pack");
+  assert.equal(result.recommendations.length, 2);
+});
+
+async function withIsolatedOmakaseState(
+  t: Parameters<typeof test>[1],
+  entries: Entry[]
+): Promise<void> {
+  const root = await mkdtemp(join(tmpdir(), "omakase-recommend-"));
+  const originalCache = process.env["XDG_CACHE_HOME"];
+  const originalConfig = process.env["XDG_CONFIG_HOME"];
+  const originalData = process.env["XDG_DATA_HOME"];
+  const originalSkills = process.env["CLAUDE_OMAKASE_SKILLS_DIR"];
+  const originalRemote = process.env["CLAUDE_OMAKASE_CATALOG_URL"];
+
+  process.env["XDG_CACHE_HOME"] = join(root, "cache");
+  process.env["XDG_CONFIG_HOME"] = join(root, "config");
+  process.env["XDG_DATA_HOME"] = join(root, "data");
+  process.env["CLAUDE_OMAKASE_SKILLS_DIR"] = join(root, "skills");
+  delete process.env["CLAUDE_OMAKASE_CATALOG_URL"];
+
+  const catalogDir = join(root, "cache", "claude-omakase");
+  await mkdir(catalogDir, { recursive: true });
+  await writeFile(
+    join(catalogDir, "catalog.json"),
+    JSON.stringify(
+      {
+        version: 1,
+        generated_at: "2026-05-31T00:00:00.000Z",
+        entries,
+      },
+      null,
+      2
+    ),
+    "utf8"
+  );
+
+  t.after(async () => {
+    restoreEnv("XDG_CACHE_HOME", originalCache);
+    restoreEnv("XDG_CONFIG_HOME", originalConfig);
+    restoreEnv("XDG_DATA_HOME", originalData);
+    restoreEnv("CLAUDE_OMAKASE_SKILLS_DIR", originalSkills);
+    restoreEnv("CLAUDE_OMAKASE_CATALOG_URL", originalRemote);
+    await rm(root, { recursive: true, force: true });
+  });
+}
+
+function restoreEnv(key: string, value: string | undefined): void {
+  if (value === undefined) {
+    delete process.env[key];
+  } else {
+    process.env[key] = value;
+  }
+}
+
+function starterEntry(params: {
+  id: string;
+  name: string;
+  description: string;
+  tags: string[];
+}): Entry {
+  return {
+    id: params.id,
+    name: params.name,
+    type: "claude_code_skill",
+    description: params.description,
+    tags: params.tags,
+    verified: true,
+    author: { name: "Test" },
+    install: {
+      skill_files: [
+        {
+          source: `https://example.com/${params.id}/SKILL.md`,
+          target: "SKILL.md",
+        },
+      ],
+    },
+    source: { adapter: "test" },
+  };
+}

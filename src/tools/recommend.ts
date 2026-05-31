@@ -38,29 +38,32 @@ export async function handle(args: z.infer<typeof recommendInput>) {
     listInstalled(),
   ]);
 
+  const tokens = profileTokens(profile);
+  if (args.context) tokens.push(args.context);
+  const query = tokens.join(" ").trim();
+
   // First-time user: no skills installed → surface starter-pack
   if (installed.receipts.length === 0 && installed.raw_skills_dir.length === 0) {
     const starterPack = catalog.entries.filter((e) =>
       e.tags.includes("starter-pack")
     );
+    const ranked =
+      query.length > 0
+        ? search(starterPack, query, args.limit).map((r) => r.entry)
+        : starterPack
+            .filter((e) => e.verified)
+            .sort((a, b) => b.tags.length - a.tags.length)
+            .slice(0, args.limit);
+    const candidates = ranked.length > 0 ? ranked : starterPack.slice(0, args.limit);
+
     return {
       mode: "starter-pack" as const,
       profile_summary: profile,
       onboarding_message:
-        "No skills installed yet. Here's a starter pack of universally useful skills — install any that sound helpful and you can always add more later.",
-      recommendations: starterPack.map(format),
+        "No skills installed yet. Here's the best first skill for your current work — you can always add more later.",
+      recommendations: candidates.map(format),
     };
   }
-
-  const tokens: string[] = [];
-  if (profile.role) tokens.push(profile.role);
-  if (profile.occupation) tokens.push(profile.occupation);
-  if (profile.languages) tokens.push(...profile.languages);
-  if (profile.tools) tokens.push(...profile.tools);
-  if (profile.usecases) tokens.push(...profile.usecases);
-  if (args.context) tokens.push(args.context);
-
-  const query = tokens.join(" ").trim();
 
   let candidates: Entry[];
   let mode: "profile-search" | "verified-defaults";
@@ -80,6 +83,16 @@ export async function handle(args: z.infer<typeof recommendInput>) {
     profile_summary: profile,
     recommendations: candidates.map(format),
   };
+}
+
+function profileTokens(profile: Awaited<ReturnType<typeof profileLib.load>>): string[] {
+  const tokens: string[] = [];
+  if (profile.role) tokens.push(profile.role);
+  if (profile.occupation) tokens.push(profile.occupation);
+  if (profile.languages) tokens.push(...profile.languages);
+  if (profile.tools) tokens.push(...profile.tools);
+  if (profile.usecases) tokens.push(...profile.usecases);
+  return tokens;
 }
 
 function format(e: Entry) {
