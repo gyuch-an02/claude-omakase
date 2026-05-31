@@ -82,6 +82,10 @@ Before opening a PR, include:
 - Which checks you ran.
 - Any known warnings or follow-up work.
 
+Adapter PRs that are small, mechanical, and covered by green CI may be labeled
+`adapter` to opt into the repository auto-merge workflow. See
+`docs/automation.md` for the exact guardrails and rollback verification command.
+
 ## Style
 
 - Prettier defaults for TS. Tabs are fine, spaces are fine — Prettier picks for you.
