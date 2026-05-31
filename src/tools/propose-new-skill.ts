@@ -6,6 +6,27 @@ import type { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import type { CreateMessageRequestParamsBase } from "@modelcontextprotocol/sdk/types.js";
 import { claudeCodeSkillsDir, packageTemplatesDir } from "../paths.js";
 
+const draftEntrySchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  type: z.literal("claude_code_skill"),
+  description: z.string().min(1),
+  tags: z.array(z.string()).min(1),
+  verified: z.literal(false),
+  author: z.object({ name: z.string().min(1) }),
+  install: z.object({
+    skill_files: z.array(
+      z.object({
+        source: z.string().url().startsWith("https://"),
+        target: z.string().min(1),
+      })
+    ),
+  }),
+  source: z.object({
+    adapter: z.literal("propose_new_skill"),
+  }),
+});
+
 export const proposeNewSkillInput = z.object({
   task_description: z
     .string()
@@ -28,7 +49,7 @@ export const proposeNewSkillInput = z.object({
     .string()
     .optional()
     .describe(
-      "Optional SKILL.md body. If provided, written as-is (skips both sampling and template)."
+      "Optional SKILL.md body. If provided, validated and written without sampling."
     ),
 });
 
@@ -40,8 +61,9 @@ When to call:
 
 Behavior:
   - Uses MCP sampling to ask the LLM to write a tailored SKILL.md from scratch.
-  - Falls back to a type-specific scaffold (python-cli / node-script / shell-automation)
-    only if draft_body is explicitly provided.
+  - Returns a clear error if the MCP host does not support sampling/createMessage.
+  - Validates frontmatter, required sections, catalog Entry shape, and resolvable install commands before writing.
+  - If draft_body is provided, validates that body and skips sampling.
   - Writes the result to ~/.claude/skills/<slug>/SKILL.md.
   - The draft is intentionally lightweight — Claude (you) is expected to iterate
     with the user, edit the file in place, and ultimately encourage them to PR it
@@ -59,9 +81,6 @@ export async function handle(
   server: Server
 ) {
   const slug = args.slug ?? slugify(args.task_description);
-  const dir = join(claudeCodeSkillsDir(), slug);
-  mkdirSync(dir, { recursive: true });
-
   const triggers = args.triggers && args.triggers.length > 0
     ? args.triggers
     : derive_triggers(args.task_description);
@@ -73,6 +92,10 @@ export async function handle(
     body = await generateWithSampling(server, { slug, taskDescription: args.task_description, triggers });
   }
 
+  await validateSkillDraft(body, { slug, triggers });
+
+  const dir = join(claudeCodeSkillsDir(), slug);
+  mkdirSync(dir, { recursive: true });
   const path = join(dir, "SKILL.md");
   await writeFile(path, body, "utf8");
 
@@ -126,15 +149,16 @@ Output ONLY the SKILL.md content, starting with the YAML frontmatter (---).`;
       "You are a technical writer specializing in Claude Code skill files. Output only valid SKILL.md content with no preamble or commentary.",
   };
 
+  if (typeof server.createMessage !== "function") {
+    throw new Error(samplingUnsupportedMessage());
+  }
+
   let result: Awaited<ReturnType<typeof server.createMessage>>;
   try {
     result = await server.createMessage(samplingParams);
   } catch (e) {
-    throw new Error(
-      `sampling/createMessage failed: ${(e as Error).message}. ` +
-        "Ensure your MCP client supports sampling (Claude Code supports it natively). " +
-        "Alternatively, pass draft_body to skip sampling."
-    );
+    const message = e instanceof Error ? e.message : String(e);
+    throw new Error(`${samplingUnsupportedMessage()} Original error: ${message}`);
   }
 
   const content = result.content;
@@ -159,6 +183,180 @@ Output ONLY the SKILL.md content, starting with the YAML frontmatter (---).`;
   // Strip any leading prose before the frontmatter fence.
   const fenceIdx = text.indexOf("---");
   return fenceIdx > 0 ? text.slice(fenceIdx) : text;
+}
+
+export async function validateSkillDraft(
+  body: string,
+  params: { slug: string; triggers: string[] }
+): Promise<void> {
+  const frontmatter = parseFrontmatter(body);
+  const name = readFrontmatterScalar(frontmatter, "name");
+  const description = readFrontmatterScalar(frontmatter, "description");
+  const triggers = readFrontmatterList(frontmatter, "triggers");
+
+  if (name !== params.slug) {
+    throw new Error(`draft frontmatter name must be "${params.slug}"`);
+  }
+  if (!description) {
+    throw new Error("draft frontmatter is missing description");
+  }
+  if (triggers.length === 0) {
+    throw new Error("draft frontmatter is missing triggers");
+  }
+
+  for (const section of [
+    "What this skill does",
+    "When to activate",
+    "Steps",
+    "Examples",
+  ]) {
+    if (!new RegExp(`^##\\s+${escapeRegExp(section)}\\s*$`, "im").test(body)) {
+      throw new Error(`draft is missing required section: ${section}`);
+    }
+  }
+
+  if (/{{[^}]+}}/.test(body)) {
+    throw new Error("draft contains unresolved template placeholders");
+  }
+
+  const draftEntry = {
+    id: params.slug,
+    name,
+    type: "claude_code_skill",
+    description,
+    tags: triggers,
+    verified: false,
+    author: { name: "local-user" },
+    install: {
+      skill_files: [
+        {
+          source: `https://example.invalid/${params.slug}/SKILL.md`,
+          target: "SKILL.md",
+        },
+      ],
+    },
+    source: { adapter: "propose_new_skill" },
+  };
+  draftEntrySchema.parse(draftEntry);
+
+  await checkInstallCommands(body);
+}
+
+function samplingUnsupportedMessage(): string {
+  return (
+    "host does not support sampling/createMessage for propose_new_skill. " +
+    "Use a Claude Code MCP host with sampling support, or pass draft_body to skip sampling."
+  );
+}
+
+function parseFrontmatter(body: string): string {
+  const match = body.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
+  if (!match?.[1]) {
+    throw new Error("draft must start with YAML frontmatter");
+  }
+  return match[1];
+}
+
+function readFrontmatterScalar(frontmatter: string, key: string): string | null {
+  const match = frontmatter.match(new RegExp(`^${escapeRegExp(key)}:\\s*(.+?)\\s*$`, "m"));
+  if (!match?.[1]) {
+    return null;
+  }
+  return stripYamlQuotes(match[1].trim());
+}
+
+function readFrontmatterList(frontmatter: string, key: string): string[] {
+  const inline = frontmatter.match(new RegExp(`^${escapeRegExp(key)}:\\s*\\[(.*?)\\]\\s*$`, "m"));
+  if (inline?.[1]) {
+    return inline[1]
+      .split(",")
+      .map((item) => stripYamlQuotes(item.trim()))
+      .filter(Boolean);
+  }
+
+  const block = frontmatter.match(new RegExp(`^${escapeRegExp(key)}:\\s*\\r?\\n((?:\\s+-\\s+.+\\r?\\n?)+)`, "m"));
+  if (!block?.[1]) {
+    return [];
+  }
+
+  return block[1]
+    .split(/\r?\n/)
+    .map((line) => line.match(/^\s+-\s+(.+?)\s*$/)?.[1])
+    .filter((item): item is string => Boolean(item))
+    .map((item) => stripYamlQuotes(item));
+}
+
+function stripYamlQuotes(value: string): string {
+  return value.replace(/^["']|["']$/g, "");
+}
+
+async function checkInstallCommands(body: string): Promise<void> {
+  const checks = [
+    ...findRegistryCommands(body, /\b(?:npm\s+(?:install|add)|npx)\s+([^\n]+)/gi, "npm"),
+    ...findRegistryCommands(body, /\b(?:(?:python\s+-m\s+)?pip(?:x)?\s+(?:install|run)|uvx)\s+([^\n]+)/gi, "pypi"),
+  ];
+
+  for (const check of checks) {
+    await assertPackageResolves(check.registry, check.packageName);
+  }
+}
+
+function findRegistryCommands(
+  body: string,
+  pattern: RegExp,
+  registry: "npm" | "pypi"
+): { registry: "npm" | "pypi"; packageName: string }[] {
+  return [...body.matchAll(pattern)]
+    .map((match) => firstPackageToken(match[1] ?? "", registry))
+    .filter((packageName): packageName is string => Boolean(packageName))
+    .map((packageName) => ({ registry, packageName }));
+}
+
+function firstPackageToken(args: string, registry: "npm" | "pypi"): string | null {
+  for (const token of args.split(/\s+/)) {
+    const cleaned = token.trim().replace(/[.,;:)]+$/g, "");
+    if (!cleaned || cleaned.startsWith("-")) {
+      continue;
+    }
+    if (/^(https?:|git\+|\.{0,2}\/)/.test(cleaned)) {
+      continue;
+    }
+    return registry === "npm" ? stripNpmVersion(cleaned) : stripPypiVersion(cleaned);
+  }
+  return null;
+}
+
+function stripNpmVersion(packageName: string): string {
+  const versionSeparator = packageName.lastIndexOf("@");
+  if (versionSeparator <= 0) {
+    return packageName;
+  }
+  return packageName.slice(0, versionSeparator);
+}
+
+function stripPypiVersion(packageName: string): string {
+  return packageName.split(/[<>=~!]/)[0] ?? packageName;
+}
+
+async function assertPackageResolves(
+  registry: "npm" | "pypi",
+  packageName: string
+): Promise<void> {
+  const url =
+    registry === "npm"
+      ? `https://registry.npmjs.org/${packageName.replace("/", "%2F")}`
+      : `https://pypi.org/pypi/${encodeURIComponent(packageName)}/json`;
+  const response = await fetch(url, { method: "HEAD" });
+
+  if (!response.ok) {
+    throw new Error(
+      `draft install command references unresolved ${registry} package: ${packageName}`
+    );
+  }
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function detectType(description: string): TaskType {
