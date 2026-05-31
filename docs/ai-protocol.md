@@ -7,9 +7,9 @@ that 404s, a fabricated publisher, or an `http://` source. None of these are
 caught by "the JSON looks right." This protocol defines the three gates every
 LLM-generated entry must pass before it is trusted (`verified: true`) or merged.
 
-The gates below are not new tooling. They formalize what
-[`scripts/test-adapter.mjs`](../scripts/test-adapter.mjs) already enforces and what
-[`handpicked/README.md`](../handpicked/README.md) asks auditors to check by hand.
+The gates below are not new tooling. They align with checks that exist today:
+- `scripts/test-adapter.mjs` verifies install resolvability (registry lookups + HTTPS `skill_files[*].source` returning HTTP 200).
+- `handpicked/README.md` describes the manual audit checklist (required before `verified: true`).
 
 ## Gate 1 — Schema validation
 
