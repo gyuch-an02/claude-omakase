@@ -23,7 +23,7 @@ export interface DoctorResult {
   summary: string;
 }
 
-export const doctorInput: z.ZodObject<{}> = z.object({}).strict();
+export const doctorInput = z.object({}).strict();
 
 export const doctorDescription = `Check installed Claude skills for missing SKILL.md files and missing install receipts.
 

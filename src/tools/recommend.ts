@@ -69,15 +69,6 @@ export async function handle(args: z.infer<typeof recommendInput>) {
     };
   }
 
-  const tokens: string[] = [];
-  if (profile.role) tokens.push(profile.role);
-  if (profile.occupation) tokens.push(profile.occupation);
-  if (profile.languages) tokens.push(...profile.languages);
-  if (profile.tools) tokens.push(...profile.tools);
-  if (profile.usecases) tokens.push(...profile.usecases);
-  if (args.context) tokens.push(args.context);
-
-  const query = tokens.join(" ").trim();
   const availableEntries = catalog.entries.filter((e) => !installedIds.has(e.id));
 
 
