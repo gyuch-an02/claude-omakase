@@ -66,10 +66,9 @@ Without `--fail-on-error` it is a soft check (exit 0) for the daily refresh; use
 ## Gate 3 — HTTPS-only sources
 
 Every `install.skill_files[*].source` **must start with `https://`**. No
-`http://`, no `file://`, no relative paths, no IP literals. Plaintext or local
-sources cannot be audited or trusted and are rejected before the HTTP-200 check
-even runs (see `checkSkillFile` in
-[`scripts/test-adapter.mjs`](../scripts/test-adapter.mjs)).
+`http://`, no `file://`, and no relative paths. Plaintext or local sources cannot
+be audited or trusted and are rejected before the HTTP-200 check even runs (see
+`checkSkillFile` in [`scripts/test-adapter.mjs`](../scripts/test-adapter.mjs)).
 
 `install.skill_files[*].target` must be a simple **relative** path that lands
 under `~/.claude/skills/<id>/` (e.g. `"SKILL.md"`). Absolute paths or `..`
