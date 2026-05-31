@@ -72,7 +72,7 @@ be audited or trusted and are rejected before the HTTP-200 check even runs (see
 
 `install.skill_files[*].target` must be a simple **relative** path that lands
 under `~/.claude/skills/<id>/` (e.g. `"SKILL.md"`). Absolute paths or `..`
-segments are rejected.
+segments are rejected by the installer (`src/installer/code-skills.ts`).
 
 ## Manual audit (before `verified: true`)
 
