@@ -9,7 +9,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write  # required for npm OIDC trusted publishing
+      id-token: write
       contents: read
 
     steps:
@@ -18,16 +18,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          # no registry-url — avoids setup-node injecting GITHUB_TOKEN as NODE_AUTH_TOKEN
 
-      - run: npm install -g npm@latest && node --version && npm --version
+      - run: npm install -g npm@latest && npm --version
 
       - run: npm ci
 
       - run: npm run build
 
       - name: Publish (npm OIDC Trusted Publishing)
-        run: npm publish --access public --provenance
+        run: npm publish --access public --provenance --loglevel silly 2>&1
         env:
           NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
-          # NODE_AUTH_TOKEN intentionally absent — npm exchanges GitHub OIDC token automatically
