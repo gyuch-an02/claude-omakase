@@ -155,11 +155,19 @@ claude mcp add omakase -- node /path/to/claude-omakase/dist/server.js
 
 ## Contributing
 
+All contributions are welcome — from first-timers to seasoned TypeScript developers.
+
+**Good first issues:** look for the [`good first issue`](https://github.com/gyuch-an02/claude-omakase/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) label.
+
+**Quick ways to contribute:**
+
 - **New adapter:** `npm run scaffold:adapter -- <name>` → implement `fetch(): Promise<Entry[]>` → register in `src/adapters/index.ts` → PR.
 - **New handpicked entry:** add a JSON file to `handpicked/` following the `Entry` shape in `src/types.ts`.
 - **Bug or feature:** open an issue or PR — all contributions welcome.
 
-See `CONTRIBUTING.md` for the full guide.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full guide, including the PR checklist and local dev loop.
+
+We follow the [Contributor Covenant](CODE_OF_CONDUCT.md). Please read it before participating.
 
 ## License
 
