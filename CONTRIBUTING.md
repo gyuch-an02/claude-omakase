@@ -8,6 +8,8 @@ You audited a Claude skill and want to mark it `verified: true`, or you want to 
 
 PR template asks one thing: explain what you actually ran to verify. For `verified: true`, include the publisher check, the HTTPS `SKILL.md` URL check, and the target-path check from `handpicked/README.md`.
 
+Not ready to write the JSON yet? Open a **"Suggest a skill for the catalog"** issue (it carries the audit checklist) and either you or a maintainer can follow up with the `handpicked/` PR. This is the lowest-effort first contribution.
+
 ## 2. Write a new adapter
 
 You know a source of Claude skills that we don't federate yet. Start with `npm run scaffold:adapter -- <source-name>`, then implement `export async function fetch(): Promise<Entry[]>`. See `src/adapters/README.md` for the full contract.

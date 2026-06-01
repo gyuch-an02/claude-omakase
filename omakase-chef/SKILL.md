@@ -36,9 +36,9 @@ Call `omakase.list_installed_skills`. If the list is empty:
 1. Ask **one question** — naturally, as part of the conversation:
    > "Before we get started — what kind of work do you do most? (e.g. code reviews, writing, research, data work, …)"
 
-2. Call `omakase.recommend_skills` with that answer as `context`. It returns `mode: "starter-pack"` with `present_as: "checklist"` and **every** starter-pack skill, most-relevant first.
+2. Call `omakase.recommend_skills` with that answer as `context`. It returns `mode: "starter-pack"` with `present_as: "checklist"` and **every** starter-pack skill, most-relevant first. The response carries a `rendered` field — a ready-made Markdown checklist. Show it **verbatim** rather than rebuilding it by hand; you may add one sentence of WHY for the top pick.
 
-3. Present them as a **checklist** — one line each, with a short WHY, most-relevant marked. Let the user pick any subset:
+3. The `rendered` checklist looks like this — let the user pick any subset:
    > "Here's the starter pack. Pick the ones that fit — I'll install whatever you check:
    > - [ ] **Quick Review** — one-line, severity-tagged feedback on any diff *(fits your code-review work best)*
    > - [ ] **Understand Anything** — deep explanations that lead with WHY
