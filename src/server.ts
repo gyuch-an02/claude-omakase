@@ -11,6 +11,8 @@
 //     }
 //   }
 
+import { readFileSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -33,9 +35,21 @@ interface Tool {
   handle: (args: unknown) => Promise<unknown>;
 }
 
+// Single source of truth: read the version from the package manifest so
+// serverInfo.version never drifts from the published package version.
+export function packageVersion(): string {
+  try {
+    const pkgPath = new URL("../package.json", import.meta.url);
+    const pkg = JSON.parse(readFileSync(pkgPath, "utf8")) as { version?: string };
+    return pkg.version ?? "0.0.0";
+  } catch {
+    return "0.0.0";
+  }
+}
+
 async function main(): Promise<void> {
   const server = new Server(
-    { name: "claude-omakase", version: "0.1.0" },
+    { name: "claude-omakase", version: packageVersion() },
     { capabilities: { tools: {} } }
   );
 
@@ -152,7 +166,12 @@ function zodToJsonSchema(schema: z.ZodTypeAny): Record<string, unknown> {
   return {};
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+// Only boot the stdio server when run as the entrypoint, so the module can be
+// imported (e.g. by tests) without starting a transport.
+const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (isMain) {
+  main().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}

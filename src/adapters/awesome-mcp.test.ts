@@ -83,3 +83,22 @@ test("normalizeHit: author derived from github owner", () => {
   assert.equal(result!.author.name, "myorg");
   assert.equal(result!.author.url, "https://github.com/myorg");
 });
+
+test("parseReadme: HTML anchors in category headers do not leak into tags", () => {
+  const readme = `
+### <a name="developer-tools"></a>Developer Tools
+
+- [jira-github-mcp](https://github.com/TamarEngel/jira-github-mcp) - Jira and GitHub integration
+`;
+  const entries = parseReadme(readme);
+  const e = entries.find((x) => x.id === "jira-github-mcp");
+  assert.ok(e, "expected jira-github-mcp entry");
+  // No markup-polluted tags.
+  for (const t of e!.tags) {
+    assert.ok(!/[<>"'=/\\]/.test(t), `tag "${t}" must be markup-free`);
+  }
+  // The clean signal survives.
+  assert.ok(e!.tags.includes("developer"));
+  assert.ok(e!.tags.includes("tools"));
+  assert.ok(e!.tags.includes("jira"));
+});

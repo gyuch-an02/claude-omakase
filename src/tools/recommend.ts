@@ -119,7 +119,12 @@ export async function handle(args: z.infer<typeof recommendInput>) {
       .slice(0, args.limit);
   } else {
     mode = "profile-search";
-    candidates = search(catalog.entries, query, args.limit + installedIds.size)
+    // An explicit ask must dominate the profile. Ranking on the combined
+    // (profile + ask) query let a strong profile tag (e.g. "frontend") outrank
+    // the actual request (e.g. "code review"). Rank on `ask` when present;
+    // fall back to the profile-derived query only when there's no explicit ask.
+    const rankQuery = ask ?? query;
+    candidates = search(catalog.entries, rankQuery, args.limit + installedIds.size)
       .map((r) => r.entry)
       .filter(notInstalled)
       .slice(0, args.limit);
