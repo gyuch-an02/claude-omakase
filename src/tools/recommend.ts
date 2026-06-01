@@ -3,6 +3,7 @@ import { load } from "../catalog/cache.js";
 import * as profileLib from "../profile.js";
 import { search } from "../catalog/search.js";
 import { handle as listInstalled } from "./list-installed.js";
+import { renderSkillTable, renderChecklist, type RenderRow } from "../catalog/render.js";
 import type { Entry } from "../types.js";
 
 export const recommendInput = z.object({
@@ -68,6 +69,7 @@ export async function handle(args: z.infer<typeof recommendInput>) {
       onboarding_message:
         "No skills installed yet. Here's the starter pack — pick the ones that fit how you work and I'll install them.",
       recommendations: orderAll(starterPack, query).map(format),
+      rendered: renderChecklist(orderAll(starterPack, query).map(toRow)),
       next_step:
         `ONBOARDING EXCEPTION — present a checklist, not one pick. Show EVERY skill above as a checkable item ` +
         `(the most relevant first), each with a one-line reason. Let the user select any subset (or all, or none). ` +
@@ -91,6 +93,7 @@ export async function handle(args: z.infer<typeof recommendInput>) {
       onboarding_message:
         "You have some skills, but your starter pack isn't complete yet. Here are the staples you're still missing — pick the ones you want.",
       recommendations: orderAll(missingStarter, query).map(format),
+      rendered: renderChecklist(orderAll(missingStarter, query).map(toRow)),
       next_step:
         `ONBOARDING EXCEPTION — present a checklist, not one pick. Show EVERY missing staple above as a checkable ` +
         `item (the most relevant first), each with a one-line reason. Let the user select any subset (or all, or none). ` +
@@ -113,6 +116,7 @@ export async function handle(args: z.infer<typeof recommendInput>) {
       mode: "verified-defaults" as const,
       profile_summary: profile,
       recommendations: candidates.map(format),
+      rendered: renderSkillTable(candidates.map(toRow)),
       next_step: singlePickNextStep,
     };
   }
@@ -134,7 +138,18 @@ export async function handle(args: z.infer<typeof recommendInput>) {
       match_score: r.score,
       match_reasons: r.reasons,
     })),
+    rendered: renderSkillTable(results.map((r) => toRow(r.entry))),
     next_step: singlePickNextStep,
+  };
+}
+
+function toRow(e: Entry): RenderRow {
+  return {
+    id: e.id,
+    name: e.name,
+    description: e.description,
+    verified: e.verified,
+    tags: e.tags,
   };
 }
 
