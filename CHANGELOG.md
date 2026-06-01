@@ -22,6 +22,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
+## [0.2.4] — 2026-06-01
+
+### Added
+- **Lifecycle tools** (supersedes #67, rebased onto current `main`): `uninstall_skill` (idempotently removes `~/.claude/skills/<id>/` + receipt), `update_skill` (force-reinstalls from catalog `skill_files`), and `doctor_skills` (per-skill health report: SKILL.md present? receipt present? in catalog? version match?).
+- `recommend_skills` profile-search results now carry `match_score` + `match_reasons` so the chef can explain why a pick fits.
+
+### Note
+- #67's original branch was built on a stale base and would have reverted the `packageVersion()` serverInfo fix and the test-import boot guard in `server.ts`, plus the starter-pack-gap / profile / checklist work in `recommend.ts`. Only the genuinely new pieces were salvaged onto current `main`; the regressions were dropped.
+
+---
+
 ## [0.2.3] — 2026-06-01
 
 ### Changed
