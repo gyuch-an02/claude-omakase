@@ -116,10 +116,78 @@ test("recommend_skills: complete starter pack falls through to verified-defaults
   assert.ok(result.recommendations.every((r) => r.id !== "grill-me"));
 });
 
+test("recommend_skills: whitespace-only context does not suppress the gap nudge", async (t) => {
+  await withIsolatedOmakaseState(
+    t,
+    [
+      starterEntry({ id: "grill-me", name: "Grill Me", description: "Plans.", tags: ["starter-pack", "planning"] }),
+      starterEntry({ id: "quick-review", name: "Quick Review", description: "Review.", tags: ["starter-pack", "review"] }),
+    ],
+    ["grill-me"]
+  );
+
+  const result = await handle(recommendInput.parse({ context: "   " }));
+
+  assert.equal(result.mode, "starter-pack-gap", "blank context is not a real ask");
+  assert.equal(result.recommendations[0]?.id, "quick-review");
+});
+
+test("recommend_skills: explicit context suppresses the gap and searches the catalog", async (t) => {
+  await withIsolatedOmakaseState(
+    t,
+    [
+      starterEntry({ id: "grill-me", name: "Grill Me", description: "Plans.", tags: ["starter-pack", "planning"] }),
+      starterEntry({
+        id: "quick-review",
+        name: "Quick Review",
+        description: "Severity-tagged code review.",
+        tags: ["starter-pack", "review"],
+      }),
+    ],
+    ["grill-me"]
+  );
+
+  const result = await handle(recommendInput.parse({ context: "I need code review help" }));
+
+  assert.equal(result.mode, "profile-search", "an explicit ask beats onboarding");
+  assert.equal(result.recommendations[0]?.id, "quick-review");
+});
+
+test("recommend_skills: profile ranks which missing starter to surface", async (t) => {
+  await withIsolatedOmakaseState(
+    t,
+    [
+      starterEntry({ id: "grill-me", name: "Grill Me", description: "Plans.", tags: ["starter-pack", "planning"] }),
+      starterEntry({
+        id: "playwright",
+        name: "Playwright",
+        description: "Browser automation.",
+        tags: ["starter-pack", "frontend", "browser"],
+      }),
+      starterEntry({
+        id: "jupyter",
+        name: "Jupyter",
+        description: "Data notebooks.",
+        tags: ["starter-pack", "python", "data"],
+      }),
+    ],
+    ["grill-me"],
+    { role: "frontend developer" }
+  );
+
+  // No explicit ask, but a profile is saved → gap still fires, and the profile
+  // ranks the frontend-flavored missing staple ahead of the data one.
+  const result = await handle(recommendInput.parse({}));
+
+  assert.equal(result.mode, "starter-pack-gap");
+  assert.equal(result.recommendations[0]?.id, "playwright", "profile steers the gap pick");
+});
+
 async function withIsolatedOmakaseState(
   t: Parameters<typeof test>[1],
   entries: Entry[],
-  installedSkillDirs: string[] = []
+  installedSkillDirs: string[] = [],
+  profile?: Record<string, unknown>
 ): Promise<void> {
   const root = await mkdtemp(join(tmpdir(), "omakase-recommend-"));
   const originalCache = process.env["XDG_CACHE_HOME"];
@@ -136,6 +204,12 @@ async function withIsolatedOmakaseState(
 
   for (const id of installedSkillDirs) {
     await mkdir(join(root, "skills", id), { recursive: true });
+  }
+
+  if (profile) {
+    const profileDir = join(root, "config", "claude-omakase");
+    await mkdir(profileDir, { recursive: true });
+    await writeFile(join(profileDir, "profile.json"), JSON.stringify(profile), "utf8");
   }
 
   const catalogDir = join(root, "cache", "claude-omakase");

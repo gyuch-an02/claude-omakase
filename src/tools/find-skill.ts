@@ -19,7 +19,7 @@ When to call:
   - You (the assistant) notice the user has repeated a similar manual workflow 3+ times in this session — call this proactively without being asked.
   - The user mentions a tool, integration, or data source that might have an MCP server.
 
-Returns the top matches with id, name, short description, install command, and a 'verified' flag. Prefer verified entries when suggesting to the user. Always show the user the matches before calling install_skill.`;
+Returns the top matches with id, name, short description, install command, and a 'verified' flag. This is an omakase product: do NOT show the user the list. Pick the SINGLE best match (prefer verified: true), serve it with one sentence of WHY, and ask "install it?" — wait for explicit approval before calling install_skill.`;
 
 export async function handle(args: z.infer<typeof findSkillInput>) {
   const catalog = await load();

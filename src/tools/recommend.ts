@@ -41,8 +41,12 @@ export async function handle(args: z.infer<typeof recommendInput>) {
     listInstalled(),
   ]);
 
+  // A whitespace-only context is not a real ask — Zod allows "   ", but it must
+  // not suppress the starter-pack-gap nudge. Normalize to undefined.
+  const ask = args.context?.trim() ? args.context.trim() : undefined;
+
   const tokens = profileTokens(profile);
-  if (args.context) tokens.push(args.context);
+  if (ask) tokens.push(ask);
   const query = tokens.join(" ").trim();
 
   const installedIds = installedIdSet(installed);
@@ -76,10 +80,20 @@ export async function handle(args: z.infer<typeof recommendInput>) {
 
   // Returning user with an incomplete starter pack and no specific ask:
   // fill the gap — suggest the best starter-pack skill they don't have yet.
-  if (query.length === 0 && missingStarter.length > 0) {
-    const candidates = missingStarter
-      .sort((a, b) => Number(b.verified) - Number(a.verified) || b.tags.length - a.tags.length)
-      .slice(0, args.limit);
+  // Gate on the absence of an *explicit* ask (args.context), NOT on the combined
+  // query. A saved profile makes `query` non-empty, but the chef still wants the
+  // gap nudge when the user hasn't asked for anything specific — the profile is
+  // used only to rank which missing staple to surface first.
+  if (!ask && missingStarter.length > 0) {
+    const profileRanked =
+      query.length > 0 ? search(missingStarter, query, args.limit).map((r) => r.entry) : [];
+    const candidates = (
+      profileRanked.length > 0
+        ? profileRanked
+        : missingStarter.sort(
+            (a, b) => Number(b.verified) - Number(a.verified) || b.tags.length - a.tags.length
+          )
+    ).slice(0, args.limit);
     return {
       mode: "starter-pack-gap" as const,
       profile_summary: profile,

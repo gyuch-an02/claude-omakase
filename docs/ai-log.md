@@ -59,3 +59,11 @@ commit. See [`CLAUDE.md`](../CLAUDE.md) → "Skill: ai-usage-log".
 3. `omakase-chef/SKILL.md`에 "incomplete starter pack" 트리거를 추가하여 Claude가 세션 시작 시 조용히 `recommend_skills`를 호출하고 `starter-pack-gap` 응답이면 빠진 스킬 하나만 제안하도록 안내했다.
 4. `src/tools/recommend.test.ts`에 미설치 스타터 스킬 추천과 완비 시 verified-defaults로 폴백하는 두 테스트를 추가했고, 격리 하네스가 설치된 스킬 디렉터리를 시뮬레이션하도록 확장했다.
 5. build·typecheck·lint(src 0건)·45개 테스트 통과를 확인했고 이 로그 항목과 동일 커밋에 포함한다.
+
+## 2026-06-01 — starter-pack-gap 버그 수정 + 세션 시작 자율 온보딩 강화
+
+1. `src/tools/recommend.ts`에서 `starter-pack-gap` 모드를 `query.length === 0` 대신 명시적 요청 부재(`!ask`)로 게이트하도록 고쳐, 프로필을 저장한 사용자가 프로필 토큰 때문에 갭 추천을 영구히 건너뛰던 버그를 제거하고 프로필은 미설치 스타터 순위 결정에만 쓰도록 했다.
+2. Codex(gpt-5.5)와 read-only 리뷰로 의논하여 공백만 있는 `context("   ")`가 갭을 잘못 억제하는 엣지를 확인하고 trim 후 빈 값을 `undefined`로 정규화했으며, `src/tools/find-skill.ts`의 "항상 목록을 보여주라"는 메뉴형 설명을 단일 추천 오마카세 방식으로 교체했다.
+3. `omakase-chef/SKILL.md`에 "세션 시작(모든 상태)" 결정적 루틴을 추가하고 `src/tools/list-installed.ts` 응답에 `installed_count`와 `next_step` 라우팅을 넣어, 빈 세션이면 첫 세션 흐름·기존 사용자면 무맥락 `recommend_skills` 호출로 갭을 1회만 제안하도록 자율 동작을 결정화했다.
+4. `src/e2e/flow.test.ts`를 신규 작성하여 MCP 추가→스캔→갭→설치→완비→find_skill→propose_new_skill 전체 흐름을 격리 파일시스템·로컬 카탈로그·무네트워크(빈 `skill_files`, `draft_body`)로 재현 가능하게 검증하고, `recommend.test.ts`에 공백 context·명시 요청의 갭 억제·프로필 순위 3개 엣지 테스트를 추가했다.
+5. typecheck·build·lint(src 0건)·테스트 49개 전부 통과를 확인했고 catalog.json은 변경하지 않았으며 이 로그 항목과 동일 커밋에 포함한다.
