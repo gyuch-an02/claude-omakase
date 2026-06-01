@@ -22,6 +22,19 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
+## [0.3.0] — 2026-06-01
+
+### Added
+- **Skill manager TUI** — `npx claude-omakase tui` (also `omakase tui`): an interactive terminal app to list installed skills, health-check them (missing SKILL.md / receipt / update available), update from the catalog, and remove them. Built on `@clack/prompts` (new runtime dependency). The `claude-omakase` binary now dispatches on a `tui`/`manage` subcommand; with no subcommand it still starts the stdio MCP server.
+- **Pretty rendering for suggestions** — `recommend_skills` and `find_skill` now return a `rendered` field: a ready-to-show Markdown checklist (starter-pack onboarding) or table (search/profile results), so Claude shows a clean table/checklist in chat instead of improvising one.
+- **Proactive suggestion hook** — `hooks/omakase-suggest.mjs` (`UserPromptSubmit`): matches each prompt against the catalog and suggests a fitting, not-yet-installed skill once per session (with a cooldown). Distinct from the repetition hook and from `propose_new_skill`. Opt-in; register it yourself.
+- **`Suggest a skill for the catalog` issue template** + `ISSUE_TEMPLATE/config.yml` (quickstart + security contact links) to make the lowest-effort contribution path guided.
+
+### Changed
+- README: new **Use cases** section (5 end-to-end walkthroughs), **Manage your skills** (TUI) section, **Proactive hooks** section, and the lifecycle tools added to the MCP tools table.
+
+---
+
 ## [0.2.4] — 2026-06-01
 
 ### Added

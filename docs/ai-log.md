@@ -99,3 +99,11 @@ commit. See [`CLAUDE.md`](../CLAUDE.md) → "Skill: ai-usage-log".
 3. SKIP에 `do`·`done`·`then`·`else`·`fi`·`for`·`while`·`if`·`function` 등 제어 키워드와 `EOF`·`EOL`·`END` 히어독 구분자, 그리고 `read`·`test`·`eval` 등 추가 셸 빌트인을 넣었다.
 4. 격리 검증으로 `for/done` 루프와 `EOF` 히어독을 3회 반복해도 침묵하고, 실제 반복 명령(`pytest` 3회)은 여전히 감지·주입함을 확인했다.
 5. 훅은 npm `files`에 없어 패키지 버전과 무관하므로 버전은 올리지 않았고 catalog.json도 변경하지 않았으며 이 로그 항목과 동일 커밋에 포함한다.
+
+## 2026-06-01 — 관리 TUI·제안 렌더링·선제 제안 훅·OSS 템플릿 (0.3.0)
+
+1. 설치된 스킬을 나열·헬스체크·업데이트·삭제하는 대화형 TUI(`src/cli/tui.ts`)를 `@clack/prompts`로 추가하고, `src/server.ts`가 `tui`/`manage` 서브커맨드면 TUI를, 인자 없으면 기존 stdio MCP 서버를 띄우도록 분기시켰으며 `package.json`에 `omakase` bin과 의존성을 더했다.
+2. `@clack/prompts`는 최신 1.x가 Node `styleText`(≥20.12)를 요구해 구버전에서 깨지므로 picocolors 기반 0.7.0으로 핀했고, non-TTY 환경에서는 안내 후 종료하는 가드를 넣었으며 Node 18·20에서 렌더링을 확인했다.
+3. 제안을 채팅에서 예쁘게 보여주기 위해 `src/catalog/render.ts`(마크다운 테이블·체크리스트)를 신설해 `recommend_skills`·`find_skill` 응답에 `rendered` 필드를 추가하고, `omakase-chef/SKILL.md`가 그 필드를 그대로 출력하도록 안내했다.
+4. 명시적 요청 없이도 프롬프트를 카탈로그와 매칭해 미설치 스킬을 세션당 1회(쿨다운) 제안하는 `hooks/omakase-suggest.mjs`(UserPromptSubmit)를 반복감지 훅·`propose_new_skill`과 별개로 추가했고, README에 용례 5종·TUI·훅 섹션과 OSS 기여용 "스킬 제안" 이슈 템플릿·`config.yml`을 마련했다.
+5. typecheck·build·lint(src 0건)·테스트 66개(렌더·라이프사이클 포함) 전부 통과를 확인하고 `package.json`을 0.3.0으로 올렸으며 catalog.json은 변경하지 않았고 이 로그 항목과 동일 커밋에 포함한다.

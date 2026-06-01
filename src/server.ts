@@ -187,11 +187,18 @@ function zodToJsonSchema(schema: z.ZodTypeAny): Record<string, unknown> {
   return {};
 }
 
-// Only boot the stdio server when run as the entrypoint, so the module can be
-// imported (e.g. by tests) without starting a transport.
+// Only boot when run as the entrypoint, so the module can be imported (e.g. by
+// tests) without starting a transport. A `tui`/`manage` subcommand launches the
+// interactive skill manager instead of the stdio MCP server, so the human CLI
+// (`npx claude-omakase tui`) and the agent share one binary.
 const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (isMain) {
-  main().catch((e) => {
+  const subcommand = process.argv[2];
+  const run =
+    subcommand === "tui" || subcommand === "manage"
+      ? import("./cli/tui.js").then((m) => m.runTui())
+      : main();
+  run.catch((e) => {
     console.error(e);
     process.exit(1);
   });

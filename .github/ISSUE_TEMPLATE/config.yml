@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Contributor quickstart (clone → green CI in ~30 min)
+    url: https://github.com/gyuch-an02/claude-omakase/blob/main/docs/contributor-quickstart.md
+    about: New here? Start with the quickstart, then pick a contribution path in CONTRIBUTING.md.
+  - name: Report a security issue (private)
+    url: https://github.com/gyuch-an02/claude-omakase/blob/main/SECURITY.md
+    about: Do not file security problems as public issues — follow the security policy instead.
