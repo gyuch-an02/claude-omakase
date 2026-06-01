@@ -75,3 +75,11 @@ commit. See [`CLAUDE.md`](../CLAUDE.md) → "Skill: ai-usage-log".
 3. `src/adapters/awesome-mcp.ts`의 태그 생성에서 카테고리·이름의 HTML을 먼저 제거하고 `sanitizeTags`로 정규화하여 오염의 근본 원인을 차단했으며, 미사용이 된 `dedupe` 헬퍼를 제거했다.
 4. `src/tools/recommend.ts`의 profile-search 랭킹을 프로필+컨텍스트 결합 질의 대신 명시적 요청(`ask`)이 있으면 그것으로만 정렬하도록 바꿔 프로필(frontend)이 실제 요청(code review)을 이기던 문제를 해결했고, `src/server.ts`의 하드코딩된 `serverInfo.version("0.1.0")`을 package.json에서 읽도록 고치며 import 시 부팅을 막는 엔트리포인트 가드를 추가했다.
 5. sanitize·list-installed·recommend·awesome-mcp·server 테스트 9건을 추가해 typecheck·build·lint(src 0건)·테스트 58개 전부 통과를 확인했고 catalog.json은 변경하지 않았으며 이 로그 항목과 동일 커밋에 포함한다.
+
+## 2026-06-01 — 스타터팩 체크리스트 온보딩 + 결정적 반복 감지 훅 (0.2.3)
+
+1. `src/tools/recommend.ts`의 `starter-pack`(미설치)과 `starter-pack-gap`(일부 설치) 두 모드를, 단일 추천 대신 관련도순으로 정렬한 전체/누락 스타터 스킬을 모두 반환하고 `present_as: "checklist"` 플래그를 다는 방식으로 바꿔 사용자가 한 번에 여러 개를 골라 설치할 수 있게 했다.
+2. 이 동작은 오마카세의 "한 번에 하나만 제안한다" 원칙의 유일한 예외이므로 `omakase-chef/SKILL.md`의 첫 세션·세션 시작·incomplete starter pack·hard rule 네 곳과 `recommend.ts` 도구 설명에 "온보딩 예외=체크리스트" 규칙을 명시해 다른 모드는 여전히 단일 추천을 유지하도록 했다.
+3. 모델의 주관적 판단에만 의존하던 "3회 반복" 트리거를 데모에서 확실히 동작시키기 위해 `hooks/omakase-repetition.mjs`(PostToolUse(Bash) 훅)를 새로 작성했고, 명령 시그니처를 세어 단일 명령과 체인·분리 호출 멀티스텝 워크플로(n-gram 연속 반복 감지)를 모두 잡아 3회째에 `find_skill` 호출을 결정적으로 주입하도록 했다.
+4. `src/tools/recommend.test.ts`와 `src/e2e/flow.test.ts`의 기존 "정확히 하나" 단언을 체크리스트 동작(전체/누락 전부 반환, `present_as` 확인, 다중 누락)으로 갱신하고 신규 테스트를 추가했으며, 훅은 `files` 필드에 없어 npm에 게시되지 않고 `install.sh`에도 미연결인 레포 자산임을 유지했다.
+5. typecheck·build·lint(src 0건)·테스트 58개 전부 통과를 확인했고 `package.json` 버전을 0.2.3으로 올렸으며 catalog.json은 변경하지 않았고 이 로그 항목과 동일 커밋에 포함한다.

@@ -29,10 +29,11 @@ After getting a result: present ONE recommendation with a one-sentence reason, t
 Never show a list. Never show more than one option at a time.
 
 Special behavior:
-  - No skills installed → returns the starter-pack (mode "starter-pack").
-  - Some skills installed but the starter-pack is incomplete and the user gave no specific ask → suggests the best missing starter-pack skill (mode "starter-pack-gap"). Use this to complete a user's starter pack after they've installed a few.
+  - No skills installed → returns the FULL starter-pack as a checklist (mode "starter-pack", present_as "checklist").
+  - Some skills installed but the starter-pack is incomplete and the user gave no specific ask → returns ALL missing starter-pack skills as a checklist (mode "starter-pack-gap", present_as "checklist"). Use this to complete a user's starter pack after they've installed a few.
   - Recommendations always exclude skills the user already has installed.
-In every mode: still pick the single best match, not the full list.`;
+
+ONBOARDING EXCEPTION: the two starter-pack modes are the ONLY case where you present a list. When present_as is "checklist", show every returned skill as a checkable item and let the user select and install any subset. In all OTHER modes, still pick the single best match, not the full list.`;
 
 export async function handle(args: z.infer<typeof recommendInput>) {
   const [catalog, profile, installed] = await Promise.all([
@@ -55,26 +56,20 @@ export async function handle(args: z.infer<typeof recommendInput>) {
   const starterPack = catalog.entries.filter((e) => e.tags.includes("starter-pack"));
   const missingStarter = starterPack.filter(notInstalled);
 
-  // First-time user: no skills installed → surface the starter-pack.
+  // First-time user: no skills installed → surface the WHOLE starter-pack as a
+  // checklist. This is the one onboarding exception to "serve exactly one".
   if (installedIds.size === 0) {
-    const ranked =
-      query.length > 0
-        ? search(starterPack, query, args.limit).map((r) => r.entry)
-        : starterPack
-            .filter((e) => e.verified)
-            .sort((a, b) => b.tags.length - a.tags.length)
-            .slice(0, args.limit);
-    const candidates = ranked.length > 0 ? ranked : starterPack.slice(0, args.limit);
-
     return {
       mode: "starter-pack" as const,
+      present_as: "checklist" as const,
       profile_summary: profile,
       onboarding_message:
-        "No skills installed yet. Here's the best first skill for your current work — you can always add more later.",
-      recommendations: candidates.map(format),
+        "No skills installed yet. Here's the starter pack — pick the ones that fit how you work and I'll install them.",
+      recommendations: orderAll(starterPack, query).map(format),
       next_step:
-        `First-time user. Serve the ONE recommendation above with a one-sentence reason, then ask "install it?". ` +
-        `Do not list the others. On approval, call install_skill and follow its next_step onboarding.`,
+        `ONBOARDING EXCEPTION — present a checklist, not one pick. Show EVERY skill above as a checkable item ` +
+        `(the most relevant first), each with a one-line reason. Let the user select any subset (or all, or none). ` +
+        `On approval, call install_skill once per selected skill, then follow each result's next_step onboarding.`,
     };
   }
 
@@ -85,26 +80,19 @@ export async function handle(args: z.infer<typeof recommendInput>) {
   // gap nudge when the user hasn't asked for anything specific — the profile is
   // used only to rank which missing staple to surface first.
   if (!ask && missingStarter.length > 0) {
-    const profileRanked =
-      query.length > 0 ? search(missingStarter, query, args.limit).map((r) => r.entry) : [];
-    const candidates = (
-      profileRanked.length > 0
-        ? profileRanked
-        : missingStarter.sort(
-            (a, b) => Number(b.verified) - Number(a.verified) || b.tags.length - a.tags.length
-          )
-    ).slice(0, args.limit);
     return {
       mode: "starter-pack-gap" as const,
+      present_as: "checklist" as const,
       profile_summary: profile,
       installed_count: installedIds.size,
       missing_starter_pack: missingStarter.map((e) => e.id),
       onboarding_message:
-        "You have some skills, but your starter pack isn't complete yet. Here's the next one worth adding.",
-      recommendations: candidates.map(format),
+        "You have some skills, but your starter pack isn't complete yet. Here are the staples you're still missing — pick the ones you want.",
+      recommendations: orderAll(missingStarter, query).map(format),
       next_step:
-        `Serve the ONE recommendation above with a one-sentence reason ("you've got X, this rounds it out"), then ask "install it?". ` +
-        `Never show the full list. On approval, call install_skill and follow its next_step onboarding.`,
+        `ONBOARDING EXCEPTION — present a checklist, not one pick. Show EVERY missing staple above as a checkable ` +
+        `item (the most relevant first), each with a one-line reason. Let the user select any subset (or all, or none). ` +
+        `On approval, call install_skill once per selected skill, then follow each result's next_step onboarding.`,
     };
   }
 
@@ -147,6 +135,20 @@ function installedIdSet(installed: Awaited<ReturnType<typeof listInstalled>>): S
   for (const r of installed.receipts) ids.add(r.id);
   for (const name of installed.raw_skills_dir) ids.add(name);
   return ids;
+}
+
+// Order all entries by relevance to `query` WITHOUT dropping any — used by the
+// starter-pack checklist modes, which must surface every staple, most-relevant
+// first. With no query, fall back to verified-then-breadth ordering.
+function orderAll(all: Entry[], query: string): Entry[] {
+  if (query.length === 0) {
+    return [...all].sort(
+      (a, b) => Number(b.verified) - Number(a.verified) || b.tags.length - a.tags.length
+    );
+  }
+  const ranked = search(all, query, all.length).map((r) => r.entry);
+  const seen = new Set(ranked.map((e) => e.id));
+  return [...ranked, ...all.filter((e) => !seen.has(e.id))];
 }
 
 function profileTokens(profile: Awaited<ReturnType<typeof profileLib.load>>): string[] {

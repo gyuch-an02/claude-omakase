@@ -22,6 +22,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
+## [0.2.3] — 2026-06-01
+
+### Changed
+- **Starter-pack onboarding is now a checklist.** `recommend_skills` returns the full starter pack (mode `starter-pack`) and every missing staple (mode `starter-pack-gap`) with `present_as: "checklist"`, so first-time and returning users can select and install any subset at once. This is the one deliberate exception to omakase's "serve exactly one" rule — all other modes still return a single pick. `omakase-chef/SKILL.md` updated to match.
+
+### Added
+- **Deterministic repetition detector** (`hooks/omakase-repetition.mjs`) — opt-in `PostToolUse(Bash)` hook that counts repeated command signatures (single commands, plus multi-step chained/sequential workflows via n-gram detection) and nudges Claude to call `find_skill` once a workflow repeats 3×. Replaces the soft, model-judgment-only repetition trigger with a reliable one for demos. Not auto-wired by `install.sh` — register it manually.
+
+---
+
 ## [0.2.0] — 2026-05-30
 
 ### Added

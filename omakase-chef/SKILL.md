@@ -21,29 +21,37 @@ Do this **once**, near the start of the session, the first time the user does an
 
 1. Call `omakase.list_installed_skills`. Follow its `next_step` field — it tells you which branch you're in.
 2. **Empty list** → run the *First session* flow below.
-3. **Non-empty list** → call `omakase.recommend_skills` with **no context**. If it returns `mode: "starter-pack-gap"`, serve the single missing staple once (see *incomplete starter pack* below). Any other mode → stay quiet; wait for a workflow trigger.
+3. **Non-empty list** → call `omakase.recommend_skills` with **no context**. If it returns `mode: "starter-pack-gap"`, present the missing staples as a checklist (see *incomplete starter pack* below). Any other mode → stay quiet; wait for a workflow trigger.
 
-Serve **at most one** nudge from this routine. If the user declines or you already nudged this session, drop it and move on.
+Serve **at most one** nudge from this routine. If the user declines or you already nudged this session, drop it and move on. (The starter-pack checklist counts as that one nudge — it is the single allowed exception to "one skill at a time".)
 
 ---
 
 ## First session (no skills installed)
+
+This is the **onboarding exception**: a brand-new user has nothing, so you present the whole starter pack as a checklist — not one pick. This is the *only* time you show a list.
 
 Call `omakase.list_installed_skills`. If the list is empty:
 
 1. Ask **one question** — naturally, as part of the conversation:
    > "Before we get started — what kind of work do you do most? (e.g. code reviews, writing, research, data work, …)"
 
-2. Based on their answer, call `omakase.recommend_skills` with that context as `context`. Pick **the single best match** from the results.
+2. Call `omakase.recommend_skills` with that answer as `context`. It returns `mode: "starter-pack"` with `present_as: "checklist"` and **every** starter-pack skill, most-relevant first.
 
-3. Serve it with one sentence of WHY:
-   > "The skill that fits best for code review work is **Quick Review** — it gives you one-line, severity-tagged feedback on any diff. Install it?"
+3. Present them as a **checklist** — one line each, with a short WHY, most-relevant marked. Let the user pick any subset:
+   > "Here's the starter pack. Pick the ones that fit — I'll install whatever you check:
+   > - [ ] **Quick Review** — one-line, severity-tagged feedback on any diff *(fits your code-review work best)*
+   > - [ ] **Understand Anything** — deep explanations that lead with WHY
+   > - [ ] **Grill Me** — stress-test a plan by getting interviewed
+   > - [ ] **Write a Skill** — turn a recurring workflow into a new skill
+   >
+   > Which ones? (all / none / just the first / …)"
 
-4. If they say yes, call `omakase.install_skill`. Follow the `next_step` field in its response for onboarding.
+4. For each skill the user selects, call `omakase.install_skill`. Follow each result's `next_step` for onboarding. Install nothing they didn't check.
 
-5. Done. Do not offer more. One skill per session is enough.
+5. Done. The checklist is your one onboarding nudge — don't pile on more after it.
 
-> **Use it THIS session, not just next.** Installed skills auto-load from the next session on. But the files already exist now — if the user wants to use the skill immediately, read `~/.claude/skills/<id>/SKILL.md` and follow its instructions directly. Do not make them restart to get value.
+> **Use it THIS session, not just next.** Installed skills auto-load from the next session on. But the files already exist now — if the user wants to use a skill immediately, read `~/.claude/skills/<id>/SKILL.md` and follow its instructions directly. Do not make them restart to get value.
 
 ---
 
@@ -72,8 +80,8 @@ One mention is enough. Do not wait for three.
 "What can I install?" / "What should I add?" / "What do you recommend?"
 Call `omakase.recommend_skills` with context from the conversation. Return **one recommendation** with a reason, not a list.
 
-**Trigger: incomplete starter pack**
-Handled by the *Session start* routine above: call `omakase.recommend_skills` with no context once per session. If it returns `mode: "starter-pack-gap"`, the user has installed some skills but is missing a starter-pack staple. Offer the single missing skill once — *"You've got X; the one thing that rounds out your starter pack is Y. Install it?"* — then drop it. Do not nag if they decline.
+**Trigger: incomplete starter pack** *(checklist exception)*
+Handled by the *Session start* routine above: call `omakase.recommend_skills` with no context once per session. If it returns `mode: "starter-pack-gap"` (with `present_as: "checklist"`), the user has some skills but is missing one or more starter-pack staples. Present **all** the missing staples as a checklist and let them pick any subset — *"You've got X already. The staples you're still missing: [ ] Y, [ ] Z. Want either?"* — then install each one they check. This is the one place you show a list; offer it once, don't nag if they pass.
 
 ---
 
@@ -109,7 +117,7 @@ If yes:
 
 ## Hard rules
 
-- **One recommendation per moment.** Never list more than one skill at a time. If you call `find_skill` or `recommend_skills` and get multiple results, you pick one and serve it. The user never sees a menu.
+- **One recommendation per moment.** Never list more than one skill at a time. If you call `find_skill` or `recommend_skills` and get multiple results, you pick one and serve it. The user never sees a menu. **The one exception: starter-pack onboarding** — when `recommend_skills` returns `present_as: "checklist"` (modes `starter-pack` / `starter-pack-gap`), present every returned staple as a checklist and let the user select and install any subset. Nowhere else.
 - **Never install without explicit approval.** "Yes", "go ahead", "do it" — wait for it. "Sounds good" is borderline; ask once to confirm.
 - **Never re-propose a declined skill this session.** They said no. Move on.
 - **Never interrupt a flow.** If the user is mid-task, finish with them first. Tap the shoulder at a natural pause.
