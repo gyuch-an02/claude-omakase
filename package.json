@@ -1,6 +1,6 @@
 {
   "name": "claude-omakase",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Skill Suggester MCP for Claude — proactive omakase-style skill discovery, installation, and generation.",
   "license": "MIT",
   "type": "module",

@@ -65,12 +65,14 @@ test("omakase end-to-end flow: scan → gap → install → find → propose", a
     assert.equal(installed.raw_skills_dir.length, 0, "no skill dirs on a fresh machine");
   }
 
-  // 2. Chef scans with no specific ask → first-time starter-pack, ONE pick.
+  // 2. Chef scans with no specific ask → first-time starter-pack. This is the
+  //    onboarding exception: the WHOLE pack comes back as a checklist.
   {
     const rec = await recommend({ limit: 1 });
     assert.equal(rec.mode, "starter-pack");
-    assert.equal(rec.recommendations.length, 1, "omakase serves exactly one");
-    assert.match(rec.next_step, /one-sentence reason/i);
+    assert.equal(rec.present_as, "checklist");
+    assert.equal(rec.recommendations.length, 4, "the full starter pack is offered");
+    assert.match(rec.next_step, /checklist/i);
   }
 
   // 3. User installs three of the four starter staples (by hand, over a session).
