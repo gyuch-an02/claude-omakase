@@ -35,3 +35,35 @@ commit. See [`CLAUDE.md`](../CLAUDE.md) → "Skill: ai-usage-log".
 3. 이 변경은 `omakase-chef/SKILL.md`가 요구하는 메뉴 없는 omakase UX와 실제 도구 반환값이 어긋나지 않도록 맞춘 것이다.
 4. 테스트는 임시 캐시, 설정, 데이터, 스킬 디렉터리를 사용해 사용자의 실제 로컬 상태를 건드리지 않도록 구성했다.
 5. Claude-assisted 리뷰 수정 사항과 이 AI 사용 로그 항목은 같은 커밋에 포함된다.
+
+## 2026-05-31 — 데모 준비 및 README 정확도 개선
+
+1. `README.md`의 아키텍처 다이어그램에서 오래된 카탈로그 항목 수 "~115 entries"를 실제 수치인 "400+ skills"로 수정하고, MCP 도구 표에서 누락된 `set_profile` 항목을 추가했다.
+2. `docs/demo-script.md`를 신규 작성하여 Day 7 라이브 데모의 setup 절차, Act 1–4 진행 흐름, Q&A 준비 내용을 포함한 5–7분 분량의 데모 스크립트를 정리했다.
+3. `docs/distribution/hn-post.md`와 `docs/distribution/discord-post.md`를 작성하여 Show HN, Anthropic Discord, Twitter/X 스레드용 배포 초안을 준비했다.
+4. `.gitignore`에 `!docs/demo-script.md` 예외 규칙을 추가하여 `docs/*` 일괄 무시 패턴에서 데모 스크립트가 추적되도록 수정했다.
+5. 변경된 파일은 `.gitignore`, `README.md`, `docs/ai-log.md`, `docs/demo-script.md`, `docs/distribution/hn-post.md`, `docs/distribution/discord-post.md`이며 이 항목과 함께 동일 커밋에 포함된다.
+
+## 2026-06-01 — 능동적 온보딩: tool 응답 next_step 힌트 + SKILL.md 트리거 튜닝
+
+1. `src/tools/find-skill.ts`, `src/tools/recommend.ts`, `src/tools/install-skill.ts`의 반환 객체에 `next_step` 필드를 추가하여 Claude가 검색·추천·설치 직후 무엇을 해야 하는지(단일 추천 제시, 승인 대기, 설치 후 트리거 문구 안내)를 응답 content로 직접 전달하도록 했다.
+2. MCP Prompts·resources·mcpContextUris·spontaneous sampling은 Claude Code CLI에서 세션 시작 시 자동 트리거되지 않음을 claude-code-guide로 검증했고, 검증된 메커니즘인 tool content 힌트와 SKILL.md 자동 로드만 사용했다.
+3. `omakase-chef/SKILL.md`의 `description`을 세션·프로젝트 시작, "뭘 설치/사용할까" 질문, 미설치 상태, 3회 반복 신호에 더 잘 매칭되도록 확장하여 능동 트리거 범위를 넓혔다.
+4. 같은 SKILL.md 첫 세션 절차에 설치 후 같은 세션에서 `~/.claude/skills/<id>/SKILL.md`를 직접 읽어 즉시 사용하는 경로를 명시하여, 다음 세션까지 기다리지 않아도 가치를 얻도록 했다.
+5. `next_step` 힌트는 `_meta`가 아닌 응답 content에 넣어 모델이 실제로 읽도록 했고, build·typecheck·lint(src 0건)·43개 테스트 통과를 확인한 뒤 이 로그 항목과 동일 커밋에 포함한다.
+
+## 2026-06-01 — starter-pack-gap 모드: 미설치 스타터 스킬 자동 추천
+
+1. `src/tools/recommend.ts`에 `starter-pack-gap` 모드를 추가하여, 일부 스킬이 설치된 사용자라도 starter-pack 태그 스킬 중 미설치 항목이 있으면 그중 가장 적합한 하나를 추천하도록 했다.
+2. 설치 식별은 Omakase 영수증 id와 `~/.claude/skills/` 디렉터리명을 합집합한 `installedIdSet` 헬퍼로 계산하고, 모든 추천 경로(verified-defaults·profile-search 포함)에서 이미 설치된 스킬을 제외하도록 수정했다.
+3. `omakase-chef/SKILL.md`에 "incomplete starter pack" 트리거를 추가하여 Claude가 세션 시작 시 조용히 `recommend_skills`를 호출하고 `starter-pack-gap` 응답이면 빠진 스킬 하나만 제안하도록 안내했다.
+4. `src/tools/recommend.test.ts`에 미설치 스타터 스킬 추천과 완비 시 verified-defaults로 폴백하는 두 테스트를 추가했고, 격리 하네스가 설치된 스킬 디렉터리를 시뮬레이션하도록 확장했다.
+5. build·typecheck·lint(src 0건)·45개 테스트 통과를 확인했고 이 로그 항목과 동일 커밋에 포함한다.
+
+## 2026-06-01 — starter-pack-gap 버그 수정 + 세션 시작 자율 온보딩 강화
+
+1. `src/tools/recommend.ts`에서 `starter-pack-gap` 모드를 `query.length === 0` 대신 명시적 요청 부재(`!ask`)로 게이트하도록 고쳐, 프로필을 저장한 사용자가 프로필 토큰 때문에 갭 추천을 영구히 건너뛰던 버그를 제거하고 프로필은 미설치 스타터 순위 결정에만 쓰도록 했다.
+2. Codex(gpt-5.5)와 read-only 리뷰로 의논하여 공백만 있는 `context("   ")`가 갭을 잘못 억제하는 엣지를 확인하고 trim 후 빈 값을 `undefined`로 정규화했으며, `src/tools/find-skill.ts`의 "항상 목록을 보여주라"는 메뉴형 설명을 단일 추천 오마카세 방식으로 교체했다.
+3. `omakase-chef/SKILL.md`에 "세션 시작(모든 상태)" 결정적 루틴을 추가하고 `src/tools/list-installed.ts` 응답에 `installed_count`와 `next_step` 라우팅을 넣어, 빈 세션이면 첫 세션 흐름·기존 사용자면 무맥락 `recommend_skills` 호출로 갭을 1회만 제안하도록 자율 동작을 결정화했다.
+4. `src/e2e/flow.test.ts`를 신규 작성하여 MCP 추가→스캔→갭→설치→완비→find_skill→propose_new_skill 전체 흐름을 격리 파일시스템·로컬 카탈로그·무네트워크(빈 `skill_files`, `draft_body`)로 재현 가능하게 검증하고, `recommend.test.ts`에 공백 context·명시 요청의 갭 억제·프로필 순위 3개 엣지 테스트를 추가했다.
+5. typecheck·build·lint(src 0건)·테스트 49개 전부 통과를 확인했고 catalog.json은 변경하지 않았으며 이 로그 항목과 동일 커밋에 포함한다.

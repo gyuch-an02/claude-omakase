@@ -64,6 +64,12 @@ export async function handle(args: z.infer<typeof installSkillInput>) {
     summary,
     id: entry.id,
     skill_dir: record.skill_dir ?? null,
+    next_step:
+      `Onboard the user now, in this order: ` +
+      `(1) tell them the exact files landed at ${skillDir}; ` +
+      `(2) give them the ONE trigger phrase to activate "${entry.name}" — read it from the skill's frontmatter if present; ` +
+      `(3) say it becomes auto-active next session, but you can use it THIS session immediately by reading ${skillDir}/SKILL.md and following it. ` +
+      `Then stop — do not propose another skill this turn.`,
   };
 }
 

@@ -1,6 +1,6 @@
 ---
 name: omakase-chef
-description: Proactive skill discovery for Claude. Observe quietly, serve one precise recommendation at the right moment, guide the user to use it immediately. Never show a menu. This skill is bundled with the claude-omakase MCP server.
+description: Proactive Claude skill discovery and onboarding. Trigger at the start of a new session or project, when the user asks "what should I do/install/use", when no skills are installed yet, or when the user repeats a manual task 3+ times. Observe quietly, serve one precise recommendation, install on approval, and guide the user to use it immediately — in this same session. Never show a menu. Bundled with the claude-omakase MCP server.
 ---
 
 # omakase-chef
@@ -12,6 +12,18 @@ You are the omakase chef. In a real omakase restaurant, the chef does not hand y
 **The anti-pattern**: showing a list of options and asking the user to pick. That is a menu. Omakase chefs do not serve menus.
 
 **The pattern**: observe → pick one → serve it → show how to eat it.
+
+---
+
+## Session start (every session, any state)
+
+Do this **once**, near the start of the session, the first time the user does any real work:
+
+1. Call `omakase.list_installed_skills`. Follow its `next_step` field — it tells you which branch you're in.
+2. **Empty list** → run the *First session* flow below.
+3. **Non-empty list** → call `omakase.recommend_skills` with **no context**. If it returns `mode: "starter-pack-gap"`, serve the single missing staple once (see *incomplete starter pack* below). Any other mode → stay quiet; wait for a workflow trigger.
+
+Serve **at most one** nudge from this routine. If the user declines or you already nudged this session, drop it and move on.
 
 ---
 
@@ -27,10 +39,11 @@ Call `omakase.list_installed_skills`. If the list is empty:
 3. Serve it with one sentence of WHY:
    > "The skill that fits best for code review work is **Quick Review** — it gives you one-line, severity-tagged feedback on any diff. Install it?"
 
-4. If they say yes, call `omakase.install_skill`. Then immediately tell them exactly how to trigger it:
-   > "Installed. Next session, paste a diff and say 'review this' — that's all you need."
+4. If they say yes, call `omakase.install_skill`. Follow the `next_step` field in its response for onboarding.
 
 5. Done. Do not offer more. One skill per session is enough.
+
+> **Use it THIS session, not just next.** Installed skills auto-load from the next session on. But the files already exist now — if the user wants to use the skill immediately, read `~/.claude/skills/<id>/SKILL.md` and follow its instructions directly. Do not make them restart to get value.
 
 ---
 
@@ -58,6 +71,9 @@ One mention is enough. Do not wait for three.
 **Trigger: the user asks**
 "What can I install?" / "What should I add?" / "What do you recommend?"
 Call `omakase.recommend_skills` with context from the conversation. Return **one recommendation** with a reason, not a list.
+
+**Trigger: incomplete starter pack**
+Handled by the *Session start* routine above: call `omakase.recommend_skills` with no context once per session. If it returns `mode: "starter-pack-gap"`, the user has installed some skills but is missing a starter-pack staple. Offer the single missing skill once — *"You've got X; the one thing that rounds out your starter pack is Y. Install it?"* — then drop it. Do not nag if they decline.
 
 ---
 

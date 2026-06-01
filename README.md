@@ -19,7 +19,7 @@
                                          │ fetched at build time
                                          ▼
          ┌──────────────────────────────────────────────┐
-         │  Federated catalog (~115 entries)            │
+         │  Federated catalog (400+ skills)             │
          │  ├── handpicked/     verified seeds + overlay │
          │  ├── mcp-servers-repo  Anthropic reference   │
          │  ├── awesome-mcp       community list        │
@@ -103,6 +103,7 @@ Install any of them: *"Install the Grill Me skill"* → Claude calls `install_sk
 | `list_installed_skills` | List installed skills and install receipts |
 | `install_skill` | Download and install a skill to `~/.claude/skills/<id>/` |
 | `recommend_skills` | Ranked suggestions based on your profile, context, and install state |
+| `set_profile` | Save your role, languages, and tools so recommendations improve over time |
 | `propose_new_skill` | Draft a new SKILL.md from scratch using MCP sampling |
 
 ## Catalog
