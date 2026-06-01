@@ -27,6 +27,9 @@ import * as installSkill from "./tools/install-skill.js";
 import * as recommend from "./tools/recommend.js";
 import * as setProfile from "./tools/set-profile.js";
 import * as proposeNewSkill from "./tools/propose-new-skill.js";
+import * as uninstallSkill from "./tools/uninstall-skill.js";
+import * as updateSkill from "./tools/update-skill.js";
+import * as doctor from "./tools/doctor.js";
 
 interface Tool {
   name: string;
@@ -71,6 +74,24 @@ async function main(): Promise<void> {
       description: installSkill.installSkillDescription,
       inputSchema: installSkill.installSkillInput,
       handle: (args) => installSkill.handle(installSkill.installSkillInput.parse(args)),
+    },
+    {
+      name: "uninstall_skill",
+      description: uninstallSkill.uninstallSkillDescription,
+      inputSchema: uninstallSkill.uninstallSkillInput,
+      handle: (args) => uninstallSkill.handle(uninstallSkill.uninstallSkillInput.parse(args)),
+    },
+    {
+      name: "update_skill",
+      description: updateSkill.updateSkillDescription,
+      inputSchema: updateSkill.updateSkillInput,
+      handle: (args) => updateSkill.handle(updateSkill.updateSkillInput.parse(args)),
+    },
+    {
+      name: "doctor_skills",
+      description: doctor.doctorDescription,
+      inputSchema: doctor.doctorInput,
+      handle: () => doctor.handle(),
     },
     {
       name: "recommend_skills",
