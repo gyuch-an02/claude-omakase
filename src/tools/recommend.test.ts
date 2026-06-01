@@ -183,6 +183,38 @@ test("recommend_skills: profile ranks which missing starter to surface", async (
   assert.equal(result.recommendations[0]?.id, "playwright", "profile steers the gap pick");
 });
 
+test("recommend_skills: explicit context outranks a strong profile match", async (t) => {
+  await withIsolatedOmakaseState(
+    t,
+    [
+      starterEntry({
+        id: "playwright",
+        name: "Playwright",
+        description: "Browser automation and frontend testing.",
+        tags: ["frontend", "browser", "testing"],
+      }),
+      starterEntry({
+        id: "quick-review",
+        name: "Quick Review",
+        description: "Severity-tagged code review of any diff.",
+        tags: ["code-review", "review", "diff"],
+      }),
+    ],
+    ["seed-skill"], // returning user (non-empty install) so we reach profile-search
+    { role: "frontend developer" }
+  );
+
+  // Profile (frontend) would pull Playwright; the explicit ask is about reviews.
+  const result = await handle(recommendInput.parse({ context: "I keep doing code review by hand" }));
+
+  assert.equal(result.mode, "profile-search");
+  assert.equal(
+    result.recommendations[0]?.id,
+    "quick-review",
+    "the explicit ask must beat the profile's frontend bias"
+  );
+});
+
 async function withIsolatedOmakaseState(
   t: Parameters<typeof test>[1],
   entries: Entry[],
