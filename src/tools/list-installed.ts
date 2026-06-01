@@ -21,9 +21,16 @@ export async function handle() {
   const receipts = readReceipts();
   const skills = readSkillsDir();
 
+  const installedCount = receipts.length + skills.length;
+
   return {
     receipts,
     raw_skills_dir: skills,
+    installed_count: installedCount,
+    next_step:
+      installedCount === 0
+        ? `No skills installed. This is a first session — ask the user ONE question about the work they do most, then call recommend_skills with that as context and serve the single best starter-pack skill.`
+        : `The user already has ${installedCount} skill(s). Call recommend_skills with NO context to check for a starter-pack gap; if mode is "starter-pack-gap", offer the one missing staple. Otherwise stay quiet until a workflow trigger fires.`,
   };
 }
 
