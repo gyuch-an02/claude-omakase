@@ -21,7 +21,10 @@ export async function handle() {
   const receipts = readReceipts();
   const skills = readSkillsDir();
 
-  const installedCount = receipts.length + skills.length;
+  // A skill installed via Omakase has BOTH a receipt and a ~/.claude/skills dir,
+  // so receipts.length + skills.length double-counts. Count distinct ids — the
+  // same union recommend_skills uses.
+  const installedCount = new Set([...receipts.map((r) => r.id), ...skills]).size;
 
   return {
     receipts,
