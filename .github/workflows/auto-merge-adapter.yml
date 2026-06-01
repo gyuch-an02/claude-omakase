@@ -1,0 +1,29 @@
+name: auto-merge-adapter
+
+# Enable GitHub auto-merge on any PR labeled "adapter". Auto-merge then
+# completes the merge once all required status checks pass (green CI).
+#
+# Repo settings this workflow depends on:
+#   1. Settings → General → Pull Requests → "Allow auto-merge" must be ON.
+#   2. Settings → Branches → main branch protection should require the "CI"
+#      status check. Without it, auto-merge fires the moment the label is
+#      added, even if CI has not yet reported.
+
+on:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  enable-auto-merge:
+    if: github.event.label.name == 'adapter'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enable auto-merge on this PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: gh pr merge "$PR" --auto --squash --repo "${{ github.repository }}"
