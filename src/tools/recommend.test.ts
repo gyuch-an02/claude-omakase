@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { recommendInput, handle } from "./recommend.js";
 import type { Entry } from "../types.js";
 
-test("recommend_skills: first-time starter pack returns one context-ranked skill", async (t) => {
+test("recommend_skills: first-time starter pack returns the full checklist, context-ranked", async (t) => {
   await withIsolatedOmakaseState(t, [
     starterEntry({
       id: "jupyter-notebook",
@@ -34,13 +34,14 @@ test("recommend_skills: first-time starter pack returns one context-ranked skill
     })
   );
 
+  // Onboarding exception: present every staple as a checklist, not one pick.
   assert.equal(result.mode, "starter-pack");
-  assert.equal(result.recommendations.length, 1);
-  assert.equal(result.recommendations[0]?.id, "playwright");
-  assert.match(result.onboarding_message, /best first skill/);
+  assert.equal(result.present_as, "checklist");
+  assert.equal(result.recommendations.length, 3, "all staples returned for the checklist");
+  assert.equal(result.recommendations[0]?.id, "playwright", "most relevant ranked first");
 });
 
-test("recommend_skills: first-time starter pack honors explicit limit", async (t) => {
+test("recommend_skills: first-time checklist ignores limit and returns all staples", async (t) => {
   await withIsolatedOmakaseState(t, [
     starterEntry({
       id: "alpha",
@@ -54,15 +55,23 @@ test("recommend_skills: first-time starter pack honors explicit limit", async (t
       description: "Second default.",
       tags: ["starter-pack", "beta", "two"],
     }),
+    starterEntry({
+      id: "gamma",
+      name: "Gamma",
+      description: "Third default.",
+      tags: ["starter-pack", "gamma", "three"],
+    }),
   ]);
 
-  const result = await handle(recommendInput.parse({ limit: 2 }));
+  // limit is irrelevant in checklist mode — the whole pack is always returned.
+  const result = await handle(recommendInput.parse({ limit: 1 }));
 
   assert.equal(result.mode, "starter-pack");
-  assert.equal(result.recommendations.length, 2);
+  assert.equal(result.present_as, "checklist");
+  assert.equal(result.recommendations.length, 3);
 });
 
-test("recommend_skills: incomplete starter pack suggests a missing starter skill", async (t) => {
+test("recommend_skills: incomplete starter pack returns ALL missing staples as a checklist", async (t) => {
   await withIsolatedOmakaseState(
     t,
     [
@@ -78,16 +87,25 @@ test("recommend_skills: incomplete starter pack suggests a missing starter skill
         description: "Severity-tagged code review.",
         tags: ["starter-pack", "review"],
       }),
+      starterEntry({
+        id: "write-a-skill",
+        name: "Write a Skill",
+        description: "Turn a workflow into a skill.",
+        tags: ["starter-pack", "meta"],
+      }),
     ],
     ["grill-me"]
   );
 
   const result = await handle(recommendInput.parse({}));
 
+  // Onboarding exception: surface every missing staple, not just the best one.
   assert.equal(result.mode, "starter-pack-gap");
-  assert.equal(result.recommendations.length, 1);
-  assert.equal(result.recommendations[0]?.id, "quick-review");
-  assert.deepEqual(result.missing_starter_pack, ["quick-review"]);
+  assert.equal(result.present_as, "checklist");
+  assert.equal(result.recommendations.length, 2);
+  const ids = result.recommendations.map((r) => r.id).sort();
+  assert.deepEqual(ids, ["quick-review", "write-a-skill"]);
+  assert.deepEqual([...result.missing_starter_pack].sort(), ["quick-review", "write-a-skill"]);
 });
 
 test("recommend_skills: complete starter pack falls through to verified-defaults", async (t) => {
