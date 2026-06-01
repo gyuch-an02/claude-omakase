@@ -83,3 +83,11 @@ commit. See [`CLAUDE.md`](../CLAUDE.md) → "Skill: ai-usage-log".
 3. 모델의 주관적 판단에만 의존하던 "3회 반복" 트리거를 데모에서 확실히 동작시키기 위해 `hooks/omakase-repetition.mjs`(PostToolUse(Bash) 훅)를 새로 작성했고, 명령 시그니처를 세어 단일 명령과 체인·분리 호출 멀티스텝 워크플로(n-gram 연속 반복 감지)를 모두 잡아 3회째에 `find_skill` 호출을 결정적으로 주입하도록 했다.
 4. `src/tools/recommend.test.ts`와 `src/e2e/flow.test.ts`의 기존 "정확히 하나" 단언을 체크리스트 동작(전체/누락 전부 반환, `present_as` 확인, 다중 누락)으로 갱신하고 신규 테스트를 추가했으며, 훅은 `files` 필드에 없어 npm에 게시되지 않고 `install.sh`에도 미연결인 레포 자산임을 유지했다.
 5. typecheck·build·lint(src 0건)·테스트 58개 전부 통과를 확인했고 `package.json` 버전을 0.2.3으로 올렸으며 catalog.json은 변경하지 않았고 이 로그 항목과 동일 커밋에 포함한다.
+
+## 2026-06-01 — 라이프사이클 도구 살리기 (#67 재베이스, 0.2.4)
+
+1. PR #67(`feat/lifecycle-tools`)이 오래된 베이스 위에 있어 그대로 머지하면 `server.ts`의 `packageVersion()`·테스트용 부팅 가드와 `recommend.ts`의 starter-pack-gap·프로필·체크리스트 작업을 조용히 되돌리는 회귀가 발생함을 trial 머지로 확인했다.
+2. 그래서 현재 `main` 기준 새 브랜치에 #67의 신규 도구 3개(`src/tools/uninstall-skill.ts`·`update-skill.ts`·`doctor.ts`)만 그대로 가져오고, 이들이 현재 `paths`·`installer/code-skills`·`types` API와 호환됨을 검증했다.
+3. `src/server.ts`에는 회귀를 빼고 세 도구의 import와 등록만 추가했으며, `src/tools/recommend.ts`의 profile-search 분기를 early-return으로 재구성해 #67의 가치 있는 부분인 `match_score`·`match_reasons`를 살리되 다른 모드의 단일 추천·체크리스트 동작은 그대로 유지했다.
+4. 순수 파일시스템 동작인 `uninstall_skill`(멱등 삭제)과 `doctor_skills`(정상/손상 분류), 그리고 zod 스키마의 경로 탈출 id 거부를 검증하는 `src/tools/lifecycle.test.ts`를 신설했다.
+5. typecheck·build·lint(src 0건)·테스트 61개 전부 통과를 확인하고 `package.json`을 0.2.4로 올렸으며 catalog.json은 변경하지 않았고 이 로그 항목과 동일 커밋에 포함한다.

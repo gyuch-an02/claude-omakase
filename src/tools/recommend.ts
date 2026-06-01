@@ -33,7 +33,9 @@ Special behavior:
   - Some skills installed but the starter-pack is incomplete and the user gave no specific ask → returns ALL missing starter-pack skills as a checklist (mode "starter-pack-gap", present_as "checklist"). Use this to complete a user's starter pack after they've installed a few.
   - Recommendations always exclude skills the user already has installed.
 
-ONBOARDING EXCEPTION: the two starter-pack modes are the ONLY case where you present a list. When present_as is "checklist", show every returned skill as a checkable item and let the user select and install any subset. In all OTHER modes, still pick the single best match, not the full list.`;
+ONBOARDING EXCEPTION: the two starter-pack modes are the ONLY case where you present a list. When present_as is "checklist", show every returned skill as a checkable item and let the user select and install any subset. In all OTHER modes, still pick the single best match, not the full list.
+
+In "profile-search" mode each recommendation carries match_score and match_reasons — use them to explain WHY the pick fits, but still serve only one.`;
 
 export async function handle(args: z.infer<typeof recommendInput>) {
   const [catalog, profile, installed] = await Promise.all([
@@ -96,35 +98,43 @@ export async function handle(args: z.infer<typeof recommendInput>) {
     };
   }
 
-  let candidates: Entry[];
-  let mode: "profile-search" | "verified-defaults";
+  const singlePickNextStep =
+    `Serve the ONE best recommendation with a one-sentence reason, then ask "install it?". ` +
+    `Never show a menu. On approval, call install_skill and follow its next_step onboarding.`;
+
+  // No query at all → safe verified defaults.
   if (query.length === 0) {
-    mode = "verified-defaults";
-    candidates = catalog.entries
+    const candidates = catalog.entries
       .filter((e) => e.verified)
       .filter(notInstalled)
       .sort((a, b) => b.tags.length - a.tags.length)
       .slice(0, args.limit);
-  } else {
-    mode = "profile-search";
-    // An explicit ask must dominate the profile. Ranking on the combined
-    // (profile + ask) query let a strong profile tag (e.g. "frontend") outrank
-    // the actual request (e.g. "code review"). Rank on `ask` when present;
-    // fall back to the profile-derived query only when there's no explicit ask.
-    const rankQuery = ask ?? query;
-    candidates = search(catalog.entries, rankQuery, args.limit + installedIds.size)
-      .map((r) => r.entry)
-      .filter(notInstalled)
-      .slice(0, args.limit);
+    return {
+      mode: "verified-defaults" as const,
+      profile_summary: profile,
+      recommendations: candidates.map(format),
+      next_step: singlePickNextStep,
+    };
   }
 
+  // Profile-search. An explicit ask must dominate the profile: ranking on the
+  // combined (profile + ask) query let a strong profile tag (e.g. "frontend")
+  // outrank the actual request (e.g. "code review"). Rank on `ask` when present;
+  // fall back to the profile-derived query only when there's no explicit ask.
+  // Surface match_score + match_reasons so the chef can explain WHY a skill fits.
+  const rankQuery = ask ?? query;
+  const results = search(catalog.entries, rankQuery, args.limit + installedIds.size)
+    .filter((r) => notInstalled(r.entry))
+    .slice(0, args.limit);
   return {
-    mode,
+    mode: "profile-search" as const,
     profile_summary: profile,
-    recommendations: candidates.map(format),
-    next_step:
-      `Serve the ONE best recommendation with a one-sentence reason, then ask "install it?". ` +
-      `Never show a menu. On approval, call install_skill and follow its next_step onboarding.`,
+    recommendations: results.map((r) => ({
+      ...format(r.entry),
+      match_score: r.score,
+      match_reasons: r.reasons,
+    })),
+    next_step: singlePickNextStep,
   };
 }
 
