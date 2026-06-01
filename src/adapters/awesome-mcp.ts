@@ -11,6 +11,7 @@
 // stub automatically if the file doesn't exist upstream.
 
 import type { Entry } from "../types.js";
+import { sanitizeTags } from "../catalog/sanitize.js";
 
 const README_URL =
   "https://raw.githubusercontent.com/punkpeye/awesome-mcp-servers/main/README.md";
@@ -108,13 +109,20 @@ export function normalizeHit(
 }
 
 function buildTags(name: string, category: string): string[] {
+  // Strip HTML before tokenizing — category headers in the source README often
+  // carry anchor tags (`<a name="...">`) that would otherwise leak into tags.
   const raw = [
     "mcp",
     "awesome-mcp",
-    ...tokenize(category),
-    ...tokenize(name),
+    ...tokenize(stripHtml(category)),
+    ...tokenize(stripHtml(name)),
   ];
-  return dedupe(raw.map((t) => t.toLowerCase()).filter((t) => t.length > 1));
+  // sanitizeTags lowercases, drops markup-polluted tokens, and dedupes.
+  return sanitizeTags(raw);
+}
+
+function stripHtml(s: string): string {
+  return s.replace(/<[^>]*>/g, " ").replace(/&[a-z]+;/gi, " ");
 }
 
 function tokenize(s: string): string[] {
@@ -128,8 +136,4 @@ function slugify(s: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "")
     .slice(0, 60);
-}
-
-function dedupe<T>(arr: T[]): T[] {
-  return [...new Set(arr)];
 }

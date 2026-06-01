@@ -67,3 +67,11 @@ commit. See [`CLAUDE.md`](../CLAUDE.md) → "Skill: ai-usage-log".
 3. `omakase-chef/SKILL.md`에 "세션 시작(모든 상태)" 결정적 루틴을 추가하고 `src/tools/list-installed.ts` 응답에 `installed_count`와 `next_step` 라우팅을 넣어, 빈 세션이면 첫 세션 흐름·기존 사용자면 무맥락 `recommend_skills` 호출로 갭을 1회만 제안하도록 자율 동작을 결정화했다.
 4. `src/e2e/flow.test.ts`를 신규 작성하여 MCP 추가→스캔→갭→설치→완비→find_skill→propose_new_skill 전체 흐름을 격리 파일시스템·로컬 카탈로그·무네트워크(빈 `skill_files`, `draft_body`)로 재현 가능하게 검증하고, `recommend.test.ts`에 공백 context·명시 요청의 갭 억제·프로필 순위 3개 엣지 테스트를 추가했다.
 5. typecheck·build·lint(src 0건)·테스트 49개 전부 통과를 확인했고 catalog.json은 변경하지 않았으며 이 로그 항목과 동일 커밋에 포함한다.
+
+## 2026-06-01 — 검색 품질·설치 카운트 버그 수정 (0.2.2)
+
+1. `src/tools/list-installed.ts`에서 `installed_count`를 `receipts.length + skills.length`로 더해 영수증과 디렉터리를 중복 집계하던 버그를 id 합집합 Set 크기로 고쳐 `recommend_skills`와 동일하게 distinct 개수를 보고하도록 했다.
+2. `src/catalog/sanitize.ts`를 신규 작성하고 `src/catalog/cache.ts` 로드 경로에 연결하여, 스크레이핑으로 태그에 섞인 HTML 조각(`<a`, `name="developer` 등)을 런타임에서 제거해 이미 배포된 catalog.json도 재빌드 없이 정제되도록 했다.
+3. `src/adapters/awesome-mcp.ts`의 태그 생성에서 카테고리·이름의 HTML을 먼저 제거하고 `sanitizeTags`로 정규화하여 오염의 근본 원인을 차단했으며, 미사용이 된 `dedupe` 헬퍼를 제거했다.
+4. `src/tools/recommend.ts`의 profile-search 랭킹을 프로필+컨텍스트 결합 질의 대신 명시적 요청(`ask`)이 있으면 그것으로만 정렬하도록 바꿔 프로필(frontend)이 실제 요청(code review)을 이기던 문제를 해결했고, `src/server.ts`의 하드코딩된 `serverInfo.version("0.1.0")`을 package.json에서 읽도록 고치며 import 시 부팅을 막는 엔트리포인트 가드를 추가했다.
+5. sanitize·list-installed·recommend·awesome-mcp·server 테스트 9건을 추가해 typecheck·build·lint(src 0건)·테스트 58개 전부 통과를 확인했고 catalog.json은 변경하지 않았으며 이 로그 항목과 동일 커밋에 포함한다.

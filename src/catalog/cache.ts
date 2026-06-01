@@ -9,13 +9,20 @@ import { existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { bundledCatalogPath, omakaseCacheDir } from "../paths.js";
+import { sanitizeCatalog } from "./sanitize.js";
 import type { Catalog } from "../types.js";
 
 const TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 const cachePath = () => join(omakaseCacheDir(), "catalog.json");
 
+// Public loader: always returns a sanitized catalog so scraped-tag pollution
+// (HTML fragments, markup punctuation) never reaches search/recommend.
 export async function load(): Promise<Catalog> {
+  return sanitizeCatalog(await loadRaw());
+}
+
+async function loadRaw(): Promise<Catalog> {
   const remote = process.env["CLAUDE_OMAKASE_CATALOG_URL"];
   if (remote) {
     try {
