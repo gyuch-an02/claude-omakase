@@ -27,11 +27,21 @@ const MAX_SESSIONS = 50; // cap state-file growth
 const KMAX = 8; // longest multi-step workflow (in signatures) we detect
 const SEQ_CAP = 60; // cap the per-session ordered signature stream
 
-// Noise commands that never warrant a skill recommendation.
+// Noise tokens that never warrant a skill recommendation: trivial commands,
+// plus shell control-flow keywords and heredoc delimiters. Without the latter,
+// a `for … done` loop or a `cat <<'EOF' … EOF` heredoc gets split on `;`/`\n`
+// and the keyword (`done`, `EOF`, `then`, …) is miscounted as a repeated task.
 const SKIP = new Set([
+  // trivial commands
   "cd", "ls", "ll", "pwd", "echo", "cat", "head", "tail", "less", "more",
   "which", "whoami", "clear", "export", "source", "true", "false", "env",
-  "mkdir", "touch", "cp", "mv", "rm", "chmod", "sleep", "printf",
+  "mkdir", "touch", "cp", "mv", "rm", "chmod", "sleep", "printf", "read",
+  "test", "[", "[[", "time", "set", "unset", "eval", "exec", "trap", "declare",
+  // shell control-flow keywords
+  "do", "done", "then", "else", "elif", "fi", "case", "esac", "for", "while",
+  "until", "if", "in", "function", "return", "break", "continue", "local",
+  // common heredoc delimiters
+  "EOF", "EOL", "HEREDOC", "END",
 ]);
 
 // Tools where the second token is the meaningful verb.
