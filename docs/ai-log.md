@@ -91,3 +91,11 @@ commit. See [`CLAUDE.md`](../CLAUDE.md) → "Skill: ai-usage-log".
 3. `src/server.ts`에는 회귀를 빼고 세 도구의 import와 등록만 추가했으며, `src/tools/recommend.ts`의 profile-search 분기를 early-return으로 재구성해 #67의 가치 있는 부분인 `match_score`·`match_reasons`를 살리되 다른 모드의 단일 추천·체크리스트 동작은 그대로 유지했다.
 4. 순수 파일시스템 동작인 `uninstall_skill`(멱등 삭제)과 `doctor_skills`(정상/손상 분류), 그리고 zod 스키마의 경로 탈출 id 거부를 검증하는 `src/tools/lifecycle.test.ts`를 신설했다.
 5. typecheck·build·lint(src 0건)·테스트 61개 전부 통과를 확인하고 `package.json`을 0.2.4로 올렸으며 catalog.json은 변경하지 않았고 이 로그 항목과 동일 커밋에 포함한다.
+
+## 2026-06-01 — 반복 감지 훅 셸 키워드 오탐 수정
+
+1. `hooks/omakase-repetition.mjs`가 명령을 `;`·`&&`·줄바꿈으로 쪼개 첫 토큰을 시그니처로 셀 때, `for … done` 루프의 `done`이나 `cat <<'EOF' … EOF` 히어독의 `EOF` 같은 셸 키워드가 반복 작업으로 오탐되던 문제를 확인했다.
+2. 원인은 SKIP 집합이 사소한 명령만 담고 제어 흐름 키워드와 히어독 구분자를 포함하지 않았던 것이다.
+3. SKIP에 `do`·`done`·`then`·`else`·`fi`·`for`·`while`·`if`·`function` 등 제어 키워드와 `EOF`·`EOL`·`END` 히어독 구분자, 그리고 `read`·`test`·`eval` 등 추가 셸 빌트인을 넣었다.
+4. 격리 검증으로 `for/done` 루프와 `EOF` 히어독을 3회 반복해도 침묵하고, 실제 반복 명령(`pytest` 3회)은 여전히 감지·주입함을 확인했다.
+5. 훅은 npm `files`에 없어 패키지 버전과 무관하므로 버전은 올리지 않았고 catalog.json도 변경하지 않았으며 이 로그 항목과 동일 커밋에 포함한다.
