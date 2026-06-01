@@ -1,13 +1,14 @@
 {
   "name": "claude-omakase",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "description": "Skill Suggester MCP for Claude — proactive omakase-style skill discovery, installation, and generation.",
   "license": "MIT",
   "type": "module",
   "main": "dist/server.js",
   "bin": {
     "claude-omakase": "dist/server.js",
-    "claude-omakase-install": "dist/cli/install.js"
+    "claude-omakase-install": "dist/cli/install.js",
+    "omakase": "dist/server.js"
   },
   "files": [
     "dist",
@@ -33,6 +34,7 @@
     "verify:catalog-rollback": "node scripts/verify-catalog-rollback.mjs"
   },
   "dependencies": {
+    "@clack/prompts": "^0.7.0",
     "@modelcontextprotocol/sdk": "^1.0.4",
     "zod": "^3.23.8"
   },

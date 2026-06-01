@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { load } from "../catalog/cache.js";
 import { search } from "../catalog/search.js";
+import { renderSkillTable } from "../catalog/render.js";
 
 export const findSkillInput = z.object({
   task_description: z
@@ -38,6 +39,15 @@ export async function handle(args: z.infer<typeof findSkillInput>) {
       score: r.score,
       match_reasons: r.reasons,
     })),
+    rendered: renderSkillTable(
+      results.map((r) => ({
+        id: r.entry.id,
+        name: r.entry.name,
+        description: r.entry.description,
+        verified: r.entry.verified,
+        tags: r.entry.tags,
+      }))
+    ),
     total_in_catalog: catalog.entries.length,
     catalog_generated_at: catalog.generated_at,
     next_step:
