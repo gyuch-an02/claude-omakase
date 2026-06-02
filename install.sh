@@ -98,13 +98,13 @@ for you:
 
   "hooks": {
     "SessionStart": [
-      { "hooks": [ { "type": "command", "command": "node ${hooks_dir}/omakase-session-start.mjs" } ] }
+      { "hooks": [ { "type": "command", "command": "node \"${hooks_dir}/omakase-session-start.mjs\"" } ] }
     ],
     "PostToolUse": [
-      { "matcher": "Bash", "hooks": [ { "type": "command", "command": "node ${hooks_dir}/omakase-repetition.mjs" } ] }
+      { "matcher": "Bash", "hooks": [ { "type": "command", "command": "node \"${hooks_dir}/omakase-repetition.mjs\"" } ] }
     ],
     "UserPromptSubmit": [
-      { "hooks": [ { "type": "command", "command": "node ${hooks_dir}/omakase-suggest.mjs" } ] }
+      { "hooks": [ { "type": "command", "command": "node \"${hooks_dir}/omakase-suggest.mjs\"" } ] }
     ]
   }
 SNIPPET
