@@ -4,6 +4,7 @@ import * as profileLib from "../profile.js";
 import { search } from "../catalog/search.js";
 import { handle as listInstalled } from "./list-installed.js";
 import { renderSkillTable, renderChecklist, type RenderRow } from "../catalog/render.js";
+import * as blocklist from "../blocklist.js";
 import type { Entry } from "../types.js";
 
 export const recommendInput = z.object({
@@ -54,9 +55,13 @@ export async function handle(args: z.infer<typeof recommendInput>) {
   const query = tokens.join(" ").trim();
 
   const installedIds = installedIdSet(installed);
-  const notInstalled = (e: Entry) => !installedIds.has(e.id);
+  // Exclude both installed skills and ones the user permanently declined.
+  const blocked = blocklist.load();
+  const notInstalled = (e: Entry) => !installedIds.has(e.id) && !blocked.has(e.id);
 
-  const starterPack = catalog.entries.filter((e) => e.tags.includes("starter-pack"));
+  const starterPack = catalog.entries.filter(
+    (e) => e.tags.includes("starter-pack") && !blocked.has(e.id)
+  );
   const missingStarter = starterPack.filter(notInstalled);
 
   // First-time user: no skills installed → surface the WHOLE starter-pack as a

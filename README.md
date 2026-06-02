@@ -90,16 +90,17 @@ Concrete, end-to-end walkthroughs of what Omakase actually does.
 
 ```
 You:     (start a new Claude session, no skills installed)
-Claude:  Before we get started — what kind of work do you do most?
-You:     mostly code review and some data analysis
-Claude:  Here's the starter pack. Pick the ones that fit — I'll install whatever you check:
-         - [ ] Quick Review — one-line, severity-tagged feedback on any diff  ← best fit
-         - [ ] Understand Anything — deep explanations that lead with WHY
-         - [ ] Grill Me — stress-test a plan by getting interviewed
-         - [ ] Write a Skill — turn a recurring workflow into a new skill
-You:     the first two
+Claude:  New here — want to set up a starter pack? I'll pop up a picker.
+         → [native checkbox dialog appears]
+            [x] Quick Review     — one-line, severity-tagged diff feedback
+            [x] Understand Anything — deep explanations that lead with WHY
+            [ ] Grill Me         — stress-test a plan by getting interviewed
+            [ ] Write a Skill    — turn a workflow into a new skill
+You:     (check two boxes, submit)
 Claude:  Installed Quick Review and Understand Anything to ~/.claude/skills/. Active next session.
 ```
+
+On clients with MCP elicitation (e.g. Claude Code), `onboard_starter_pack` shows a **real interactive checkbox dialog** and installs exactly what you check — no typing, no parsing. On clients without it, the same skills come back as a Markdown checklist and you tell Claude which you want.
 
 ### 2. Repeated manual work — proactive nudge
 
@@ -159,6 +160,8 @@ Install any of them: *"Install the Grill Me skill"* → Claude calls `install_sk
 | `list_installed_skills` | List installed skills and install receipts |
 | `install_skill` | Download and install a skill to `~/.claude/skills/<id>/` |
 | `recommend_skills` | Ranked suggestions based on your profile, context, and install state (returns a ready-to-show `rendered` Markdown table/checklist) |
+| `offer_skill` | Offer one found skill with an interactive **Install / Not now / Never recommend** picker (MCP elicitation); "never" blocks it from future `find_skill`/`recommend_skills` |
+| `onboard_starter_pack` | Interactive starter-pack setup — on clients with MCP elicitation, shows a real checkbox picker and installs exactly what you check; falls back to a Markdown checklist otherwise |
 | `uninstall_skill` | Remove `~/.claude/skills/<id>/` and its install receipt (idempotent) |
 | `update_skill` | Re-download a skill's files from the catalog |
 | `doctor_skills` | Health report per skill: SKILL.md present? receipt present? in catalog? version match? |

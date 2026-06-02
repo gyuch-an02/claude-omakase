@@ -29,27 +29,21 @@ Serve **at most one** nudge from this routine. If the user declines or you alrea
 
 ## First session (no skills installed)
 
-This is the **onboarding exception**: a brand-new user has nothing, so you present the whole starter pack as a checklist — not one pick. This is the *only* time you show a list.
+This is the **onboarding exception**: a brand-new user has nothing, so you offer the whole starter pack at once — not one pick. This is the *only* time you present more than one skill.
 
 Call `omakase.list_installed_skills`. If the list is empty:
 
-1. Ask **one question** — naturally, as part of the conversation:
-   > "Before we get started — what kind of work do you do most? (e.g. code reviews, writing, research, data work, …)"
+1. Briefly say hello and that you can set up a starter pack. Then call **`omakase.onboard_starter_pack`** — it handles selection + install for you.
 
-2. Call `omakase.recommend_skills` with that answer as `context`. It returns `mode: "starter-pack"` with `present_as: "checklist"` and **every** starter-pack skill, most-relevant first. The response carries a `rendered` field — a ready-made Markdown checklist. Show it **verbatim** rather than rebuilding it by hand; you may add one sentence of WHY for the top pick.
+2. Read its `mode`:
+   - **`installed`** — the client showed the user a real interactive checkbox picker and installed exactly what they checked. The picker IS the selection; do **not** re-ask. Follow `next_step`: give each installed skill its trigger phrase. Done.
+   - **`declined`** — the user dismissed the picker. Install nothing, move on.
+   - **`complete`** — they already have the whole pack. Say so, move on.
+   - **`markdown-fallback`** — this client can't show a picker. The response has a `rendered` Markdown checklist; show it **verbatim**, ask which they want, then call `omakase.install_skill` once per pick. Install nothing they didn't choose.
 
-3. The `rendered` checklist looks like this — let the user pick any subset:
-   > "Here's the starter pack. Pick the ones that fit — I'll install whatever you check:
-   > - [ ] **Quick Review** — one-line, severity-tagged feedback on any diff *(fits your code-review work best)*
-   > - [ ] **Understand Anything** — deep explanations that lead with WHY
-   > - [ ] **Grill Me** — stress-test a plan by getting interviewed
-   > - [ ] **Write a Skill** — turn a recurring workflow into a new skill
-   >
-   > Which ones? (all / none / just the first / …)"
+3. Done. The starter-pack offer is your one onboarding nudge — don't pile on more after it.
 
-4. For each skill the user selects, call `omakase.install_skill`. Follow each result's `next_step` for onboarding. Install nothing they didn't check.
-
-5. Done. The checklist is your one onboarding nudge — don't pile on more after it.
+> The interactive picker (`installed`/`declined`) is preferred — the user genuinely checks boxes, no text parsing. The `markdown-fallback` path is only for clients without elicitation support.
 
 > **Use it THIS session, not just next.** Installed skills auto-load from the next session on. But the files already exist now — if the user wants to use a skill immediately, read `~/.claude/skills/<id>/SKILL.md` and follow its instructions directly. Do not make them restart to get value.
 
@@ -65,11 +59,16 @@ The user has done the same type of work by hand three or more times in this sess
 ```
 Call omakase.find_skill with the task description.
 Pick the single best match (prefer verified: true).
-Tap the shoulder — once, briefly:
+Tap the shoulder — once, briefly — then call omakase.offer_skill with that id:
 
   "You've summarized three PRs in this session.
-   There's a pr-summarizer skill for this — one call instead of three.
-   Want me to install it?"
+   There's a pr-summarizer skill for this — one call instead of three."
+
+offer_skill shows the user an interactive Install / Not now / Never-recommend
+picker (on clients with elicitation) and acts on the choice — install,
+skip, or block it forever. On clients without a picker it returns mode "ask";
+then ask those three options in text and call offer_skill again with `decision` set.
+"Never" is permanent and cross-session: that skill won't be surfaced again.
 ```
 
 **Trigger: explicit mention of a recurring workflow**
@@ -78,7 +77,7 @@ One mention is enough. Do not wait for three.
 
 **Trigger: the user asks**
 "What can I install?" / "What should I add?" / "What do you recommend?"
-Call `omakase.recommend_skills` with context from the conversation. Return **one recommendation** with a reason, not a list.
+Call `omakase.recommend_skills` with context from the conversation. Take the **one** best result and hand its id to `omakase.offer_skill` for the interactive Install / Not now / Never picker. Never dump the full list.
 
 **Trigger: incomplete starter pack** *(checklist exception)*
 Handled by the *Session start* routine above: call `omakase.recommend_skills` with no context once per session. If it returns `mode: "starter-pack-gap"` (with `present_as: "checklist"`), the user has some skills but is missing one or more starter-pack staples. Present **all** the missing staples as a checklist and let them pick any subset — *"You've got X already. The staples you're still missing: [ ] Y, [ ] Z. Want either?"* — then install each one they check. This is the one place you show a list; offer it once, don't nag if they pass.
@@ -108,8 +107,8 @@ Every install must end with:
 
 If yes:
 1. Ask for 2–3 concrete trigger phrases they would actually say
-2. Call `omakase.propose_new_skill` with a tight description and those triggers
-3. Read the draft back to the user — one section at a time — and ask what to change
+2. Call `omakase.propose_new_skill` with a tight description and those triggers. On clients with elicitation it first shows the user an **editable concept form** (skill id / what it does / triggers) — they can tweak it before anything is drafted or written. `concept_edited: true` in the response means they did.
+3. Read the generated draft back to the user — one section at a time — and ask what to change
 4. Edit the file until they're satisfied
 5. Mention: "Once it's stable, you can PR it to the community at gyuch-an02/claude-omakase"
 
@@ -119,7 +118,7 @@ If yes:
 
 - **One recommendation per moment.** Never list more than one skill at a time. If you call `find_skill` or `recommend_skills` and get multiple results, you pick one and serve it. The user never sees a menu. **The one exception: starter-pack onboarding** — when `recommend_skills` returns `present_as: "checklist"` (modes `starter-pack` / `starter-pack-gap`), present every returned staple as a checklist and let the user select and install any subset. Nowhere else.
 - **Never install without explicit approval.** "Yes", "go ahead", "do it" — wait for it. "Sounds good" is borderline; ask once to confirm.
-- **Never re-propose a declined skill this session.** They said no. Move on.
+- **Never re-propose a declined skill this session.** They said no. Move on. If they chose "Never recommend" via `offer_skill`, it's blocked permanently (cross-session) — `find_skill`/`recommend_skills` already exclude it.
 - **Never interrupt a flow.** If the user is mid-task, finish with them first. Tap the shoulder at a natural pause.
 - **Disclose what you touch.** Always say the file path before installing. Always say what changes.
 
