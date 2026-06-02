@@ -30,6 +30,7 @@ import * as proposeNewSkill from "./tools/propose-new-skill.js";
 import * as uninstallSkill from "./tools/uninstall-skill.js";
 import * as updateSkill from "./tools/update-skill.js";
 import * as doctor from "./tools/doctor.js";
+import * as onboard from "./tools/onboard.js";
 
 interface Tool {
   name: string;
@@ -98,6 +99,12 @@ async function main(): Promise<void> {
       description: recommend.recommendDescription,
       inputSchema: recommend.recommendInput,
       handle: (args) => recommend.handle(recommend.recommendInput.parse(args)),
+    },
+    {
+      name: "onboard_starter_pack",
+      description: onboard.onboardStarterPackDescription,
+      inputSchema: onboard.onboardStarterPackInput,
+      handle: (args) => onboard.handle(onboard.onboardStarterPackInput.parse(args), server),
     },
     {
       name: "set_profile",

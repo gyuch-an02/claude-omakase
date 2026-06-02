@@ -25,6 +25,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
+## [0.4.0] — 2026-06-02
+
+### Added
+- **Interactive starter-pack onboarding** — new `onboard_starter_pack` tool. On MCP clients that support **elicitation** (e.g. Claude Code), it shows a *real* native checkbox picker (one box per missing starter skill) and installs exactly what the user checks — no markdown, no text parsing. On clients without elicitation it returns a Markdown checklist (`mode: "markdown-fallback"`) to drive the old type-to-select flow. `omakase-chef/SKILL.md` first-session flow rewritten to call it. Resolves the limitation that the previous checklist was display-only markdown, not a selectable widget.
+
+---
+
 ## [0.3.0] — 2026-06-01
 
 ### Added
