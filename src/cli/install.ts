@@ -38,6 +38,9 @@ function hooksTargetDir(): string {
 }
 
 function installHooks(): void {
+  // import.meta.url is a file:// URL: its pathname is percent-encoded (spaces →
+  // %20) and on Windows looks like /C:/…. Decode and strip the leading slash so
+  // copyFileSync sees a real filesystem path even under a username with spaces.
   const srcDir = decodeURIComponent(
     new URL("../../hooks/", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")
   );
@@ -64,10 +67,11 @@ function printRegistrationSnippet(): void {
 
 function printHooksSnippet(): void {
   const dir = hooksTargetDir();
-  const esc = (p: string) => p.replaceAll("\\", "\\\\");
-  const sessionStart = esc(join(dir, "omakase-session-start.mjs"));
-  const repetition = esc(join(dir, "omakase-repetition.mjs"));
-  const suggest = esc(join(dir, "omakase-suggest.mjs"));
+  // Build each hook command as a JSON string value. JSON.stringify quotes the
+  // command and escapes embedded quotes/backslashes, so a path with spaces or
+  // Windows backslashes stays valid inside settings.json. We wrap the path in
+  // shell quotes too, so the shell that runs the hook handles spaces.
+  const command = (file: string) => JSON.stringify(`node "${join(dir, file)}"`);
 
   console.log(`Optional — make the chef proactive. Add this "hooks" block to your Claude Code
 settings.json (SessionStart greets new users with the starter pack; the other
@@ -76,13 +80,13 @@ for you:
 
   "hooks": {
     "SessionStart": [
-      { "hooks": [ { "type": "command", "command": "node \\\"${sessionStart}\\\"" } ] }
+      { "hooks": [ { "type": "command", "command": ${command("omakase-session-start.mjs")} } ] }
     ],
     "PostToolUse": [
-      { "matcher": "Bash", "hooks": [ { "type": "command", "command": "node \\\"${repetition}\\\"" } ] }
+      { "matcher": "Bash", "hooks": [ { "type": "command", "command": ${command("omakase-repetition.mjs")} } ] }
     ],
     "UserPromptSubmit": [
-      { "hooks": [ { "type": "command", "command": "node \\\"${suggest}\\\"" } ] }
+      { "hooks": [ { "type": "command", "command": ${command("omakase-suggest.mjs")} } ] }
     ]
   }`);
 }
