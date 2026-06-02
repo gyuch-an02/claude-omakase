@@ -30,6 +30,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
+## [0.4.1] — 2026-06-02
+
+### Fixed
+- **Reliable stdio in any environment.** The MCP server now routes `console.log`/`info`/`debug` to stderr at startup, so stdout is reserved strictly for the JSON-RPC stream. A stray stdout write from the server or any transitive dependency would corrupt the protocol and surface as "failed to connect" in a fresh `npx -y claude-omakase` registration. Added an end-to-end stdio handshake test (`src/e2e/server-handshake.test.ts`) that spawns the built server, runs `initialize` + `tools/list`, and asserts the full toolset plus pure-JSON stdout — the MCP contract a clean-env client depends on, which the handler unit tests never exercised.
+
+---
+
 ## [0.4.0] — 2026-06-02
 
 A suite of interactive flows built on **MCP elicitation** — the chat surface now drives real native dialogs instead of display-only Markdown.
