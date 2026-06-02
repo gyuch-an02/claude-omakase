@@ -2,45 +2,45 @@
 /**
  * Omakase repetition detector — hard hook (deterministic).
  *
- * Registered as a PostToolUse(Bash) hook. After every Bash command, it:
- *   1. Normalizes the command into a coarse "task signature" (first token,
- *      or first two tokens for multi-command tools like git/npm/cargo).
- *   2. Increments a per-session counter for that signature.
- *   3. When a signature reaches THRESHOLD (default 3) for the first time in
- *      the session, it emits an `additionalContext` message telling Claude to
- *      call the omakase.find_skill MCP tool and propose one matching skill.
+ * Registered as a PostToolUse(Bash) hook. After every Bash command it:
+ *   1. Cleans the command into coarse "task signatures" (first token of each
+ *      real command segment), discarding heredoc bodies, shell keywords, and
+ *      non-command fragments.
+ *   2. Records each signature with a timestamp in ONE persistent file that
+ *      spans sessions (not reset per session).
+ *   3. When a signature recurs THRESHOLD times within a rolling time window —
+ *      or a multi-step workflow repeats THRESHOLD times — it tells Claude to
+ *      find a matching skill (asking before install).
  *
- * This replaces the soft "Claude notices repetition on its own" path in
- * omakase-chef/SKILL.md with a deterministic trigger that is reliable in a
- * live demo. The command is never blocked — this only nudges.
+ * Cross-session by design: a task you do once per session across several days
+ * still accumulates and eventually triggers. The command is never blocked.
  *
- * State: ~/.claude/omakase-state/repetition.json
- * No network, no telemetry. Pure local read-modify-write.
+ * State: ~/.claude/omakase-state/repetition.json   (no network, no telemetry)
+ * Tunables: OMAKASE_REPETITION_THRESHOLD (default 2)
+ *           OMAKASE_REPETITION_WINDOW_DAYS (default 14)
  */
 
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-const THRESHOLD = Number(process.env.OMAKASE_REPETITION_THRESHOLD || 3);
-const MAX_SESSIONS = 50; // cap state-file growth
+const THRESHOLD = Number(process.env.OMAKASE_REPETITION_THRESHOLD || 2);
+const WINDOW_MS = Number(process.env.OMAKASE_REPETITION_WINDOW_DAYS || 14) * 24 * 60 * 60 * 1000;
 const KMAX = 8; // longest multi-step workflow (in signatures) we detect
-const SEQ_CAP = 60; // cap the per-session ordered signature stream
+const SEQ_CAP = 80; // cap the ordered signature stream
+const MAX_SIGS = 800; // cap distinct tracked signatures
 
-// Noise tokens that never warrant a skill recommendation: trivial commands,
-// plus shell control-flow keywords and heredoc delimiters. Without the latter,
-// a `for … done` loop or a `cat <<'EOF' … EOF` heredoc gets split on `;`/`\n`
-// and the keyword (`done`, `EOF`, `then`, …) is miscounted as a repeated task.
+// Noise tokens: trivial commands, shell control-flow keywords, heredoc
+// delimiters. A command name must also pass the COMMAND_RE shape test below,
+// which already drops most fragments — this set covers real words that slip
+// through (e.g. `test`, `time`, `for`).
 const SKIP = new Set([
-  // trivial commands
   "cd", "ls", "ll", "pwd", "echo", "cat", "head", "tail", "less", "more",
   "which", "whoami", "clear", "export", "source", "true", "false", "env",
   "mkdir", "touch", "cp", "mv", "rm", "chmod", "sleep", "printf", "read",
-  "test", "[", "[[", "time", "set", "unset", "eval", "exec", "trap", "declare",
-  // shell control-flow keywords
+  "test", "time", "set", "unset", "eval", "exec", "trap", "declare", "wc",
   "do", "done", "then", "else", "elif", "fi", "case", "esac", "for", "while",
   "until", "if", "in", "function", "return", "break", "continue", "local",
-  // common heredoc delimiters
   "EOF", "EOL", "HEREDOC", "END",
 ]);
 
@@ -49,6 +49,10 @@ const MULTI = new Set([
   "git", "npm", "npx", "pnpm", "yarn", "cargo", "docker", "kubectl",
   "gh", "go", "pip", "pip3", "poetry", "uv", "brew", "terraform",
 ]);
+
+// A plausible command name: starts with a letter, then letters/digits/._-.
+// Rejects fragments like `5.`, `##`, `)"`, `-d)`, `$NODE`, `mk()`, `auth"`.
+const COMMAND_RE = /^[a-zA-Z][a-zA-Z0-9._-]*$/;
 
 function readStdin() {
   try {
@@ -65,8 +69,6 @@ function classifyOne(segment) {
   if (!cmd) return null;
 
   const tokens = cmd.split(/\s+/).filter(Boolean);
-  if (tokens.length === 0) return null;
-
   // Drop leading env-var assignments like FOO=bar cmd ...
   let i = 0;
   while (i < tokens.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(tokens[i])) i++;
@@ -75,22 +77,27 @@ function classifyOne(segment) {
 
   // Strip path prefix: /usr/bin/pytest -> pytest
   head = head.split("/").pop();
+  if (!head || !COMMAND_RE.test(head)) return null;
   if (SKIP.has(head)) return null;
 
-  if (MULTI.has(head) && tokens[i + 1] && !tokens[i + 1].startsWith("-")) {
-    return `${head} ${tokens[i + 1]}`;
+  const next = tokens[i + 1];
+  if (MULTI.has(head) && next && COMMAND_RE.test(next)) {
+    return `${head} ${next}`;
   }
   return head;
 }
 
 /**
- * Decompose a command line into an ordered list of task signatures.
- * A chained command (`a && b; c | d`) yields one signature per meaningful
- * segment, in order, so multi-step workflows are captured as a sequence.
+ * Decompose a command line into ordered task signatures. Heredoc bodies are
+ * dropped entirely (everything from the first `<<` on), so prose lines never
+ * become signatures. Chained commands yield one signature per segment.
  */
 function signatures(rawCommand) {
   if (!rawCommand) return [];
-  return rawCommand
+  // Cut the heredoc body: keep only the command up to the first `<<`.
+  const heredoc = rawCommand.indexOf("<<");
+  const head = heredoc >= 0 ? rawCommand.slice(0, heredoc) : rawCommand;
+  return head
     .split(/&&|\|\||;|\||\n/)
     .map((s) => s.trim())
     .filter(Boolean)
@@ -100,10 +107,7 @@ function signatures(rawCommand) {
 
 const SEP = "";
 
-/**
- * Count how many times the last-k block of `seq` repeats contiguously,
- * walking backwards from the end. e.g. [a,b,a,b,a,b] with k=2 -> 3.
- */
+/** How many times the last-k block of `seq` repeats contiguously from the end. */
 function trailingRepeats(seq, k) {
   const n = seq.length;
   if (k <= 0 || k > n) return 0;
@@ -119,49 +123,17 @@ function trailingRepeats(seq, k) {
   return reps;
 }
 
-/**
- * Inspect the ordered signature stream and decide what (if anything) to nudge.
- * Returns { kind: "composite"|"single", pattern: string[], reps } or null.
- * Prefers the largest multi-step (k>=2) workflow that has repeated THRESHOLD
- * times. While a multi-step pattern is still forming (>=2 reps but <THRESHOLD),
- * suppresses single-command nudges so the composite can win.
- */
-function detect(seq, counts, threshold, kmax) {
-  // 1. Largest completed multi-step workflow.
-  for (let k = Math.min(kmax, Math.floor(seq.length / threshold)); k >= 2; k--) {
-    if (trailingRepeats(seq, k) >= threshold) {
-      return { kind: "composite", pattern: seq.slice(seq.length - k), reps: threshold };
-    }
-  }
-  // 2. Multi-step workflow still forming -> stay silent this round.
-  for (let k = Math.min(kmax, Math.floor(seq.length / 2)); k >= 2; k--) {
-    if (trailingRepeats(seq, k) >= 2) return null;
-  }
-  // 3. Single-command repetition (total occurrences, need not be consecutive).
-  const last = seq[seq.length - 1];
-  if (last && (counts[last] || 0) >= threshold) {
-    return { kind: "single", pattern: [last], reps: counts[last] };
-  }
-  return null;
-}
-
 function loadState(file) {
   try {
-    return JSON.parse(readFileSync(file, "utf8"));
+    const s = JSON.parse(readFileSync(file, "utf8"));
+    return {
+      events: s.events && typeof s.events === "object" ? s.events : {},
+      seq: Array.isArray(s.seq) ? s.seq : [],
+      nudged: Array.isArray(s.nudged) ? s.nudged : [],
+    };
   } catch {
-    return { sessions: {} };
+    return { events: {}, seq: [], nudged: [] };
   }
-}
-
-function saveState(file, state) {
-  // Cap growth: if too many sessions, keep only the current one.
-  const ids = Object.keys(state.sessions);
-  if (ids.length > MAX_SESSIONS) {
-    const keep = state.__current;
-    state.sessions = keep && state.sessions[keep] ? { [keep]: state.sessions[keep] } : {};
-  }
-  delete state.__current;
-  writeFileSync(file, JSON.stringify(state), "utf8");
 }
 
 function main() {
@@ -169,15 +141,14 @@ function main() {
   try {
     input = JSON.parse(readStdin() || "{}");
   } catch {
-    process.exit(0); // malformed input — do nothing
+    process.exit(0);
   }
-
   if (input.tool_name !== "Bash") process.exit(0);
-  const command = input.tool_input?.command || "";
-  const sigs = signatures(command);
+
+  const sigs = signatures(input.tool_input?.command || "");
   if (sigs.length === 0) process.exit(0);
 
-  const sessionId = input.session_id || "default";
+  const now = Date.now();
   const dir = join(homedir(), ".claude", "omakase-state");
   const file = join(dir, "repetition.json");
   try {
@@ -187,45 +158,73 @@ function main() {
   }
 
   const state = loadState(file);
-  state.__current = sessionId;
-  const sess = (state.sessions[sessionId] ??= { counts: {}, seq: [], nudged: [] });
-  if (!sess.seq) sess.seq = []; // migrate old state shape
 
-  // Append this call's signatures (in order) to the stream and bump totals.
-  for (const s of sigs) {
-    sess.counts[s] = (sess.counts[s] || 0) + 1;
-    sess.seq.push(s);
+  // Record events (with timestamps) and the ordered stream.
+  for (const sig of sigs) {
+    (state.events[sig] ??= []).push(now);
+    state.seq.push(sig);
   }
-  if (sess.seq.length > SEQ_CAP) sess.seq = sess.seq.slice(-SEQ_CAP);
+  // Prune each signature's timestamps to the rolling window; drop empties.
+  for (const sig of Object.keys(state.events)) {
+    const kept = state.events[sig].filter((t) => now - t <= WINDOW_MS);
+    if (kept.length === 0) delete state.events[sig];
+    else state.events[sig] = kept;
+  }
+  // Cap distinct signatures (keep the most recently active).
+  const sigKeys = Object.keys(state.events);
+  if (sigKeys.length > MAX_SIGS) {
+    sigKeys
+      .sort((a, b) => Math.max(...state.events[b]) - Math.max(...state.events[a]))
+      .slice(MAX_SIGS)
+      .forEach((k) => delete state.events[k]);
+  }
+  if (state.seq.length > SEQ_CAP) state.seq = state.seq.slice(-SEQ_CAP);
 
+  // --- detect ---
   let context = null;
-  const hit = detect(sess.seq, sess.counts, THRESHOLD, KMAX);
-  if (hit) {
-    const key =
-      hit.kind === "composite" ? `seq:${hit.pattern.join(">")}` : `cmd:${hit.pattern[0]}`;
-    if (!sess.nudged.includes(key)) {
-      sess.nudged.push(key);
-      if (hit.kind === "composite") {
-        const flow = hit.pattern.map((s) => `\`${s}\``).join(" → ");
-        context =
-          `[omakase auto-detect] The user has repeated a multi-step workflow ${hit.reps} times this session: ${flow}. ` +
-          `Per the omakase-chef skill, call the omakase.find_skill MCP tool describing this end-to-end workflow ` +
-          `(not just one step), pick the single best match (prefer verified), and propose installing it in one ` +
-          `sentence with WHY. Ask the user before installing. Do this once; do not show a menu. ` +
-          `If find_skill returns nothing useful, offer omakase.propose_new_skill instead, or stay quiet.`;
-      } else {
-        context =
-          `[omakase auto-detect] The user has run \`${hit.pattern[0]}\`-type commands ${hit.reps} times this ` +
-          `session — a repeated manual task. Per the omakase-chef skill, call the omakase.find_skill MCP tool ` +
-          `with a task description for this "${hit.pattern[0]}" workflow, pick the single best match (prefer ` +
-          `verified), and propose installing it in one sentence with WHY. Ask the user before installing. ` +
-          `Do this once; do not show a menu. If find_skill returns nothing useful, stay quiet.`;
-      }
+  let key = null;
+  let payload = null;
+
+  // 1. Multi-step workflow: largest k>=2 block that just repeated THRESHOLD times.
+  for (let k = Math.min(KMAX, Math.floor(state.seq.length / THRESHOLD)); k >= 2; k--) {
+    if (trailingRepeats(state.seq, k) >= THRESHOLD) {
+      const pattern = state.seq.slice(state.seq.length - k);
+      key = `seq:${pattern.join(">")}`;
+      payload = { kind: "composite", pattern, reps: THRESHOLD };
+      break;
+    }
+  }
+  // 2. Single command recurring THRESHOLD times within the window.
+  if (!payload) {
+    const lastSig = sigs[sigs.length - 1];
+    const count = state.events[lastSig]?.length ?? 0;
+    if (count >= THRESHOLD) {
+      key = `cmd:${lastSig}`;
+      payload = { kind: "single", pattern: [lastSig], reps: count };
+    }
+  }
+
+  if (payload && !state.nudged.includes(key)) {
+    state.nudged.push(key);
+    if (payload.kind === "composite") {
+      const flow = payload.pattern.map((s) => `\`${s}\``).join(" → ");
+      context =
+        `[omakase auto-detect] The user has repeated a multi-step workflow ${payload.reps} times: ${flow}. ` +
+        `Per the omakase-chef skill, call omakase.find_skill describing this end-to-end workflow (not just one step), ` +
+        `pick the single best match (prefer verified), and propose installing it in one sentence with WHY. ` +
+        `Ask before installing. Do this once; no menu. If nothing fits, offer omakase.propose_new_skill or stay quiet.`;
+    } else {
+      context =
+        `[omakase auto-detect] The user has run \`${payload.pattern[0]}\`-type commands ${payload.reps} times ` +
+        `(across recent sessions) — a recurring manual task. Per the omakase-chef skill, call omakase.find_skill with ` +
+        `a task description for this "${payload.pattern[0]}" workflow, pick the single best match (prefer verified), ` +
+        `and propose installing it in one sentence with WHY. Ask before installing. Do this once; no menu. ` +
+        `If nothing fits, stay quiet.`;
     }
   }
 
   try {
-    saveState(file, state);
+    writeFileSync(file, JSON.stringify(state), "utf8");
   } catch {
     /* best-effort */
   }
@@ -233,10 +232,7 @@ function main() {
   if (context) {
     process.stdout.write(
       JSON.stringify({
-        hookSpecificOutput: {
-          hookEventName: "PostToolUse",
-          additionalContext: context,
-        },
+        hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: context },
       })
     );
   }

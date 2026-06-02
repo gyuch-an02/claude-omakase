@@ -107,3 +107,11 @@ commit. See [`CLAUDE.md`](../CLAUDE.md) → "Skill: ai-usage-log".
 3. 제안을 채팅에서 예쁘게 보여주기 위해 `src/catalog/render.ts`(마크다운 테이블·체크리스트)를 신설해 `recommend_skills`·`find_skill` 응답에 `rendered` 필드를 추가하고, `omakase-chef/SKILL.md`가 그 필드를 그대로 출력하도록 안내했다.
 4. 명시적 요청 없이도 프롬프트를 카탈로그와 매칭해 미설치 스킬을 세션당 1회(쿨다운) 제안하는 `hooks/omakase-suggest.mjs`(UserPromptSubmit)를 반복감지 훅·`propose_new_skill`과 별개로 추가했고, README에 용례 5종·TUI·훅 섹션과 OSS 기여용 "스킬 제안" 이슈 템플릿·`config.yml`을 마련했다.
 5. typecheck·build·lint(src 0건)·테스트 66개(렌더·라이프사이클 포함) 전부 통과를 확인하고 `package.json`을 0.3.0으로 올렸으며 catalog.json은 변경하지 않았고 이 로그 항목과 동일 커밋에 포함한다.
+
+## 2026-06-02 — 반복 감지 훅 재작성: 세션 누적·임계 2·노이즈 정제
+
+1. `hooks/omakase-repetition.mjs`를 세션별 카운트에서 세션을 가로지르는 단일 파일 누적 방식으로 바꿔, 각 시그니처를 타임스탬프와 함께 기록하고 기본 14일 롤링 윈도우 안의 발생 횟수로 판정하도록 했다.
+2. 기본 임계값을 3에서 2로 낮춰 "이전에 2회 반복된 작업"이면 추천하도록 했고, `OMAKASE_REPETITION_THRESHOLD`와 `OMAKASE_REPETITION_WINDOW_DAYS` 환경변수로 조정 가능하게 했다.
+3. 시그니처 추출에서 히어독 본문(`<<` 이후 전체)을 통째로 버리고, 첫 토큰이 명령어 형태(`^[a-zA-Z][\w.-]*$`)가 아니면 무시하도록 해 `5.`·`##`·`)"`·`-d)`·`$NODE` 같은 프래그먼트와 셸 키워드 오탐을 제거했다.
+4. 격리 검증으로 히어독·for/done 노이즈는 침묵, 같은 명령 2회는 발동, 서로 다른 session_id 간 누적 발동, 멀티스텝 2회 반복 시 composite 발동, `$()`·중괄호 프래그먼트 거부를 모두 확인했다.
+5. 이 훅은 npm `files`에 없어 패키지 버전과 무관하므로 버전은 올리지 않았고, README의 훅 섹션과 CHANGELOG의 Unreleased를 갱신했으며 catalog.json은 변경하지 않았고 이 로그 항목과 동일 커밋에 포함한다.
