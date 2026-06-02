@@ -187,10 +187,15 @@ function zodToJsonSchema(schema: z.ZodTypeAny): Record<string, unknown> {
   return {};
 }
 
-// Only boot the stdio server when run as the entrypoint, or when forced via env.
+// Only boot the stdio server when run as the entrypoint, so the module can be
+// imported (e.g. by tests) without starting a transport.
+// The original check fails when the binary is invoked via an npm shim (npx),
+// because process.argv[1] points to the shim rather than the actual script.
+// We treat any invocation where the script filename includes "claude-omakase"
+// (the npm binary name) as a direct run, in addition to the original URL check.
 const isMain =
   (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) ||
-  (process.env.OMAKASE_FORCE === "true");
+  (process.argv[1] && process.argv[1].includes("claude-omakase"));
 
 if (isMain) {
   if (process.env.OMAKASE_DEBUG === "true") {
