@@ -11,7 +11,7 @@
 //     }
 //   }
 
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -210,7 +210,15 @@ function zodToJsonSchema(schema: z.ZodTypeAny): Record<string, unknown> {
 // tests) without starting a transport. A `tui`/`manage` subcommand launches the
 // interactive skill manager instead of the stdio MCP server, so the human CLI
 // (`npx claude-omakase tui`) and the agent share one binary.
-const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+const isMain =
+  process.argv[1] &&
+  (() => {
+    try {
+      return import.meta.url === pathToFileURL(realpathSync(process.argv[1]!)).href;
+    } catch {
+      return import.meta.url === pathToFileURL(process.argv[1]!).href;
+    }
+  })();
 if (isMain) {
   const subcommand = process.argv[2];
   const run =
