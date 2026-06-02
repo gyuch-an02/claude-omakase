@@ -10,7 +10,6 @@ adapter-smoke-report.json
 docs/*
 !docs/contributor-quickstart.md
 !docs/ai-protocol.md
-!docs/ai-log.md
 !docs/automation.md
 !docs/demo-script.md
 !docs/distribution/
