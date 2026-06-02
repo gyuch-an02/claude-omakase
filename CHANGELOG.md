@@ -30,6 +30,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
+## [0.4.0] — 2026-06-02
+
+A suite of interactive flows built on **MCP elicitation** — the chat surface now drives real native dialogs instead of display-only Markdown.
+
+### Added
+- **Interactive starter-pack onboarding** — new `onboard_starter_pack` tool. On MCP clients that support **elicitation** (e.g. Claude Code), it shows a *real* native checkbox picker (one box per missing starter skill) and installs exactly what the user checks — no markdown, no text parsing. On clients without elicitation it returns a Markdown checklist (`mode: "markdown-fallback"`) to drive the old type-to-select flow. `omakase-chef/SKILL.md` first-session flow rewritten to call it. Resolves the limitation that the previous checklist was display-only markdown, not a selectable widget.
+- **Interactive `offer_skill`** — offers one found skill with a native **Install / Not now / Never recommend** picker via elicitation; on clients without it, returns `mode: "ask"` (then call again with `decision`). "Never" is persisted to a local block list (`~/.local/share/claude-omakase/declined.json`) and excluded from both `find_skill` and `recommend_skills` thereafter.
+- **`propose_new_skill` concept editing** — on elicitation-capable clients, before drafting it shows an editable form (skill id / what it does / triggers) so the user can tweak the concept first; `concept_edited` is reported in the response.
+
+---
+
 ## [0.3.0] — 2026-06-01
 
 ### Added

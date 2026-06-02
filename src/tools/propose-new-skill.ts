@@ -80,17 +80,59 @@ export async function handle(
   args: z.infer<typeof proposeNewSkillInput>,
   server: Server
 ) {
-  const slug = args.slug ?? slugify(args.task_description);
-  const triggers = args.triggers && args.triggers.length > 0
-    ? args.triggers
-    : derive_triggers(args.task_description);
+  let slug = args.slug ?? slugify(args.task_description);
+  let taskDescription = args.task_description;
+  let triggers =
+    args.triggers && args.triggers.length > 0 ? args.triggers : derive_triggers(args.task_description);
+  let conceptEdited = false;
 
-  let body: string;
-  if (args.draft_body) {
-    body = args.draft_body;
-  } else {
-    body = await generateWithSampling(server, { slug, taskDescription: args.task_description, triggers });
+  // Let the user edit the concept (id / what it does / triggers) BEFORE we draft
+  // and write anything — but only if the client supports an interactive form.
+  if (!args.draft_body && Boolean(server.getClientCapabilities?.()?.elicitation)) {
+    const res = await server.elicitInput({
+      message: "Review the new skill's concept — edit anything before I draft it:",
+      requestedSchema: {
+        type: "object",
+        properties: {
+          slug: {
+            type: "string",
+            title: "Skill id (slug)",
+            description: "kebab-case folder name under ~/.claude/skills/",
+            default: slug,
+          },
+          task_description: {
+            type: "string",
+            title: "What it does",
+            description: "One or two sentences describing the skill's job.",
+            default: taskDescription,
+          },
+          triggers: {
+            type: "string",
+            title: "Trigger phrases (comma-separated)",
+            description: "Phrases that should activate the skill later.",
+            default: triggers.join(", "),
+          },
+        },
+        required: [],
+      },
+    });
+    if (res.action === "accept" && res.content) {
+      const c = res.content as Record<string, unknown>;
+      if (typeof c["slug"] === "string" && c["slug"].trim()) slug = slugify(c["slug"]);
+      if (typeof c["task_description"] === "string" && c["task_description"].trim()) {
+        taskDescription = c["task_description"].trim();
+      }
+      if (typeof c["triggers"] === "string" && c["triggers"].trim()) {
+        triggers = c["triggers"].split(",").map((t) => t.trim()).filter(Boolean);
+      }
+      conceptEdited = true;
+    }
+    // declined/cancel → keep the originally proposed concept
   }
+
+  const body = args.draft_body
+    ? args.draft_body
+    : await generateWithSampling(server, { slug, taskDescription, triggers });
 
   await validateSkillDraft(body, { slug, triggers });
 
@@ -103,6 +145,7 @@ export async function handle(
     ok: true,
     slug,
     path,
+    concept_edited: conceptEdited,
     next_steps: [
       `Open ${path} and refine the instructions.`,
       "Test the skill by running a fresh Claude session.",
