@@ -53,6 +53,15 @@ export function packageVersion(): string {
 }
 
 async function main(): Promise<void> {
+  // stdout is reserved STRICTLY for the JSON-RPC stream. A single stray line on
+  // stdout — from our code or any transitive dependency — corrupts the protocol
+  // and makes the client report "failed to connect". Route all console chatter
+  // to stderr so nothing but the transport can touch stdout. (StdioServerTransport
+  // writes via process.stdout.write directly, so it is unaffected.)
+  console.log = (...args: unknown[]) => console.error(...args);
+  console.info = (...args: unknown[]) => console.error(...args);
+  console.debug = (...args: unknown[]) => console.error(...args);
+
   const server = new Server(
     { name: "claude-omakase", version: packageVersion() },
     { capabilities: { tools: {} } }
