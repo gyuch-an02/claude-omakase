@@ -31,7 +31,6 @@ import * as uninstallSkill from "./tools/uninstall-skill.js";
 import * as updateSkill from "./tools/update-skill.js";
 import * as doctor from "./tools/doctor.js";
 import * as offer from "./tools/offer.js";
-import * as onboard from "./tools/onboard.js";
 
 interface Tool {
   name: string;
@@ -108,19 +107,13 @@ async function main(): Promise<void> {
       name: "recommend_skills",
       description: recommend.recommendDescription,
       inputSchema: recommend.recommendInput,
-      handle: (args) => recommend.handle(recommend.recommendInput.parse(args)),
+      handle: (args) => recommend.handle(recommend.recommendInput.parse(args), server),
     },
     {
       name: "offer_skill",
       description: offer.offerSkillDescription,
       inputSchema: offer.offerSkillInput,
       handle: (args) => offer.handle(offer.offerSkillInput.parse(args), server),
-    },
-    {
-      name: "onboard_starter_pack",
-      description: onboard.onboardStarterPackDescription,
-      inputSchema: onboard.onboardStarterPackInput,
-      handle: (args) => onboard.handle(onboard.onboardStarterPackInput.parse(args), server),
     },
     {
       name: "set_profile",

@@ -10,9 +10,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ## [Unreleased]
 
 ### Removed
+- **`onboard_starter_pack` tool** — merged into `recommend_skills`. It duplicated the gap computation and split one concept ("set up the starter pack") across two tools that differed only by entry point (empty vs. partial install). `recommend_skills` with no context now drives the picker for both cases. The toolset drops from 11 to 10.
 - **In-repo AI-usage log convention** — deleted `docs/ai-log.md`, the `ai-log-check` workflow, the `CLAUDE.md` "Skill: ai-usage-log" section, and the PR-template checklist item. That log was a hackathon-level meta concern that had leaked into the product repo (wrong place, wrong format); contributors no longer need to add a `docs/ai-log.md` entry per PR.
 
 ### Changed
+- **`recommend_skills` now owns starter-pack onboarding end to end.** With no context it offers the full pack (no skills installed) or the missing staples (partial install), and on elicitation-capable clients it shows a real checkbox picker and installs the selection directly (`mode: "installed"` / `"declined"`). Non-picker paths are **loud, never silent**: a picker that errors or times out returns `mode: "picker-error"`, and a client without elicitation returns `picker: "unsupported"` — both carry the `rendered` checklist and a `next_step` that tells Claude to say *why* there's no picker before falling back to text.
 - **Repetition hook rewrite** (`hooks/omakase-repetition.mjs`): now tracks signatures in one **cross-session** file with timestamps and a rolling window (default 14 days) instead of resetting per session; default threshold lowered 3 → 2; signature extraction drops heredoc bodies, shell keywords, and non-command fragments (no more `5.`/`##`/`done`/`)"` false positives). Tunable via `OMAKASE_REPETITION_THRESHOLD` and `OMAKASE_REPETITION_WINDOW_DAYS`.
 - **Installer now ships the hooks.** `install.sh` and `claude-omakase-install` copy all proactive hooks to `~/.claude/hooks/omakase/` (a stable path) and print an opt-in `settings.json` snippet. They still never edit your Claude config. The `hooks/` directory is now included in the published npm package.
 
