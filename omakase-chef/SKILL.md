@@ -65,11 +65,16 @@ The user has done the same type of work by hand three or more times in this sess
 ```
 Call omakase.find_skill with the task description.
 Pick the single best match (prefer verified: true).
-Tap the shoulder — once, briefly:
+Tap the shoulder — once, briefly — then call omakase.offer_skill with that id:
 
   "You've summarized three PRs in this session.
-   There's a pr-summarizer skill for this — one call instead of three.
-   Want me to install it?"
+   There's a pr-summarizer skill for this — one call instead of three."
+
+offer_skill shows the user an interactive Install / Not now / Never-recommend
+picker (on clients with elicitation) and acts on the choice — install,
+skip, or block it forever. On clients without a picker it returns mode "ask";
+then ask those three options in text and call offer_skill again with `decision` set.
+"Never" is permanent and cross-session: that skill won't be surfaced again.
 ```
 
 **Trigger: explicit mention of a recurring workflow**
@@ -78,7 +83,7 @@ One mention is enough. Do not wait for three.
 
 **Trigger: the user asks**
 "What can I install?" / "What should I add?" / "What do you recommend?"
-Call `omakase.recommend_skills` with context from the conversation. Return **one recommendation** with a reason, not a list.
+Call `omakase.recommend_skills` with context from the conversation. Take the **one** best result and hand its id to `omakase.offer_skill` for the interactive Install / Not now / Never picker. Never dump the full list.
 
 **Trigger: incomplete starter pack** *(checklist exception)*
 Handled by the *Session start* routine above: call `omakase.recommend_skills` with no context once per session. If it returns `mode: "starter-pack-gap"` (with `present_as: "checklist"`), the user has some skills but is missing one or more starter-pack staples. Present **all** the missing staples as a checklist and let them pick any subset — *"You've got X already. The staples you're still missing: [ ] Y, [ ] Z. Want either?"* — then install each one they check. This is the one place you show a list; offer it once, don't nag if they pass.
@@ -108,8 +113,8 @@ Every install must end with:
 
 If yes:
 1. Ask for 2–3 concrete trigger phrases they would actually say
-2. Call `omakase.propose_new_skill` with a tight description and those triggers
-3. Read the draft back to the user — one section at a time — and ask what to change
+2. Call `omakase.propose_new_skill` with a tight description and those triggers. On clients with elicitation it first shows the user an **editable concept form** (skill id / what it does / triggers) — they can tweak it before anything is drafted or written. `concept_edited: true` in the response means they did.
+3. Read the generated draft back to the user — one section at a time — and ask what to change
 4. Edit the file until they're satisfied
 5. Mention: "Once it's stable, you can PR it to the community at gyuch-an02/claude-omakase"
 
@@ -119,7 +124,7 @@ If yes:
 
 - **One recommendation per moment.** Never list more than one skill at a time. If you call `find_skill` or `recommend_skills` and get multiple results, you pick one and serve it. The user never sees a menu. **The one exception: starter-pack onboarding** — when `recommend_skills` returns `present_as: "checklist"` (modes `starter-pack` / `starter-pack-gap`), present every returned staple as a checklist and let the user select and install any subset. Nowhere else.
 - **Never install without explicit approval.** "Yes", "go ahead", "do it" — wait for it. "Sounds good" is borderline; ask once to confirm.
-- **Never re-propose a declined skill this session.** They said no. Move on.
+- **Never re-propose a declined skill this session.** They said no. Move on. If they chose "Never recommend" via `offer_skill`, it's blocked permanently (cross-session) — `find_skill`/`recommend_skills` already exclude it.
 - **Never interrupt a flow.** If the user is mid-task, finish with them first. Tap the shoulder at a natural pause.
 - **Disclose what you touch.** Always say the file path before installing. Always say what changes.
 

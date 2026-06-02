@@ -159,6 +159,7 @@ Install any of them: *"Install the Grill Me skill"* → Claude calls `install_sk
 | `list_installed_skills` | List installed skills and install receipts |
 | `install_skill` | Download and install a skill to `~/.claude/skills/<id>/` |
 | `recommend_skills` | Ranked suggestions based on your profile, context, and install state (returns a ready-to-show `rendered` Markdown table/checklist) |
+| `offer_skill` | Offer one found skill with an interactive **Install / Not now / Never recommend** picker (MCP elicitation); "never" blocks it from future `find_skill`/`recommend_skills` |
 | `uninstall_skill` | Remove `~/.claude/skills/<id>/` and its install receipt (idempotent) |
 | `update_skill` | Re-download a skill's files from the catalog |
 | `doctor_skills` | Health report per skill: SKILL.md present? receipt present? in catalog? version match? |
