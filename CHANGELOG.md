@@ -9,6 +9,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added
+- **Interactive `offer_skill`** — offers one found skill with a native **Install / Not now / Never recommend** picker via MCP elicitation; on clients without elicitation it returns `mode: "ask"` (then call again with `decision`). "Never" is persisted to a local block list (`~/.local/share/claude-omakase/declined.json`) and excluded from both `find_skill` and `recommend_skills` thereafter.
+- **`propose_new_skill` concept editing** — on elicitation-capable clients, before drafting it shows an editable form (skill id / what it does / triggers) so the user can tweak the concept first; `concept_edited` is reported in the response.
+
 ### Removed
 - **In-repo AI-usage log convention** — deleted `docs/ai-log.md`, the `ai-log-check` workflow, the `CLAUDE.md` "Skill: ai-usage-log" section, and the PR-template checklist item. That log was a hackathon-level meta concern that had leaked into the product repo (wrong place, wrong format); contributors no longer need to add a `docs/ai-log.md` entry per PR.
 

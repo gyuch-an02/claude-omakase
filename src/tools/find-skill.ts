@@ -2,6 +2,7 @@ import { z } from "zod";
 import { load } from "../catalog/cache.js";
 import { search } from "../catalog/search.js";
 import { renderSkillTable } from "../catalog/render.js";
+import * as blocklist from "../blocklist.js";
 
 export const findSkillInput = z.object({
   task_description: z
@@ -24,7 +25,10 @@ Returns the top matches with id, name, short description, install command, and a
 
 export async function handle(args: z.infer<typeof findSkillInput>) {
   const catalog = await load();
-  const results = search(catalog.entries, args.task_description, args.limit);
+  // Exclude skills the user permanently declined ("never recommend").
+  const blocked = blocklist.load();
+  const candidates = catalog.entries.filter((e) => !blocked.has(e.id));
+  const results = search(candidates, args.task_description, args.limit);
   return {
     matches: results.map((r) => ({
       id: r.entry.id,
