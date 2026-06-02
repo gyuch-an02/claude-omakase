@@ -24,8 +24,9 @@ import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-const COOLDOWN_MS =
-  Number(process.env.OMAKASE_SESSION_COOLDOWN_HOURS ?? 24) * 60 * 60 * 1000;
+const cooldownHoursRaw = Number(process.env.OMAKASE_SESSION_COOLDOWN_HOURS);
+const cooldownHours = Number.isFinite(cooldownHoursRaw) ? Math.max(0, cooldownHoursRaw) : 24;
+const COOLDOWN_MS = cooldownHours * 60 * 60 * 1000;
 
 // Only a truly new session should be greeted. Resuming or compacting an
 // existing conversation is a continuation, not a fresh start.
