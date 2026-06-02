@@ -40,7 +40,7 @@ First time? Claude greets you with a **starter pack** of universally useful skil
 
 ```bash
 # 1. Install the omakase-chef skill
-npx claude-omakase-install
+npx -y -p claude-omakase claude-omakase-install
 
 # 2. Add the MCP server to your Claude Code config
 claude mcp add omakase -- npx -y claude-omakase

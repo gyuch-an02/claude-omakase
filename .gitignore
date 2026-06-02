@@ -16,3 +16,4 @@ docs/*
 !docs/distribution/
 !docs/distribution/*.md
 .agents/
+demo.sh

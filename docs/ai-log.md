@@ -115,3 +115,11 @@ commit. See [`CLAUDE.md`](../CLAUDE.md) → "Skill: ai-usage-log".
 3. 시그니처 추출에서 히어독 본문(`<<` 이후 전체)을 통째로 버리고, 첫 토큰이 명령어 형태(`^[a-zA-Z][\w.-]*$`)가 아니면 무시하도록 해 `5.`·`##`·`)"`·`-d)`·`$NODE` 같은 프래그먼트와 셸 키워드 오탐을 제거했다.
 4. 격리 검증으로 히어독·for/done 노이즈는 침묵, 같은 명령 2회는 발동, 서로 다른 session_id 간 누적 발동, 멀티스텝 2회 반복 시 composite 발동, `$()`·중괄호 프래그먼트 거부를 모두 확인했다.
 5. 이 훅은 npm `files`에 없어 패키지 버전과 무관하므로 버전은 올리지 않았고, README의 훅 섹션과 CHANGELOG의 Unreleased를 갱신했으며 catalog.json은 변경하지 않았고 이 로그 항목과 동일 커밋에 포함한다.
+
+## 2026-06-02 — README 설치 명령 수정·로컬 데모 무시
+
+1. README의 설치 명령을 `npx claude-omakase-install`에서 `npx -p claude-omakase claude-omakase-install`로 고쳤다.
+2. `claude-omakase-install`은 독립 패키지가 아니라 `claude-omakase` 패키지 안의 bin이라서, 기존 명령은 npm 레지스트리에서 동명 패키지를 찾다가 404로 실패했다.
+3. 수정한 명령이 `package.json`의 `bin` 정의와 일치하며 게시된 0.3.0 패키지에서 실제로 동작함을 검증했다.
+4. 함께 작성한 로컬 시연 스크립트 `demo.sh`는 저장소에 올리지 않도록 `.gitignore`에 추가해, docs 산출물만 추적하는 기존 무시 규칙 관례와 일관성을 유지했다.
+5. catalog.json과 패키지 버전은 변경하지 않았고 이 로그 항목과 동일 커밋에 포함한다.
