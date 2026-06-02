@@ -1,10 +1,45 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { recommendInput, handle } from "./recommend.js";
 import type { Entry } from "../types.js";
+
+// Minimal fake MCP server exposing only what serveStarterPack touches.
+function fakeServer(opts: {
+  elicitation?: boolean;
+  elicitResult?: { action: string; content?: Record<string, unknown> };
+  elicitThrows?: string;
+  onElicit?: () => void;
+}) {
+  return {
+    getClientCapabilities: () => (opts.elicitation ? { elicitation: {} } : {}),
+    elicitInput: async () => {
+      opts.onElicit?.();
+      if (opts.elicitThrows) throw new Error(opts.elicitThrows);
+      return opts.elicitResult ?? { action: "decline" };
+    },
+  } as never;
+}
+
+// Offline starter entry — empty skill_files makes install write a local stub
+// instead of fetching over https, so the picker-install tests never touch the
+// network.
+function offlineStarter(id: string, tags: string[] = []): Entry {
+  return {
+    id,
+    name: id.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" "),
+    type: "claude_code_skill",
+    description: `The ${id} skill.`,
+    tags: ["starter-pack", ...tags],
+    verified: true,
+    author: { name: "Test" },
+    install: { skill_files: [] },
+    source: { adapter: "test" },
+  };
+}
 
 test("recommend_skills: first-time starter pack returns the full checklist, context-ranked", async (t) => {
   await withIsolatedOmakaseState(t, [
@@ -231,6 +266,107 @@ test("recommend_skills: explicit context outranks a strong profile match", async
     "quick-review",
     "the explicit ask must beat the profile's frontend bias"
   );
+});
+
+// ── starter-pack picker (elicitation) ───────────────────────────────────────
+
+test("recommend_skills: picker accept installs exactly the checked starter skills", async (t) => {
+  await withIsolatedOmakaseState(t, [
+    offlineStarter("grill-me"),
+    offlineStarter("quick-review"),
+    offlineStarter("write-a-skill"),
+  ]);
+  const skillsDir = process.env["CLAUDE_OMAKASE_SKILLS_DIR"]!;
+
+  const res = await handle(
+    recommendInput.parse({}),
+    fakeServer({
+      elicitation: true,
+      elicitResult: {
+        action: "accept",
+        content: { "grill-me": true, "quick-review": false, "write-a-skill": true },
+      },
+    })
+  );
+
+  assert.equal(res.mode, "installed");
+  assert.equal(res.starter_pack, "starter-pack");
+  const ids = res.installed.map((i) => i.id).sort();
+  assert.deepEqual(ids, ["grill-me", "write-a-skill"]);
+  assert.ok(existsSync(join(skillsDir, "grill-me", "SKILL.md")), "checked skill landed");
+  assert.ok(existsSync(join(skillsDir, "write-a-skill", "SKILL.md")));
+  assert.equal(existsSync(join(skillsDir, "quick-review")), false, "unchecked skill not installed");
+});
+
+test("recommend_skills: gap picker installs the checked missing staples", async (t) => {
+  await withIsolatedOmakaseState(
+    t,
+    [offlineStarter("grill-me"), offlineStarter("quick-review"), offlineStarter("write-a-skill")],
+    ["grill-me"]
+  );
+  const skillsDir = process.env["CLAUDE_OMAKASE_SKILLS_DIR"]!;
+
+  const res = await handle(
+    recommendInput.parse({}),
+    fakeServer({
+      elicitation: true,
+      elicitResult: { action: "accept", content: { "quick-review": true, "write-a-skill": false } },
+    })
+  );
+
+  assert.equal(res.mode, "installed");
+  assert.equal(res.starter_pack, "starter-pack-gap");
+  assert.deepEqual(res.installed.map((i) => i.id), ["quick-review"]);
+  assert.ok(existsSync(join(skillsDir, "quick-review", "SKILL.md")));
+});
+
+test("recommend_skills: declined picker installs nothing", async (t) => {
+  await withIsolatedOmakaseState(t, [offlineStarter("grill-me"), offlineStarter("quick-review")]);
+  const skillsDir = process.env["CLAUDE_OMAKASE_SKILLS_DIR"]!;
+
+  const res = await handle(
+    recommendInput.parse({}),
+    fakeServer({ elicitation: true, elicitResult: { action: "cancel" } })
+  );
+
+  assert.equal(res.mode, "declined");
+  assert.equal(res.starter_pack, "starter-pack");
+  assert.equal(res.installed.length, 0);
+  assert.equal(existsSync(join(skillsDir, "grill-me")), false);
+});
+
+test("recommend_skills: picker error surfaces loudly, installs nothing", async (t) => {
+  await withIsolatedOmakaseState(t, [offlineStarter("grill-me"), offlineStarter("quick-review")]);
+  const skillsDir = process.env["CLAUDE_OMAKASE_SKILLS_DIR"]!;
+
+  const res = await handle(
+    recommendInput.parse({}),
+    fakeServer({ elicitation: true, elicitThrows: "Request timed out" })
+  );
+
+  assert.equal(res.mode, "picker-error");
+  assert.equal(res.starter_pack, "starter-pack");
+  assert.match(res.error, /timed out/i);
+  assert.match(res.next_step, /TELL THE USER/);
+  assert.ok(res.rendered && res.rendered.includes("Grill"), "data kept for a text fallback");
+  assert.equal(existsSync(join(skillsDir, "grill-me")), false, "nothing installed on picker error");
+});
+
+test("recommend_skills: client without elicitation gets a LOUD unsupported notice", async (t) => {
+  let elicited = false;
+  await withIsolatedOmakaseState(t, [offlineStarter("grill-me"), offlineStarter("quick-review")]);
+
+  const res = await handle(
+    recommendInput.parse({}),
+    fakeServer({ elicitation: false, onElicit: () => (elicited = true) })
+  );
+
+  assert.equal(elicited, false, "must not call elicitInput when unsupported");
+  assert.equal(res.mode, "starter-pack");
+  assert.equal(res.picker, "unsupported");
+  assert.equal(res.present_as, "checklist");
+  assert.match(res.next_step, /does not support the interactive picker/i);
+  assert.ok(res.rendered && res.rendered.includes("Grill"));
 });
 
 async function withIsolatedOmakaseState(

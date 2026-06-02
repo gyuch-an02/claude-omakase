@@ -100,7 +100,7 @@ You:     (check two boxes, submit)
 Claude:  Installed Quick Review and Understand Anything to ~/.claude/skills/. Active next session.
 ```
 
-On clients with MCP elicitation (e.g. Claude Code), `onboard_starter_pack` shows a **real interactive checkbox dialog** and installs exactly what you check — no typing, no parsing. On clients without it, the same skills come back as a Markdown checklist and you tell Claude which you want.
+On clients with MCP elicitation (e.g. Claude Code), `recommend_skills` shows a **real interactive checkbox dialog** and installs exactly what you check — no typing, no parsing. The same tool drives this for both a brand-new user (the full pack) and a returning user with gaps (just the missing staples). On clients without elicitation it says so and returns the skills as a Markdown checklist for you to pick from.
 
 ### 2. Repeated manual work — proactive nudge
 
@@ -159,9 +159,8 @@ Install any of them: *"Install the Grill Me skill"* → Claude calls `install_sk
 | `find_skill` | Search the catalog by task description |
 | `list_installed_skills` | List installed skills and install receipts |
 | `install_skill` | Download and install a skill to `~/.claude/skills/<id>/` |
-| `recommend_skills` | Ranked suggestions based on your profile, context, and install state (returns a ready-to-show `rendered` Markdown table/checklist) |
+| `recommend_skills` | Ranked suggestions based on your profile, context, and install state. With no context it drives **starter-pack onboarding** — full pack for a new user, missing staples for a returning one — via a real checkbox picker (MCP elicitation), or a Markdown checklist on clients without it |
 | `offer_skill` | Offer one found skill with an interactive **Install / Not now / Never recommend** picker (MCP elicitation); "never" blocks it from future `find_skill`/`recommend_skills` |
-| `onboard_starter_pack` | Interactive starter-pack setup — on clients with MCP elicitation, shows a real checkbox picker and installs exactly what you check; falls back to a Markdown checklist otherwise |
 | `uninstall_skill` | Remove `~/.claude/skills/<id>/` and its install receipt (idempotent) |
 | `update_skill` | Re-download a skill's files from the catalog |
 | `doctor_skills` | Health report per skill: SKILL.md present? receipt present? in catalog? version match? |
