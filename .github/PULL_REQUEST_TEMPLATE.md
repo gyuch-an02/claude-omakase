@@ -19,4 +19,3 @@
 - [ ] New adapter: `src/adapters/<name>.test.ts` exists with fixture-based tests
 - [ ] New `handpicked/` entry: includes `verified: true` justification in PR body
 - [ ] `catalog.json` rebuilt via `npm run build:catalog` if adapter output changed
-- [ ] `docs/ai-log.md` entry added (required by repo convention)
