@@ -205,7 +205,7 @@ Two opt-in [Claude Code hooks](https://docs.claude.com/en/docs/claude-code/hooks
 
 | Hook | Event | What it does |
 |---|---|---|
-| `omakase-repetition.mjs` | `PostToolUse` (Bash) | Counts repeated command workflows (single commands **and** multi-step chains via n-gram detection); after a workflow repeats 3×, nudges Claude to find a matching skill. |
+| `omakase-repetition.mjs` | `PostToolUse` (Bash) | Tracks command workflows (single commands **and** multi-step chains via n-gram detection) in one **cross-session** file with timestamps; when a task recurs 2× within a rolling window, nudges Claude to find a matching skill. Heredoc bodies and shell keywords are filtered out. |
 | `omakase-suggest.mjs` | `UserPromptSubmit` | Matches each prompt against the catalog; if a not-yet-installed skill clearly fits, suggests it once per session (with a cooldown). |
 
 Register them in your Claude Code `settings.json`:
@@ -227,7 +227,7 @@ Register them in your Claude Code `settings.json`:
 }
 ```
 
-Tunable via env vars: `OMAKASE_REPETITION_THRESHOLD` (default 3), `OMAKASE_SUGGEST_THRESHOLD` (default 5), `OMAKASE_SUGGEST_COOLDOWN` (default 3 prompts). Both are local-only — no network, no telemetry.
+Tunable via env vars: `OMAKASE_REPETITION_THRESHOLD` (default 2), `OMAKASE_REPETITION_WINDOW_DAYS` (default 14), `OMAKASE_SUGGEST_THRESHOLD` (default 5), `OMAKASE_SUGGEST_COOLDOWN` (default 3 prompts). Both are local-only — no network, no telemetry.
 
 ## Catalog
 
