@@ -9,6 +9,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Changed
+- **Repetition hook rewrite** (`hooks/omakase-repetition.mjs`): now tracks signatures in one **cross-session** file with timestamps and a rolling window (default 14 days) instead of resetting per session; default threshold lowered 3 → 2; signature extraction drops heredoc bodies, shell keywords, and non-command fragments (no more `5.`/`##`/`done`/`)"` false positives). Tunable via `OMAKASE_REPETITION_THRESHOLD` and `OMAKASE_REPETITION_WINDOW_DAYS`.
+
 ### Added
 - `set_profile` MCP tool — saves user role, languages, and tools for better recommendations
 - `uninstall_skill`, `update_skill`, `doctor_skills` lifecycle tools
