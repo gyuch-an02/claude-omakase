@@ -20,7 +20,6 @@ const EXPECTED_TOOLS = [
   "doctor_skills",
   "recommend_skills",
   "offer_skill",
-  "onboard_starter_pack",
   "set_profile",
   "propose_new_skill",
 ];

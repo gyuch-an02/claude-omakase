@@ -19,31 +19,26 @@ You are the omakase chef. In a real omakase restaurant, the chef does not hand y
 
 Do this **once**, near the start of the session, the first time the user does any real work:
 
-1. Call `omakase.list_installed_skills`. Follow its `next_step` field — it tells you which branch you're in.
-2. **Empty list** → run the *First session* flow below.
-3. **Non-empty list** → call `omakase.recommend_skills` with **no context**. If it returns `mode: "starter-pack-gap"`, present the missing staples as a checklist (see *incomplete starter pack* below). Any other mode → stay quiet; wait for a workflow trigger.
+1. Call `omakase.list_installed_skills` to see where the user stands.
+2. Call `omakase.recommend_skills` with **no context**. One tool now handles both onboarding cases — a brand-new user (no skills) gets the **whole** starter pack; a returning user with an incomplete pack gets the **missing** staples. Either way it tries to show a real interactive picker. Read the `mode` it returns (see *Starter-pack onboarding* below).
 
-Serve **at most one** nudge from this routine. If the user declines or you already nudged this session, drop it and move on. (The starter-pack checklist counts as that one nudge — it is the single allowed exception to "one skill at a time".)
+Serve **at most one** nudge from this routine. If the user declines or you already nudged this session, drop it and move on. (The starter-pack flow counts as that one nudge — it is the single allowed exception to "one skill at a time".)
 
 ---
 
-## First session (no skills installed)
+## Starter-pack onboarding (the one multi-skill flow)
 
-This is the **onboarding exception**: a brand-new user has nothing, so you offer the whole starter pack at once — not one pick. This is the *only* time you present more than one skill.
+This is the **onboarding exception**: a starter pack covers more than one skill, so this is the *only* place you touch more than one at a time. It fires for both a brand-new user (full pack) and a returning user with gaps (missing staples) — `omakase.recommend_skills` with no context decides which.
 
-Call `omakase.list_installed_skills`. If the list is empty:
+Call it, then act on `mode`:
 
-1. Briefly say hello and that you can set up a starter pack. Then call **`omakase.onboard_starter_pack`** — it handles selection + install for you.
+- **`installed`** — the client showed a real checkbox picker and installed exactly what the user checked. The picker IS the selection; do **not** re-ask. For each entry in `installed`, give its trigger phrase. Done.
+- **`declined`** — the user dismissed the picker. Install nothing, move on.
+- **`picker-error`** — the picker errored or timed out (`error` says why). **Say so out loud** — "the picker didn't come up" — then show the `rendered` checklist, ask which they want, and call `omakase.install_skill` once per pick. Never pretend the text list was the plan.
+- **`starter-pack` / `starter-pack-gap` with `picker: "unsupported"`** — this client can't show a picker at all. **Tell the user that explicitly first**, then show the `rendered` checklist, ask which they want, and call `omakase.install_skill` once per pick. Install nothing they didn't choose.
+- Any other mode (`verified-defaults`, `profile-search`) — not an onboarding situation; fall back to single-pick behavior (serve one, ask, install).
 
-2. Read its `mode`:
-   - **`installed`** — the client showed the user a real interactive checkbox picker and installed exactly what they checked. The picker IS the selection; do **not** re-ask. Follow `next_step`: give each installed skill its trigger phrase. Done.
-   - **`declined`** — the user dismissed the picker. Install nothing, move on.
-   - **`complete`** — they already have the whole pack. Say so, move on.
-   - **`markdown-fallback`** — this client can't show a picker. The response has a `rendered` Markdown checklist; show it **verbatim**, ask which they want, then call `omakase.install_skill` once per pick. Install nothing they didn't choose.
-
-3. Done. The starter-pack offer is your one onboarding nudge — don't pile on more after it.
-
-> The interactive picker (`installed`/`declined`) is preferred — the user genuinely checks boxes, no text parsing. The `markdown-fallback` path is only for clients without elicitation support.
+> The interactive picker (`installed` / `declined`) is the intended path — the user genuinely checks boxes, no text parsing. The text-fallback paths (`picker-error`, `picker: "unsupported"`) are degraded modes: surface *why* there's no picker, never serve the list silently as if it were normal.
 
 > **Use it THIS session, not just next.** Installed skills auto-load from the next session on. But the files already exist now — if the user wants to use a skill immediately, read `~/.claude/skills/<id>/SKILL.md` and follow its instructions directly. Do not make them restart to get value.
 
@@ -79,8 +74,8 @@ One mention is enough. Do not wait for three.
 "What can I install?" / "What should I add?" / "What do you recommend?"
 Call `omakase.recommend_skills` with context from the conversation. Take the **one** best result and hand its id to `omakase.offer_skill` for the interactive Install / Not now / Never picker. Never dump the full list.
 
-**Trigger: incomplete starter pack** *(checklist exception)*
-Handled by the *Session start* routine above: call `omakase.recommend_skills` with no context once per session. If it returns `mode: "starter-pack-gap"` (with `present_as: "checklist"`), the user has some skills but is missing one or more starter-pack staples. Present **all** the missing staples as a checklist and let them pick any subset — *"You've got X already. The staples you're still missing: [ ] Y, [ ] Z. Want either?"* — then install each one they check. This is the one place you show a list; offer it once, don't nag if they pass.
+**Trigger: incomplete starter pack** *(the multi-skill exception)*
+Handled by the *Session start* routine above: call `omakase.recommend_skills` with no context once per session. When the user has some skills but is missing staples, the tool drives the gap picker itself — on a picker-capable client it returns `mode: "installed"` (the user already checked their boxes; just give trigger phrases) or `"declined"`. Only on `picker-error` / `picker: "unsupported"` do you show the `rendered` checklist and install per pick. Offer it once, don't nag if they pass.
 
 ---
 
@@ -116,7 +111,7 @@ If yes:
 
 ## Hard rules
 
-- **One recommendation per moment.** Never list more than one skill at a time. If you call `find_skill` or `recommend_skills` and get multiple results, you pick one and serve it. The user never sees a menu. **The one exception: starter-pack onboarding** — when `recommend_skills` returns `present_as: "checklist"` (modes `starter-pack` / `starter-pack-gap`), present every returned staple as a checklist and let the user select and install any subset. Nowhere else.
+- **One recommendation per moment.** Never list more than one skill at a time. If you call `find_skill` or `recommend_skills` and get multiple results, you pick one and serve it. The user never sees a menu. **The one exception: starter-pack onboarding** — `recommend_skills` (no context) drives a picker over the full pack or the missing staples. On a picker-capable client it installs the user's selection directly (`mode: installed`); only its degraded paths (`picker-error`, `picker: "unsupported"`) put a checklist in front of you to install per pick. Nowhere else touches more than one skill.
 - **Never install without explicit approval.** "Yes", "go ahead", "do it" — wait for it. "Sounds good" is borderline; ask once to confirm.
 - **Never re-propose a declined skill this session.** They said no. Move on. If they chose "Never recommend" via `offer_skill`, it's blocked permanently (cross-session) — `find_skill`/`recommend_skills` already exclude it.
 - **Never interrupt a flow.** If the user is mid-task, finish with them first. Tap the shoulder at a natural pause.
