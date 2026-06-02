@@ -23,6 +23,30 @@ function installChefSkill(): void {
   console.log(green(`Installed omakase-chef skill at ${targetDir}/SKILL.md`));
 }
 
+// Proactive hooks that make discovery deterministic. We copy them to a stable
+// location so the registration snippet can reference a durable path (the npm
+// package itself may live in an ephemeral npx cache). We do NOT register them —
+// the user opts in by pasting the printed snippet into settings.json.
+const HOOK_FILES = [
+  "omakase-session-start.mjs",
+  "omakase-repetition.mjs",
+  "omakase-suggest.mjs",
+];
+
+function hooksTargetDir(): string {
+  return join(homedir(), ".claude", "hooks", "omakase");
+}
+
+function installHooks(): void {
+  const srcDir = new URL("../../hooks/", import.meta.url).pathname;
+  const targetDir = hooksTargetDir();
+  mkdirSync(targetDir, { recursive: true });
+  for (const h of HOOK_FILES) {
+    copyFileSync(join(srcDir, h), join(targetDir, h));
+  }
+  console.log(green(`Installed proactive hooks at ${targetDir}/`));
+}
+
 function printRegistrationSnippet(): void {
   console.log(`Add the following to your MCP host config and restart the host:
 
@@ -36,12 +60,33 @@ function printRegistrationSnippet(): void {
   }`);
 }
 
+function printHooksSnippet(): void {
+  const dir = hooksTargetDir();
+  console.log(`Optional — make the chef proactive. Add this "hooks" block to your Claude Code
+settings.json (SessionStart greets new users with the starter pack; the other
+two nudge on repetition and matching prompts). Omakase never edits this file
+for you:
+
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "node ${dir}/omakase-session-start.mjs" } ] }
+    ],
+    "PostToolUse": [
+      { "matcher": "Bash", "hooks": [ { "type": "command", "command": "node ${dir}/omakase-repetition.mjs" } ] }
+    ],
+    "UserPromptSubmit": [
+      { "hooks": [ { "type": "command", "command": "node ${dir}/omakase-suggest.mjs" } ] }
+    ]
+  }`);
+}
+
 function main(): void {
   console.log(cyan("Claude Omakase installer"));
   console.log();
 
   requireNode();
   installChefSkill();
+  installHooks();
 
   console.log();
   console.log(green("Done."));
@@ -49,9 +94,11 @@ function main(): void {
   console.log("Next steps:");
   printRegistrationSnippet();
   console.log();
+  printHooksSnippet();
+  console.log();
   console.log(cyan("Uninstall:"));
-  console.log(`  rm -rf "$HOME/.claude/skills/omakase-chef"`);
-  console.log(`  remove the "omakase" entry from your MCP host config.`);
+  console.log(`  rm -rf "$HOME/.claude/skills/omakase-chef" "$HOME/.claude/hooks/omakase"`);
+  console.log(`  remove the "omakase" entry (and any omakase hooks) from your config.`);
 }
 
 main();

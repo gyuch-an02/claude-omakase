@@ -14,8 +14,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Changed
 - **Repetition hook rewrite** (`hooks/omakase-repetition.mjs`): now tracks signatures in one **cross-session** file with timestamps and a rolling window (default 14 days) instead of resetting per session; default threshold lowered 3 → 2; signature extraction drops heredoc bodies, shell keywords, and non-command fragments (no more `5.`/`##`/`done`/`)"` false positives). Tunable via `OMAKASE_REPETITION_THRESHOLD` and `OMAKASE_REPETITION_WINDOW_DAYS`.
+- **Installer now ships the hooks.** `install.sh` and `claude-omakase-install` copy all proactive hooks to `~/.claude/hooks/omakase/` (a stable path) and print an opt-in `settings.json` snippet. They still never edit your Claude config. The `hooks/` directory is now included in the published npm package.
 
 ### Added
+- **Session-start onboarding hook** — `hooks/omakase-session-start.mjs` (`SessionStart`): on a fresh session (`startup`/`clear`, not resume/compact) it injects a one-shot instruction telling Claude to run the omakase-chef *Session start* routine immediately, so new users are greeted with the starter pack instead of having to ask. Delegates all branching to `omakase.list_installed_skills`; fires at most once per `OMAKASE_SESSION_COOLDOWN_HOURS` (default 24, set `0` to greet every startup). Opt-in; register it yourself.
 - `set_profile` MCP tool — saves user role, languages, and tools for better recommendations
 - `uninstall_skill`, `update_skill`, `doctor_skills` lifecycle tools
 - `recommend_skills` V2: filters already-installed skills, returns match scores/reasons
