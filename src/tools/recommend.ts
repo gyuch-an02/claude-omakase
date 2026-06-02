@@ -1,8 +1,10 @@
 import { z } from "zod";
+import type { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { load } from "../catalog/cache.js";
 import * as profileLib from "../profile.js";
 import { search } from "../catalog/search.js";
 import { handle as listInstalled } from "./list-installed.js";
+import { handle as installSkill } from "./install-skill.js";
 import { renderSkillTable, renderChecklist, type RenderRow } from "../catalog/render.js";
 import * as blocklist from "../blocklist.js";
 import type { Entry } from "../types.js";
@@ -30,16 +32,18 @@ When to call:
 After getting a result: present ONE recommendation with a one-sentence reason, then ask "install it?".
 Never show a list. Never show more than one option at a time.
 
-Special behavior:
-  - No skills installed → returns the FULL starter-pack as a checklist (mode "starter-pack", present_as "checklist").
-  - Some skills installed but the starter-pack is incomplete and the user gave no specific ask → returns ALL missing starter-pack skills as a checklist (mode "starter-pack-gap", present_as "checklist"). Use this to complete a user's starter pack after they've installed a few.
+Special behavior (STARTER-PACK / ONBOARDING — both empty and partial):
+  - No skills installed → offers the FULL starter pack.
+  - Some skills installed but the starter pack is incomplete and the user gave no specific ask → offers ALL the missing starter-pack staples. Use this to complete a user's starter pack after they've installed a few.
+  - In BOTH cases, if the MCP client supports elicitation, the tool shows the user a REAL interactive checkbox picker (one box per skill) and installs exactly what they check — no text parsing, no follow-up install_skill calls. Returns mode "installed" (with the chosen skills) or "declined".
+  - If the client does NOT support elicitation, it returns the candidates as a Markdown checklist instead (mode "starter-pack" or "starter-pack-gap", present_as "checklist"); show it, ask which to install, then call install_skill once per pick.
   - Recommendations always exclude skills the user already has installed.
 
-ONBOARDING EXCEPTION: the two starter-pack modes are the ONLY case where you present a list. When present_as is "checklist", show every returned skill as a checkable item and let the user select and install any subset. In all OTHER modes, still pick the single best match, not the full list.
+ONBOARDING EXCEPTION: the starter-pack flow is the ONLY case that touches more than one skill at once. When the picker runs it installs the user's selection directly; on the checklist fallback, present every returned skill as a checkable item and let the user select any subset. In all OTHER modes, still pick the single best match, not the full list.
 
 In "profile-search" mode each recommendation carries match_score and match_reasons — use them to explain WHY the pick fits, but still serve only one.`;
 
-export async function handle(args: z.infer<typeof recommendInput>) {
+export async function handle(args: z.infer<typeof recommendInput>, server?: Server) {
   const [catalog, profile, installed] = await Promise.all([
     load(),
     profileLib.load(),
@@ -64,46 +68,26 @@ export async function handle(args: z.infer<typeof recommendInput>) {
   );
   const missingStarter = starterPack.filter(notInstalled);
 
-  // First-time user: no skills installed → surface the WHOLE starter-pack as a
-  // checklist. This is the one onboarding exception to "serve exactly one".
-  if (installedIds.size === 0) {
-    return {
-      mode: "starter-pack" as const,
-      present_as: "checklist" as const,
-      profile_summary: profile,
-      onboarding_message:
-        "No skills installed yet. Here's the starter pack — pick the ones that fit how you work and I'll install them.",
-      recommendations: orderAll(starterPack, query).map(format),
-      rendered: renderChecklist(orderAll(starterPack, query).map(toRow)),
-      next_step:
-        `ONBOARDING EXCEPTION — present a checklist, not one pick. Show EVERY skill above as a checkable item ` +
-        `(the most relevant first), each with a one-line reason. Let the user select any subset (or all, or none). ` +
-        `On approval, call install_skill once per selected skill, then follow each result's next_step onboarding.`,
-    };
-  }
-
-  // Returning user with an incomplete starter pack and no specific ask:
-  // fill the gap — suggest the best starter-pack skill they don't have yet.
-  // Gate on the absence of an *explicit* ask (args.context), NOT on the combined
-  // query. A saved profile makes `query` non-empty, but the chef still wants the
-  // gap nudge when the user hasn't asked for anything specific — the profile is
-  // used only to rank which missing staple to surface first.
-  if (!ask && missingStarter.length > 0) {
-    return {
-      mode: "starter-pack-gap" as const,
-      present_as: "checklist" as const,
-      profile_summary: profile,
-      installed_count: installedIds.size,
-      missing_starter_pack: missingStarter.map((e) => e.id),
-      onboarding_message:
-        "You have some skills, but your starter pack isn't complete yet. Here are the staples you're still missing — pick the ones you want.",
-      recommendations: orderAll(missingStarter, query).map(format),
-      rendered: renderChecklist(orderAll(missingStarter, query).map(toRow)),
-      next_step:
-        `ONBOARDING EXCEPTION — present a checklist, not one pick. Show EVERY missing staple above as a checkable ` +
-        `item (the most relevant first), each with a one-line reason. Let the user select any subset (or all, or none). ` +
-        `On approval, call install_skill once per selected skill, then follow each result's next_step onboarding.`,
-    };
+  // Starter-pack onboarding — the one flow that touches more than one skill.
+  // Two entry points, one behavior:
+  //   • First-time user (nothing installed) → offer the WHOLE starter pack.
+  //   • Returning user, incomplete pack, no explicit ask → offer the missing
+  //     staples (the "gap"). Gate on the absence of an *explicit* ask
+  //     (args.context), NOT the combined query: a saved profile makes `query`
+  //     non-empty, but the chef still wants the gap nudge when the user hasn't
+  //     asked for anything specific — the profile only ranks which staple leads.
+  const firstTime = installedIds.size === 0;
+  if (firstTime || (!ask && missingStarter.length > 0)) {
+    const candidates = orderAll(firstTime ? starterPack : missingStarter, query);
+    if (candidates.length > 0) {
+      return serveStarterPack({
+        kind: firstTime ? "starter-pack" : "starter-pack-gap",
+        candidates,
+        profile,
+        installedCount: installedIds.size,
+        server,
+      });
+    }
   }
 
   const singlePickNextStep =
@@ -146,6 +130,114 @@ export async function handle(args: z.infer<typeof recommendInput>) {
     rendered: renderSkillTable(results.map((r) => toRow(r.entry))),
     next_step: singlePickNextStep,
   };
+}
+
+// Drive the starter-pack flow. Picker-first: when the client advertises
+// elicitation, show a real checkbox form and install the user's selection
+// directly. Every non-picker path is LOUD — the chef must tell the user *why*
+// there's no picker (unsupported client, or a picker that errored/timed out)
+// rather than silently dropping to a text list as if that were normal.
+async function serveStarterPack(opts: {
+  kind: "starter-pack" | "starter-pack-gap";
+  candidates: Entry[];
+  profile: Awaited<ReturnType<typeof profileLib.load>>;
+  installedCount: number;
+  server?: Server;
+}) {
+  const { kind, candidates, profile, installedCount, server } = opts;
+  const canElicit = Boolean(server?.getClientCapabilities?.()?.elicitation);
+
+  // Genuinely incapable client (e.g. a minimal/legacy MCP host). Don't pretend
+  // a text list is the intended UX — say the picker is unavailable, out loud.
+  if (!canElicit) {
+    return {
+      mode: kind,
+      present_as: "checklist" as const,
+      picker: "unsupported" as const,
+      profile_summary: profile,
+      ...(kind === "starter-pack-gap"
+        ? { installed_count: installedCount, missing_starter_pack: candidates.map((e) => e.id) }
+        : {}),
+      onboarding_message:
+        kind === "starter-pack"
+          ? "No skills installed yet. Here's the starter pack."
+          : "You have some skills, but your starter pack isn't complete yet. Here are the staples you're still missing.",
+      recommendations: candidates.map(format),
+      rendered: renderChecklist(candidates.map(toRow)),
+      next_step:
+        `Your MCP client does not support the interactive picker, so I can't pop a checkbox form here. ` +
+        `TELL THE USER THAT EXPLICITLY first — don't present this as the normal flow. Then show the checklist ` +
+        `above, ask which to install, and call install_skill once per pick. Install nothing they didn't choose.`,
+    };
+  }
+
+  // Interactive picker: one boolean checkbox per candidate. MCP elicitation
+  // schemas only allow flat primitives, so a multi-pick is N booleans.
+  const properties: Record<string, { type: "boolean"; title: string; description: string; default: boolean }> = {};
+  for (const e of candidates) {
+    properties[e.id] = { type: "boolean", title: e.name, description: clip(e.description), default: false };
+  }
+
+  let result: Awaited<ReturnType<NonNullable<Server["elicitInput"]>>>;
+  try {
+    result = await server!.elicitInput({
+      message:
+        kind === "starter-pack"
+          ? "Pick the starter-pack skills to install (check the ones you want):"
+          : "Your starter pack is missing a few staples — pick the ones to install:",
+      requestedSchema: { type: "object", properties, required: [] },
+    });
+  } catch (err) {
+    // The client advertised elicitation but the picker errored or timed out
+    // (e.g. no human attached to this session). Surface it loudly with the data
+    // intact so the chef can offer a text pick — never swallow it.
+    return {
+      mode: "picker-error" as const,
+      starter_pack: kind,
+      error: (err as Error).message,
+      profile_summary: profile,
+      recommendations: candidates.map(format),
+      rendered: renderChecklist(candidates.map(toRow)),
+      next_step:
+        `The interactive picker failed (${(err as Error).message}). TELL THE USER the picker didn't come up, ` +
+        `then show the checklist above and ask which to install, calling install_skill once per pick.`,
+    };
+  }
+
+  if (result.action !== "accept" || !result.content) {
+    return {
+      mode: "declined" as const,
+      starter_pack: kind,
+      installed: [],
+      next_step: "The user dismissed the picker. Don't install anything; carry on with their task.",
+    };
+  }
+
+  const chosen = candidates.filter((e) => result.content?.[e.id] === true);
+  const installedNow: Array<{ id: string; skill_dir?: string | null; error?: string }> = [];
+  for (const e of chosen) {
+    try {
+      const r = await installSkill({ id: e.id, force: false, inputs: {} });
+      installedNow.push({ id: e.id, skill_dir: r.skill_dir });
+    } catch (err) {
+      installedNow.push({ id: e.id, error: (err as Error).message });
+    }
+  }
+
+  return {
+    mode: "installed" as const,
+    starter_pack: kind,
+    installed: installedNow,
+    next_step: installedNow.length
+      ? `Installed ${installedNow.length} skill(s) via the picker. For each, give the user its trigger phrase and ` +
+        `note it's active next session (usable now by reading its SKILL.md). Then stop — don't propose more this turn.`
+      : "The user checked nothing in the picker. Don't install anything; move on.",
+  };
+}
+
+function clip(text: string, max = 100): string {
+  const s = text.replace(/\s+/g, " ").trim();
+  return s.length <= max ? s : s.slice(0, max - 1).trimEnd() + "…";
 }
 
 function toRow(e: Entry): RenderRow {
