@@ -38,7 +38,9 @@ function hooksTargetDir(): string {
 }
 
 function installHooks(): void {
-  const srcDir = new URL("../../hooks/", import.meta.url).pathname;
+  const srcDir = decodeURIComponent(
+    new URL("../../hooks/", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")
+  );
   const targetDir = hooksTargetDir();
   mkdirSync(targetDir, { recursive: true });
   for (const h of HOOK_FILES) {
