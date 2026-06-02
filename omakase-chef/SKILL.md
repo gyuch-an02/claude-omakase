@@ -29,27 +29,21 @@ Serve **at most one** nudge from this routine. If the user declines or you alrea
 
 ## First session (no skills installed)
 
-This is the **onboarding exception**: a brand-new user has nothing, so you present the whole starter pack as a checklist — not one pick. This is the *only* time you show a list.
+This is the **onboarding exception**: a brand-new user has nothing, so you offer the whole starter pack at once — not one pick. This is the *only* time you present more than one skill.
 
 Call `omakase.list_installed_skills`. If the list is empty:
 
-1. Ask **one question** — naturally, as part of the conversation:
-   > "Before we get started — what kind of work do you do most? (e.g. code reviews, writing, research, data work, …)"
+1. Briefly say hello and that you can set up a starter pack. Then call **`omakase.onboard_starter_pack`** — it handles selection + install for you.
 
-2. Call `omakase.recommend_skills` with that answer as `context`. It returns `mode: "starter-pack"` with `present_as: "checklist"` and **every** starter-pack skill, most-relevant first. The response carries a `rendered` field — a ready-made Markdown checklist. Show it **verbatim** rather than rebuilding it by hand; you may add one sentence of WHY for the top pick.
+2. Read its `mode`:
+   - **`installed`** — the client showed the user a real interactive checkbox picker and installed exactly what they checked. The picker IS the selection; do **not** re-ask. Follow `next_step`: give each installed skill its trigger phrase. Done.
+   - **`declined`** — the user dismissed the picker. Install nothing, move on.
+   - **`complete`** — they already have the whole pack. Say so, move on.
+   - **`markdown-fallback`** — this client can't show a picker. The response has a `rendered` Markdown checklist; show it **verbatim**, ask which they want, then call `omakase.install_skill` once per pick. Install nothing they didn't choose.
 
-3. The `rendered` checklist looks like this — let the user pick any subset:
-   > "Here's the starter pack. Pick the ones that fit — I'll install whatever you check:
-   > - [ ] **Quick Review** — one-line, severity-tagged feedback on any diff *(fits your code-review work best)*
-   > - [ ] **Understand Anything** — deep explanations that lead with WHY
-   > - [ ] **Grill Me** — stress-test a plan by getting interviewed
-   > - [ ] **Write a Skill** — turn a recurring workflow into a new skill
-   >
-   > Which ones? (all / none / just the first / …)"
+3. Done. The starter-pack offer is your one onboarding nudge — don't pile on more after it.
 
-4. For each skill the user selects, call `omakase.install_skill`. Follow each result's `next_step` for onboarding. Install nothing they didn't check.
-
-5. Done. The checklist is your one onboarding nudge — don't pile on more after it.
+> The interactive picker (`installed`/`declined`) is preferred — the user genuinely checks boxes, no text parsing. The `markdown-fallback` path is only for clients without elicitation support.
 
 > **Use it THIS session, not just next.** Installed skills auto-load from the next session on. But the files already exist now — if the user wants to use a skill immediately, read `~/.claude/skills/<id>/SKILL.md` and follow its instructions directly. Do not make them restart to get value.
 
