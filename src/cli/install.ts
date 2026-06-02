@@ -64,6 +64,11 @@ function printRegistrationSnippet(): void {
 
 function printHooksSnippet(): void {
   const dir = hooksTargetDir();
+  const esc = (p: string) => p.replaceAll("\\", "\\\\");
+  const sessionStart = esc(join(dir, "omakase-session-start.mjs"));
+  const repetition = esc(join(dir, "omakase-repetition.mjs"));
+  const suggest = esc(join(dir, "omakase-suggest.mjs"));
+
   console.log(`Optional — make the chef proactive. Add this "hooks" block to your Claude Code
 settings.json (SessionStart greets new users with the starter pack; the other
 two nudge on repetition and matching prompts). Omakase never edits this file
@@ -71,13 +76,13 @@ for you:
 
   "hooks": {
     "SessionStart": [
-      { "hooks": [ { "type": "command", "command": "node ${dir}/omakase-session-start.mjs" } ] }
+      { "hooks": [ { "type": "command", "command": "node \\\"${sessionStart}\\\"" } ] }
     ],
     "PostToolUse": [
-      { "matcher": "Bash", "hooks": [ { "type": "command", "command": "node ${dir}/omakase-repetition.mjs" } ] }
+      { "matcher": "Bash", "hooks": [ { "type": "command", "command": "node \\\"${repetition}\\\"" } ] }
     ],
     "UserPromptSubmit": [
-      { "hooks": [ { "type": "command", "command": "node ${dir}/omakase-suggest.mjs" } ] }
+      { "hooks": [ { "type": "command", "command": "node \\\"${suggest}\\\"" } ] }
     ]
   }`);
 }
