@@ -40,7 +40,7 @@
     "web:install": "npm --prefix web install"
   },
   "dependencies": {
-    "@clack/prompts": "^0.7.0",
+    "@clack/prompts": "^1.5.0",
     "@modelcontextprotocol/sdk": "^1.0.4",
     "cors": "^2.8.6",
     "express": "^5.2.1",
