@@ -12,6 +12,7 @@ export async function install(
   entry: Entry,
   options: { force?: boolean } = {}
 ): Promise<{ skillDir: string }> {
+  assertSafeId(entry.id);
   const root = claudeCodeSkillsDir();
   const dest = join(root, entry.id);
   if (existsSync(dest)) {
@@ -67,8 +68,25 @@ SKILL.md content from the upstream source:
 }
 
 export function uninstall(id: string): void {
+  assertSafeId(id);
   const dir = join(claudeCodeSkillsDir(), id);
   if (existsSync(dir)) rmSync(dir, { recursive: true, force: true });
+}
+
+// A skill id becomes a path segment under ~/.claude/skills/ and is fed to
+// mkdir/rm. A scraped or remote-overridden catalog can carry a hostile id, so
+// reject anything that could escape the skills root (absolute, backslash, or a
+// ".." segment) before it reaches the filesystem. install-skill/update-skill
+// don't validate the id themselves, so this is the single choke point.
+function assertSafeId(id: string): void {
+  if (
+    id.length === 0 ||
+    id.startsWith("/") ||
+    id.includes("\\") ||
+    id.split("/").includes("..")
+  ) {
+    throw new Error(`unsafe skill id: ${JSON.stringify(id)}`);
+  }
 }
 
 function isSafeRelative(p: string): boolean {
