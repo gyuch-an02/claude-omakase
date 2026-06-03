@@ -35,7 +35,7 @@
     "verify:catalog-rollback": "node scripts/verify-catalog-rollback.mjs"
   },
   "dependencies": {
-    "@clack/prompts": "^0.7.0",
+    "@clack/prompts": "^1.5.0",
     "@modelcontextprotocol/sdk": "^1.0.4",
     "zod": "^3.23.8"
   },
