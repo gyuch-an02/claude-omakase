@@ -9,6 +9,18 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-06-03
+
+### Added
+- **Interactive TUI** — `npx claude-omakase tui` (alias `manage`) launches a `@clack/prompts` skill manager: a health dashboard per installed skill plus update/remove via checkboxes. `tui.ts` exports `runTui()`; the pure render helpers (`statusIcon`/`catalogCell`/`renderTable`) are now unit-tested.
+
+### Fixed
+- **Path traversal via catalog `entry.id`** — `code-skills.install/uninstall` fed `entry.id` into `join()`+`mkdir`/`rmSync` with no guard (while `uninstall_skill`'s input did). A scraped or remote-overridden entry with id `../x` could create or `rmSync` a directory outside `~/.claude/skills/`. Added `assertSafeId()` at the choke point, covering install + update.
+- **Malformed catalog crashed the whole server** — a catalog that is valid JSON but lacks an `entries` array crashed `sanitizeCatalog` on `entries.map`, taking down every tool. Readers now validate shape and fall through; a bad remote throws (logged, not silently emptied).
+- **`propose_new_skill` could write into the skills root** — a `task_description` with no ASCII alphanumerics produced an empty slug; now validated against the kebab-case pattern before writing.
+- **Renderer didn't escape skill names** — a scraped name with `|` or a newline could break the rendered Markdown table/checklist; names are now clipped and pipe-escaped.
+- **npx entrypoint detection** — the server now starts reliably when launched through the npx / global-install shim.
+
 ### Removed
 - **`onboard_starter_pack` tool** — merged into `recommend_skills`. It duplicated the gap computation and split one concept ("set up the starter pack") across two tools that differed only by entry point (empty vs. partial install). `recommend_skills` with no context now drives the picker for both cases. The toolset drops from 11 to 10.
 - **In-repo AI-usage log convention** — deleted `docs/ai-log.md`, the `ai-log-check` workflow, the `CLAUDE.md` "Skill: ai-usage-log" section, and the PR-template checklist item. That log was a hackathon-level meta concern that had leaked into the product repo (wrong place, wrong format); contributors no longer need to add a `docs/ai-log.md` entry per PR.
