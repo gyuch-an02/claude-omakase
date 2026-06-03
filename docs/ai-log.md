@@ -115,3 +115,11 @@ commit. See [`CLAUDE.md`](../CLAUDE.md) → "Skill: ai-usage-log".
 3. TUI는 `@clack/prompts`를 사용해 설치된 스킬의 SKILL.md·Receipt·Catalog 상태를 표로 출력하고, 헬스 재확인·업데이트·삭제·종료 메뉴를 제공한다.
 4. `server.ts`의 `isMain` 분기에서 `process.argv[2] === "tui"`를 감지해 MCP stdio 서버 대신 TUI를 실행하므로 기존 MCP 동작에는 영향이 없다.
 5. build·typecheck가 통과함을 확인했고 이 로그 항목은 동일 커밋에 포함한다.
+
+## 2026-06-02 — npx 엔트리포인트 감지 및 웹서버 추가
+
+1. npx로 실행 시 `process.argv[1]`이 npm shim을 가리켜 `import.meta.url` 비교가 실패하는 문제를 해결하기 위해 `src/server.ts`의 `isMain` 로직을 수정하고 `src/web-server.ts`를 신설했다.
+2. 변경된 파일은 `src/server.ts`(엔트리포인트 감지 수정), `src/web-server.ts`(신규), `package.json`·`package-lock.json`(웹서버 의존성 추가) 네 개다.
+3. `isMain` 판단에 `process.argv[1].includes("claude-omakase")` 조건을 추가해 npm shim 경로에서도 올바르게 감지하도록 했다.
+4. 이후 커밋(`2d45843`)에서 `OMAKASE_FORCE` 환경 변수 방식으로 교체했다가 `997fa6c`에서 다시 includes 방식으로 복구했으며, 세 커밋 모두 동일한 문제를 단계적으로 개선한 것이다.
+5. 기존 레포 관례(lint·typecheck·build 통과)를 준수했고 이 로그 항목은 누락된 두 커밋을 소급해 기록한다.
