@@ -4,7 +4,7 @@ import * as doctor from "../tools/doctor.js";
 import * as updateSkill from "../tools/update-skill.js";
 import * as uninstallSkill from "../tools/uninstall-skill.js";
 
-function statusIcon(skill: doctor.SkillHealth): string {
+export function statusIcon(skill: doctor.SkillHealth): string {
   if (!skill.skill_md_exists) return "⚠️ ";
   if (skill.in_catalog && skill.catalog_version && skill.installed_version &&
       skill.catalog_version !== skill.installed_version) return "🔄";
@@ -12,14 +12,14 @@ function statusIcon(skill: doctor.SkillHealth): string {
   return "⚠️ ";
 }
 
-function catalogCell(skill: doctor.SkillHealth): string {
+export function catalogCell(skill: doctor.SkillHealth): string {
   if (!skill.in_catalog) return "✗ missing";
   if (skill.catalog_version && skill.installed_version &&
       skill.catalog_version !== skill.installed_version) return "update!";
   return "✓       ";
 }
 
-function renderTable(skills: doctor.SkillHealth[]): string {
+export function renderTable(skills: doctor.SkillHealth[]): string {
   const rows = skills.map((s) => {
     const icon = statusIcon(s);
     const name = s.id.padEnd(22);
@@ -43,7 +43,7 @@ async function runHealthCheck(): Promise<doctor.DoctorResult> {
   return result;
 }
 
-async function main(): Promise<void> {
+export async function runTui(): Promise<void> {
   p.intro("🍱  Claude Omakase — skill manager");
 
   let health = await runHealthCheck();
@@ -128,7 +128,3 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
