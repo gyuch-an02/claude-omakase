@@ -107,3 +107,11 @@ commit. See [`CLAUDE.md`](../CLAUDE.md) → "Skill: ai-usage-log".
 3. npx로 실행 시 `process.argv[1]`이 실제 스크립트 경로가 아닌 npm shim 경로를 가리켜 URL 비교가 실패하므로, 파일명에 `claude-omakase`가 포함되는지 추가로 확인하는 방식이 환경 변수 없이도 작동한다.
 4. 기존 레포 관례(lint·typecheck·build 통과, CLAUDE.md의 ai-log 규칙 준수)와 일관성을 유지하며 테스트 실패는 이 변경과 무관한 기존 빈 test suite 문제이다.
 5. lint·typecheck·build가 모두 통과함을 확인했고 이 로그 항목은 동일 커밋에 포함한다.
+
+## 2026-06-03 — TUI 서브커맨드 추가
+
+1. `npx claude-omakase tui` 명령으로 실행할 수 있는 터미널 UI를 `src/cli/tui.ts`에 신설했다.
+2. 변경된 파일은 `src/cli/tui.ts`(신규), `src/server.ts`(tui 분기 추가), `package.json`·`package-lock.json`(@clack/prompts 의존성 추가) 네 개다.
+3. TUI는 `@clack/prompts`를 사용해 설치된 스킬의 SKILL.md·Receipt·Catalog 상태를 표로 출력하고, 헬스 재확인·업데이트·삭제·종료 메뉴를 제공한다.
+4. `server.ts`의 `isMain` 분기에서 `process.argv[2] === "tui"`를 감지해 MCP stdio 서버 대신 TUI를 실행하므로 기존 MCP 동작에는 영향이 없다.
+5. build·typecheck가 통과함을 확인했고 이 로그 항목은 동일 커밋에 포함한다.

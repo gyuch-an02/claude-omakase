@@ -198,11 +198,18 @@ const isMain =
   (process.argv[1] && process.argv[1].includes("claude-omakase"));
 
 if (isMain) {
-  if (process.env.OMAKASE_DEBUG === "true") {
-    console.log("[DEBUG] Starting Omakase server");
+  if (process.argv[2] === "tui") {
+    import("./cli/tui.js").catch((e) => {
+      console.error(e);
+      process.exit(1);
+    });
+  } else {
+    if (process.env.OMAKASE_DEBUG === "true") {
+      console.log("[DEBUG] Starting Omakase server");
+    }
+    main().catch((e) => {
+      console.error(e);
+      process.exit(1);
+    });
   }
-  main().catch((e) => {
-    console.error(e);
-    process.exit(1);
-  });
 }
