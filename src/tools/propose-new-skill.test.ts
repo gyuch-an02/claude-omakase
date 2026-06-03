@@ -144,6 +144,27 @@ test("propose_new_skill: unresolved install command is rejected before write", a
   assert.equal(existsSync(join(skillsDir, "safe-skill", "SKILL.md")), false);
 });
 
+test("propose_new_skill: an underivable slug is rejected before writing anywhere", async (t) => {
+  const skillsDir = await withTempSkillsDir(t);
+
+  // No explicit slug + a task_description with no ASCII alphanumerics →
+  // slugify() yields "", which would otherwise write SKILL.md into the skills
+  // ROOT (~/.claude/skills/SKILL.md).
+  await assert.rejects(
+    () =>
+      handle(
+        {
+          task_description: "한국어로만 작성된 설명입니다",
+          draft_body: validDraft,
+        },
+        {} as Server
+      ),
+    /could not derive a valid skill slug/
+  );
+
+  assert.equal(existsSync(join(skillsDir, "SKILL.md")), false, "must not write into the skills root");
+});
+
 async function withTempSkillsDir(t: Parameters<typeof test>[1]): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), "omakase-skills-"));
   const original = process.env["CLAUDE_OMAKASE_SKILLS_DIR"];

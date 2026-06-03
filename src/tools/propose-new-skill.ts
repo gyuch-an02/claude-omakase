@@ -130,6 +130,15 @@ export async function handle(
     // declined/cancel → keep the originally proposed concept
   }
 
+  // slugify() can yield "" or a single char (e.g. a task_description with no
+  // ASCII alphanumerics), which would write SKILL.md straight into the skills
+  // root or fail the name===slug check confusingly. Validate before writing.
+  if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(slug)) {
+    throw new Error(
+      `could not derive a valid skill slug from the input; pass an explicit kebab-case slug`
+    );
+  }
+
   const body = args.draft_body
     ? args.draft_body
     : await generateWithSampling(server, { slug, taskDescription, triggers });
