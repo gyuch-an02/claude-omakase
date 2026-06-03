@@ -30,7 +30,6 @@ import * as proposeNewSkill from "./tools/propose-new-skill.js";
 import * as uninstallSkill from "./tools/uninstall-skill.js";
 import * as updateSkill from "./tools/update-skill.js";
 import * as doctor from "./tools/doctor.js";
-import * as offer from "./tools/offer.js";
 
 interface Tool {
   name: string;
@@ -52,15 +51,6 @@ export function packageVersion(): string {
 }
 
 async function main(): Promise<void> {
-  // stdout is reserved STRICTLY for the JSON-RPC stream. A single stray line on
-  // stdout — from our code or any transitive dependency — corrupts the protocol
-  // and makes the client report "failed to connect". Route all console chatter
-  // to stderr so nothing but the transport can touch stdout. (StdioServerTransport
-  // writes via process.stdout.write directly, so it is unaffected.)
-  console.log = (...args: unknown[]) => console.error(...args);
-  console.info = (...args: unknown[]) => console.error(...args);
-  console.debug = (...args: unknown[]) => console.error(...args);
-
   const server = new Server(
     { name: "claude-omakase", version: packageVersion() },
     { capabilities: { tools: {} } }
@@ -107,13 +97,7 @@ async function main(): Promise<void> {
       name: "recommend_skills",
       description: recommend.recommendDescription,
       inputSchema: recommend.recommendInput,
-      handle: (args) => recommend.handle(recommend.recommendInput.parse(args), server),
-    },
-    {
-      name: "offer_skill",
-      description: offer.offerSkillDescription,
-      inputSchema: offer.offerSkillInput,
-      handle: (args) => offer.handle(offer.offerSkillInput.parse(args), server),
+      handle: (args) => recommend.handle(recommend.recommendInput.parse(args)),
     },
     {
       name: "set_profile",
@@ -192,9 +176,6 @@ function zodToJsonSchema(schema: z.ZodTypeAny): Record<string, unknown> {
   }
   if (schema instanceof z.ZodNumber) return { type: "number" };
   if (schema instanceof z.ZodBoolean) return { type: "boolean" };
-  if (schema instanceof z.ZodEnum) {
-    return { type: "string", enum: schema.options as string[] };
-  }
   if (schema instanceof z.ZodArray) {
     return { type: "array", items: zodToJsonSchema(schema.element) };
   }
@@ -206,19 +187,29 @@ function zodToJsonSchema(schema: z.ZodTypeAny): Record<string, unknown> {
   return {};
 }
 
-// Only boot when run as the entrypoint, so the module can be imported (e.g. by
-// tests) without starting a transport. A `tui`/`manage` subcommand launches the
-// interactive skill manager instead of the stdio MCP server, so the human CLI
-// (`npx claude-omakase tui`) and the agent share one binary.
-const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+// Only boot the stdio server when run as the entrypoint, so the module can be
+// imported (e.g. by tests) without starting a transport.
+// The original check fails when the binary is invoked via an npm shim (npx),
+// because process.argv[1] points to the shim rather than the actual script.
+// We treat any invocation where the script filename includes "claude-omakase"
+// (the npm binary name) as a direct run, in addition to the original URL check.
+const isMain =
+  (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) ||
+  (process.argv[1] && process.argv[1].includes("claude-omakase"));
+
 if (isMain) {
-  const subcommand = process.argv[2];
-  const run =
-    subcommand === "tui" || subcommand === "manage"
-      ? import("./cli/tui.js").then((m) => m.runTui())
-      : main();
-  run.catch((e) => {
-    console.error(e);
-    process.exit(1);
-  });
+  if (process.argv[2] === "tui") {
+    import("./cli/tui.js").catch((e) => {
+      console.error(e);
+      process.exit(1);
+    });
+  } else {
+    if (process.env.OMAKASE_DEBUG === "true") {
+      console.log("[DEBUG] Starting Omakase server");
+    }
+    main().catch((e) => {
+      console.error(e);
+      process.exit(1);
+    });
+  }
 }
