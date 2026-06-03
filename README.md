@@ -10,21 +10,21 @@
 ┌──────────────────────────────────────────────────────────┐
 │                      Claude Code                         │
 │                                                          │
-│  ┌─────────────────┐         ┌──────────────────────┐   │
-│  │ omakase-chef    │  calls  │ claude-omakase MCP   │   │
-│  │ SKILL.md        │ ──────▶ │ server (stdio)       │   │
-│  │ (the behavior)  │         │ (registry + install) │   │
-│  └─────────────────┘         └──────────┬───────────┘   │
-└────────────────────────────────────────│────────────────┘
-                                         │ fetched at build time
-                                         ▼
-         ┌──────────────────────────────────────────────┐
-         │  Federated catalog (400+ skills)             │
+│  ┌─────────────────┐         ┌──────────────────────┐    │
+│  │ omakase-chef    │  calls  │ claude-omakase MCP   │    │
+│  │ SKILL.md        │ ──────▶│ server (stdio)       │    │
+│  │ (the behavior)  │         │ (registry + install) │    │
+│  └─────────────────┘         └──────────┬───────────┘    │
+└───────────────────────────────────────  │  ──────────────┘
+                                          │  fetched at build time
+                                          ▼
+         ┌───────────────────────────────────────────────┐
+         │  Federated catalog (400+ skills)              │
          │  ├── handpicked/     verified seeds + overlay │
-         │  ├── mcp-servers-repo  Anthropic reference   │
-         │  ├── awesome-mcp       community list        │
-         │  └── skillsmp          public marketplace    │
-         └──────────────────────────────────────────────┘
+         │  ├── mcp-servers-repo  Anthropic reference    │
+         │  ├── awesome-mcp       community list         │
+         │  └── skillsmp          public marketplace     │
+         └───────────────────────────────────────────────┘
 ```
 
 ## How it works
