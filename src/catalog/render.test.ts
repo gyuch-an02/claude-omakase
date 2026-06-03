@@ -44,6 +44,16 @@ test("renderSkillTable: escapes pipes and clips long descriptions", () => {
   assert.match(out, /…/, "long description is clipped");
 });
 
+test("renderSkillTable: a name with a pipe or newline cannot break the row layout", () => {
+  const out = renderSkillTable([
+    { id: "x", name: "Evil | Name\ninjected", description: "ok", verified: true, tags: [] },
+  ]);
+  // Header + separator + exactly one data row — the newline in the name must
+  // not spill into a second row.
+  assert.equal(out.split("\n").length, 3, "name newline collapsed, no extra rows");
+  assert.doesNotMatch(out, /\| Evil \| Name/, "raw pipe in name must be escaped");
+});
+
 test("renderSkillTable: empty input is handled", () => {
   assert.equal(renderSkillTable([]), "_No matches._");
 });

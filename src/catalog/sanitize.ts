@@ -32,5 +32,8 @@ export function sanitizeEntry(entry: Entry): Entry {
 }
 
 export function sanitizeCatalog(catalog: Catalog): Catalog {
-  return { ...catalog, entries: catalog.entries.map(sanitizeEntry) };
+  // Defensive: a malformed source (valid JSON but no `entries` array) must not
+  // crash the loader. Callers validate shape upstream; this is the backstop.
+  const entries = Array.isArray(catalog?.entries) ? catalog.entries : [];
+  return { ...catalog, entries: entries.map(sanitizeEntry) };
 }
