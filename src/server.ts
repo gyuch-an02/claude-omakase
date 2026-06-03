@@ -225,10 +225,12 @@ function isEntrypoint(): boolean {
 if (isEntrypoint()) {
   const subcommand = process.argv[2];
   if (subcommand === "tui" || subcommand === "manage") {
-    import("./cli/tui.js").catch((e) => {
-      console.error(e);
-      process.exit(1);
-    });
+    import("./cli/tui.js")
+      .then((m) => m.runTui())
+      .catch((e) => {
+        console.error(e);
+        process.exit(1);
+      });
   } else {
     if (process.env.OMAKASE_DEBUG === "true") {
       console.error("[DEBUG] Starting Omakase server");
