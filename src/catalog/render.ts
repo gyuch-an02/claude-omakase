@@ -37,7 +37,8 @@ export function renderSkillTable(rows: RenderRow[]): string {
   const lines = rows.map((r) => {
     const check = r.verified ? "✅" : "·";
     const tags = (r.tags ?? []).filter((t) => t !== "starter-pack").slice(0, 3).join(", ");
-    return `| ${check} | **${cell(r.name)}** | ${cell(clip(r.description))} | ${cell(tags)} |`;
+    // clip() collapses newlines a scraped name might carry; cell() escapes "|".
+    return `| ${check} | **${cell(clip(r.name, 60))}** | ${cell(clip(r.description))} | ${cell(tags)} |`;
   });
   return [header, sep, ...lines].join("\n");
 }
@@ -51,7 +52,7 @@ export function renderChecklist(rows: RenderRow[]): string {
   return rows
     .map((r, i) => {
       const hint = i === 0 ? "  ← _best fit for your work_" : "";
-      return `- [ ] **${r.name}** — ${clip(r.description)}${hint}`;
+      return `- [ ] **${clip(r.name, 60)}** — ${clip(r.description)}${hint}`;
     })
     .join("\n");
 }

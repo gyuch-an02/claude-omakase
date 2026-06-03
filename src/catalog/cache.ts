@@ -56,7 +56,12 @@ async function loadRaw(): Promise<Catalog> {
 async function loadRemote(url: string): Promise<Catalog> {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`catalog fetch ${url}: ${res.status}`);
-  const catalog = (await res.json()) as Catalog;
+  const catalog = (await res.json()) as unknown;
+  if (!isCatalogShape(catalog)) {
+    // Throw (not silently accept) so loadRaw's catch logs it and falls through
+    // to the cached/bundled catalog instead of serving an empty one.
+    throw new Error(`catalog fetch ${url}: response is not a valid catalog`);
+  }
   await writeCache(catalog);
   return catalog;
 }
@@ -66,21 +71,29 @@ function readFreshCache(): Catalog | null {
   if (!existsSync(path)) return null;
   const age = Date.now() - statSync(path).mtimeMs;
   if (age > TTL_MS) return null;
-  try {
-    return JSON.parse(readFileSync(path, "utf8")) as Catalog;
-  } catch {
-    return null;
-  }
+  return readCatalogFile(path);
 }
 
 function readBundled(): Catalog | null {
   const path = bundledCatalogPath();
   if (!existsSync(path)) return null;
+  return readCatalogFile(path);
+}
+
+// Parse a catalog file, returning null on bad JSON OR a structurally invalid
+// catalog (e.g. missing `entries`). Returning null lets the loader fall through
+// to the next source rather than crash downstream on `entries.map`.
+function readCatalogFile(path: string): Catalog | null {
   try {
-    return JSON.parse(readFileSync(path, "utf8")) as Catalog;
+    const parsed = JSON.parse(readFileSync(path, "utf8")) as unknown;
+    return isCatalogShape(parsed) ? parsed : null;
   } catch {
     return null;
   }
+}
+
+function isCatalogShape(x: unknown): x is Catalog {
+  return typeof x === "object" && x !== null && Array.isArray((x as { entries?: unknown }).entries);
 }
 
 async function writeCache(catalog: Catalog): Promise<void> {
