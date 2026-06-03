@@ -11,8 +11,8 @@
 //     }
 //   }
 
-import { readFileSync } from "node:fs";
-import { pathToFileURL } from "node:url";
+import { readFileSync, realpathSync } from "node:fs";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -206,19 +206,38 @@ function zodToJsonSchema(schema: z.ZodTypeAny): Record<string, unknown> {
   return {};
 }
 
+function isEntrypoint(): boolean {
+  const script = process.argv[1];
+  if (!script) return false;
+
+  const modulePath = fileURLToPath(import.meta.url);
+  try {
+    return realpathSync(script) === realpathSync(modulePath);
+  } catch {
+    return import.meta.url === pathToFileURL(script).href;
+  }
+}
+
 // Only boot when run as the entrypoint, so the module can be imported (e.g. by
 // tests) without starting a transport. A `tui`/`manage` subcommand launches the
 // interactive skill manager instead of the stdio MCP server, so the human CLI
 // (`npx claude-omakase tui`) and the agent share one binary.
-const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
-if (isMain) {
+if (isEntrypoint()) {
   const subcommand = process.argv[2];
-  const run =
-    subcommand === "tui" || subcommand === "manage"
-      ? import("./cli/tui.js").then((m) => m.runTui())
-      : main();
-  run.catch((e) => {
-    console.error(e);
-    process.exit(1);
-  });
+  if (subcommand === "tui" || subcommand === "manage") {
+    import("./cli/tui.js")
+      .then((m) => m.runTui())
+      .catch((e) => {
+        console.error(e);
+        process.exit(1);
+      });
+  } else {
+    if (process.env.OMAKASE_DEBUG === "true") {
+      console.error("[DEBUG] Starting Omakase server");
+    }
+    main().catch((e) => {
+      console.error(e);
+      process.exit(1);
+    });
+  }
 }
