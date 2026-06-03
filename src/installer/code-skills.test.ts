@@ -75,6 +75,18 @@ test("install: rejects path traversal targets with a concrete error", async () =
   });
 });
 
+test("install: rejects a path-traversal entry id before touching the filesystem", async () => {
+  await withSkillsDir(async (dir) => {
+    const escapeTarget = join(dir, "..", "pwned");
+    await assert.rejects(
+      install(entry({ id: "../pwned" })),
+      /unsafe skill id/
+    );
+    // The traversal target must NOT have been created or deleted.
+    assert.equal(existsSync(escapeTarget), false, "must not create dirs outside the skills root");
+  });
+});
+
 test("install: rejects non-https skill sources with a concrete error", async () => {
   await withSkillsDir(async () => {
     await assert.rejects(
