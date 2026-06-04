@@ -8,6 +8,7 @@ import { fetch as fetchHandpicked } from "./handpicked.js";
 import { fetch as fetchMcpServersRepo } from "./mcp-servers-repo.js";
 import { fetch as fetchAwesomeMcp } from "./awesome-mcp.js";
 import { fetch as fetchSkillsmp } from "./skillsmp.js";
+import { fetch as fetchGithubSkills } from "./github-skills.js";
 
 export interface Adapter {
   name: string;
@@ -38,6 +39,12 @@ export const adapters: Adapter[] = [
     description:
       "Public agent-skills marketplace at skillsmp.com (the source behind ByteDance's find-skills SKILL).",
     fetch: fetchSkillsmp,
+  },
+  {
+    name: "github-skills",
+    description:
+      "Raw GitHub code search for public repositories containing Claude Code SKILL.md files.",
+    fetch: fetchGithubSkills,
   },
 ];
 
