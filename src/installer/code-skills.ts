@@ -2,7 +2,7 @@
 // writing files into ~/.claude/skills/<id>/. Claude Code picks these up at the
 // next launch.
 
-import { existsSync, mkdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, renameSync, rmSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { claudeCodeSkillsDir } from "../paths.js";
@@ -21,14 +21,15 @@ export async function install(
         `skill "${entry.id}" already exists at ${dest}; pass force: true to replace it`
       );
     }
-    rmSync(dest, { recursive: true, force: true });
   }
-  mkdirSync(dest, { recursive: true });
+  mkdirSync(root, { recursive: true });
+  const stage = mkdtempSync(join(root, `.tmp-${safeTempPrefix(entry.id)}-`));
 
-  if (!entry.install.skill_files || entry.install.skill_files.length === 0) {
-    // Adapter didn't ship file URLs. Write a minimal SKILL.md stub so the
-    // user knows where the skill landed and can replace it.
-    const stub = `---
+  try {
+    if (!entry.install.skill_files || entry.install.skill_files.length === 0) {
+      // Adapter didn't ship file URLs. Write a minimal SKILL.md stub so the
+      // user knows where the skill landed and can replace it.
+      const stub = `---
 name: ${entry.id}
 description: ${entry.description}
 ---
@@ -43,28 +44,34 @@ SKILL.md content from the upstream source:
 
 — source adapter: ${entry.source.adapter}
 `;
-    await writeFile(join(dest, "SKILL.md"), stub, "utf8");
+      await writeFile(join(stage, "SKILL.md"), stub, "utf8");
+      commitStage(stage, dest, Boolean(options.force));
+      return { skillDir: dest };
+    }
+
+    for (const file of entry.install.skill_files) {
+      if (!isSafeRelative(file.target)) {
+        throw new Error(`unsafe skill target path: ${file.target}`);
+      }
+      if (!file.source.startsWith("https://")) {
+        throw new Error(`skill source must be https://: ${file.source}`);
+      }
+      const target = join(stage, file.target);
+      mkdirSync(dirname(target), { recursive: true });
+      const res = await fetch(file.source);
+      if (!res.ok) {
+        throw new Error(`fetch ${file.source} failed: ${res.status}`);
+      }
+      const buf = Buffer.from(await res.arrayBuffer());
+      await writeFile(target, buf);
+    }
+
+    commitStage(stage, dest, Boolean(options.force));
     return { skillDir: dest };
+  } catch (e) {
+    rmSync(stage, { recursive: true, force: true });
+    throw e;
   }
-
-  for (const file of entry.install.skill_files) {
-    if (!isSafeRelative(file.target)) {
-      throw new Error(`unsafe skill target path: ${file.target}`);
-    }
-    if (!file.source.startsWith("https://")) {
-      throw new Error(`skill source must be https://: ${file.source}`);
-    }
-    const target = join(dest, file.target);
-    mkdirSync(dirname(target), { recursive: true });
-    const res = await fetch(file.source);
-    if (!res.ok) {
-      throw new Error(`fetch ${file.source} failed: ${res.status}`);
-    }
-    const buf = Buffer.from(await res.arrayBuffer());
-    await writeFile(target, buf);
-  }
-
-  return { skillDir: dest };
 }
 
 export function uninstall(id: string): void {
@@ -96,4 +103,13 @@ function isSafeRelative(p: string): boolean {
     !p.includes("\\") &&
     !p.split("/").includes("..")
   );
+}
+
+function commitStage(stage: string, dest: string, force: boolean): void {
+  if (force) rmSync(dest, { recursive: true, force: true });
+  renameSync(stage, dest);
+}
+
+function safeTempPrefix(id: string): string {
+  return id.replace(/[^a-zA-Z0-9._-]/g, "-").slice(0, 40) || "skill";
 }
