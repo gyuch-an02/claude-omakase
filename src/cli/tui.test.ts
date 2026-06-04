@@ -5,7 +5,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { statusIcon, catalogCell, renderTable } from "./tui.js";
+import { statusIcon, catalogCell, renderTable, tryOp } from "./tui.js";
 import type { SkillHealth } from "../tools/doctor.js";
 
 function health(overrides: Partial<SkillHealth> = {}): SkillHealth {
@@ -88,4 +88,26 @@ test("renderTable: a broken install surfaces the warning glyph and missing marke
   const out = renderTable([health({ id: "broken", skill_md_exists: false, receipt_exists: false, in_catalog: false })]);
   assert.match(out, /⚠️/);
   assert.match(out, /✗ missing/);
+});
+
+// tryOp isolates per-skill failures so one bad update/remove can't crash the
+// interactive batch — the loop reports it and continues to the next skill.
+test("tryOp: success reports ok with no error", async () => {
+  const seen: string[] = [];
+  const r = await tryOp("alpha", async (id) => { seen.push(id); });
+  assert.deepEqual(r, { id: "alpha", ok: true });
+  assert.deepEqual(seen, ["alpha"]);
+});
+
+test("tryOp: a thrown Error is captured, not propagated", async () => {
+  const r = await tryOp("beta", async () => { throw new Error("network 503"); });
+  assert.equal(r.ok, false);
+  assert.equal(r.id, "beta");
+  assert.equal(r.error, "network 503");
+});
+
+test("tryOp: a non-Error throw is stringified rather than crashing", async () => {
+  const r = await tryOp("gamma", async () => { throw "boom"; });
+  assert.equal(r.ok, false);
+  assert.equal(r.error, "boom");
 });
