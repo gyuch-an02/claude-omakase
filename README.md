@@ -198,13 +198,13 @@ It shows a health dashboard for every installed skill and lets you act on them:
 ```
 ┌  🍱  Claude Omakase — skill manager
 │
-◇  3 installed · 2 healthy · 1 need attention ───────────────╮
-│      Skill              SKILL.md  Receipt  Catalog         │
-│  ──────────────────────────────────────────────────────   │
-│  ✅  quick-review        ✓         ✓        ✓               │
-│  🔄  grill-me            ✓         ✓        update!         │
-│  ⚠️  understand-anything ✗ missing ✓        ✓               │
-╰────────────────────────────────────────────────────────────╯
+◇  3 installed · 2 healthy · 1 need attention ───────────╮
+│       Skill                SKILL.md   Receipt  Catalog │
+│   ──────────────────────────────────────────────────── │
+│   ✅  quick-review         ✓          ✓        ✓       │
+│   🔄  grill-me             ✓          ✓        update! │
+│   ⚠️  understand-anything  ✗ missing  ✓        ✓       │
+╰────────────────────────────────────────────────────────╯
 │
 ◇  What would you like to do?
 │  ● Re-run health check
