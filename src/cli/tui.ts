@@ -41,10 +41,20 @@ export function catalogCell(skill: doctor.SkillHealth): string {
   return "✓       ";
 }
 
+// Fixed width of the Skill-name column. Ids longer than this are truncated with
+// an ellipsis so they can't push the SKILL.md/Receipt/Catalog columns out of
+// alignment (e.g. a scraped id like "summarize-github-pull-request-…").
+const NAME_W = 22;
+
+// Clip to `width` total chars, marking truncation with a trailing "…".
+export function clipName(id: string, width = NAME_W): string {
+  return id.length > width ? id.slice(0, width - 1) + "…" : id;
+}
+
 export function renderTable(skills: doctor.SkillHealth[]): string {
   const rows = skills.map((s) => {
     const icon = statusIcon(s);
-    const name = s.id.padEnd(22);
+    const name = clipName(s.id).padEnd(NAME_W);
     const skillMd = s.skill_md_exists ? "✓        " : "✗ missing";
     const receipt = s.receipt_exists ? "✓      " : "✗ missing";
     const catalog = catalogCell(s);
