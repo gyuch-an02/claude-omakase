@@ -1,0 +1,47 @@
+name: Feature request
+description: Suggest a new capability or improvement
+title: "[feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the user pain or gap in functionality.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What you'd like to see. Be as specific as possible.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches you thought about and why you ruled them out.
+    validations:
+      required: false
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope — which part of the codebase would this touch?
+      options:
+        - label: MCP tools (`src/tools/`)
+        - label: Catalog / adapters (`src/adapters/`, `src/catalog/`)
+        - label: Installer (`src/installer/`)
+        - label: omakase-chef behavior (`omakase-chef/SKILL.md`)
+        - label: CI / release workflow (`.github/workflows/`)
+        - label: Docs / README
+        - label: Other
+  - type: dropdown
+    id: willing
+    attributes:
+      label: Are you willing to implement this?
+      options:
+        - "Yes — I'll open the PR"
+        - "No, just suggesting"
+    validations:
+      required: true

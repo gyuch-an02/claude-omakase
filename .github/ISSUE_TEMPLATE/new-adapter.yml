@@ -1,0 +1,44 @@
+name: Propose a new adapter
+description: Suggest a source the catalog should federate from
+title: "[adapter] <source name>"
+labels: ["adapter-request"]
+body:
+  - type: input
+    id: source
+    attributes:
+      label: Source URL / API
+      description: Where the skills/servers live (repo, API endpoint, marketplace).
+    validations:
+      required: true
+  - type: checkboxes
+    id: covers
+    attributes:
+      label: What it covers
+      options:
+        - label: MCP servers
+        - label: Claude skills
+        - label: Other
+  - type: input
+    id: estimate
+    attributes:
+      label: Estimated entries
+      placeholder: "~ 50"
+    validations:
+      required: false
+  - type: textarea
+    id: trust
+    attributes:
+      label: Why this source is trustworthy
+      description: Publisher, maintenance history, how entries can be audited.
+    validations:
+      required: true
+  - type: dropdown
+    id: offering
+    attributes:
+      label: Are you offering to write the adapter?
+      description: See `src/adapters/README.md` for the contract.
+      options:
+        - "Yes — I'll write the adapter"
+        - "No, just suggesting the source"
+    validations:
+      required: true

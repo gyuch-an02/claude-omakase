@@ -1,0 +1,73 @@
+name: Suggest a skill for the catalog
+description: Propose a Claude skill to add as a verified handpicked entry
+title: "skill: <skill name>"
+labels: ["skill-suggestion", "good first issue"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The easiest way to contribute. If a skill exists that the catalog doesn't
+        surface (or surfaces with wrong metadata), propose it here — then send a
+        `handpicked/<id>.json` PR. See `handpicked/README.md` for the schema + audit rules.
+  - type: input
+    id: name
+    attributes:
+      label: Skill name
+    validations:
+      required: true
+  - type: input
+    id: skill-id
+    attributes:
+      label: Proposed id (kebab-case)
+    validations:
+      required: true
+  - type: input
+    id: oneliner
+    attributes:
+      label: What it does (one sentence)
+    validations:
+      required: true
+  - type: input
+    id: homepage
+    attributes:
+      label: Homepage / source repo
+    validations:
+      required: true
+  - type: input
+    id: skill-url
+    attributes:
+      label: SKILL.md raw URL (must be https://)
+    validations:
+      required: true
+  - type: input
+    id: tags
+    attributes:
+      label: Suggested tags
+    validations:
+      required: false
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it belongs in the catalog
+      description: Who is it for? What recurring task does it remove? Why isn't an adapter enough?
+    validations:
+      required: true
+  - type: checkboxes
+    id: audit
+    attributes:
+      label: "Audit checklist (required for `verified: true`)"
+      description: Check what you actually verified — see `handpicked/README.md` and `docs/TRUST.md`.
+      options:
+        - label: Publisher is nameable/defensible (official org, maintainer, repo with history)
+        - label: Source URL is `https://`, returns HTTP 200, points at the expected file
+        - label: Target path is a simple relative path under `~/.claude/skills/<id>/`
+        - label: No arbitrary install command — file-only skill preferred
+        - label: Description matches what the skill actually instructs Claude to do
+        - label: A maintainer can review the upstream source from the links above
+  - type: textarea
+    id: else
+    attributes:
+      label: Anything else
+      description: License, caveats, whether you plan to open the handpicked/ PR yourself.
+    validations:
+      required: false

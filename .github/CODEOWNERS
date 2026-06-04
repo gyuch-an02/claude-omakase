@@ -1,16 +1,24 @@
+# Maintainers (@gyuch-an02, @Jennispj) review everything; lane owners below are
+# added on top for their area. Multiple owners = GitHub requests review from all,
+# any one approval satisfies it (review is advisory unless branch protection sets
+# require_code_owner_reviews).
+
+# Default — both maintainers on anything not matched more specifically
+*                    @gyuch-an02 @Jennispj
+
 # Source code & build
-src/**              @gyuch-an02
-scripts/**          @gyuch-an02
-install.sh          @gyuch-an02
-package.json        @gyuch-an02
-tsconfig.json       @gyuch-an02
+src/**               @gyuch-an02 @Jennispj
+scripts/**           @gyuch-an02 @Jennispj
+install.sh           @gyuch-an02 @Jennispj
+package.json         @gyuch-an02 @Jennispj
+tsconfig.json        @gyuch-an02 @Jennispj
 
-# Content & docs
-handpicked/**       @changwook06
-profiles/**         @changwook06
-omakase-chef/**     @changwook06
-CONTRIBUTING.md     @changwook06
-docs/**             @changwook06
+# Content & docs (lane owner + maintainers)
+handpicked/**        @changwook06 @gyuch-an02 @Jennispj
+profiles/**          @changwook06 @gyuch-an02 @Jennispj
+omakase-chef/**      @changwook06 @gyuch-an02 @Jennispj
+CONTRIBUTING.md      @changwook06 @gyuch-an02 @Jennispj
+docs/**              @changwook06 @gyuch-an02 @Jennispj
 
-# Workflow automation
-.github/workflows/** @present913
+# Workflow automation (lane owner + maintainers)
+.github/workflows/** @present913 @gyuch-an02 @Jennispj
