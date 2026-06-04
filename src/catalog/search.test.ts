@@ -27,6 +27,19 @@ test("exact id wins", () => {
   assert.equal(results[0]?.entry.id, "github");
 });
 
+test("exact hyphenated id wins before token scoring", () => {
+  const results = search(
+    [
+      entry({ id: "quick-review", name: "Misc", description: "", tags: [] }),
+      entry({ id: "review-helper", name: "Review Helper", description: "quick review", tags: [] }),
+    ],
+    "quick-review"
+  );
+
+  assert.equal(results[0]?.entry.id, "quick-review");
+  assert.ok(results[0]?.reasons.includes("id match (quick-review)"));
+});
+
 test("verified breaks ties", () => {
   const results = search(
     [
