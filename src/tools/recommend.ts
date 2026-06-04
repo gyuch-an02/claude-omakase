@@ -278,6 +278,7 @@ function profileTokens(profile: Awaited<ReturnType<typeof profileLib.load>>): st
   if (profile.role) tokens.push(profile.role);
   if (profile.occupation) tokens.push(profile.occupation);
   if (profile.languages) tokens.push(...profile.languages);
+  if (profile.ides) tokens.push(...profile.ides);
   if (profile.tools) tokens.push(...profile.tools);
   if (profile.usecases) tokens.push(...profile.usecases);
   return tokens;

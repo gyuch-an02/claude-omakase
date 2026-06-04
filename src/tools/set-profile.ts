@@ -14,6 +14,10 @@ export const setProfileInput = z.object({
     .array(z.string())
     .optional()
     .describe("Programming languages or tools the user works with daily (e.g. ['Python', 'TypeScript', 'SQL'])."),
+  ides: z
+    .array(z.string())
+    .optional()
+    .describe("Editors or IDEs the user works in (e.g. ['Claude Code', 'VS Code', 'Cursor', 'Jupyter'])."),
   tools: z
     .array(z.string())
     .optional()
@@ -41,6 +45,7 @@ export async function handle(args: z.infer<typeof setProfileInput>) {
     ...(args.role !== undefined ? { role: args.role } : {}),
     ...(args.occupation !== undefined ? { occupation: args.occupation } : {}),
     ...(args.languages !== undefined ? { languages: args.languages } : {}),
+    ...(args.ides !== undefined ? { ides: args.ides } : {}),
     ...(args.tools !== undefined ? { tools: args.tools } : {}),
     ...(args.usecases !== undefined ? { usecases: args.usecases } : {}),
   };
