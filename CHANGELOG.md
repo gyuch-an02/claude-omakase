@@ -9,6 +9,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Changed
+- **Repetition hook fires on tasks, not tooling.** `hooks/omakase-repetition.mjs` was over-eager: default threshold 2 plus a `SKIP` list that only covered shell builtins meant ordinary dev noise (`grep`, `cut`, `git status`, `npm run`, `gh pr`, …) tripped a "find a skill" nudge — recommending on nearly every run instead of when it mattered. Now: (1) default `OMAKASE_REPETITION_THRESHOLD` raised 2 → 3; (2) `SKIP` extended with primitive text/file/system tools; (3) a new `DENY_SIG` set drops VCS/build/pkg/infra plumbing subcommands (analysis-flavored ones like `git diff`/`blame`/`show` are kept — repeating those is a real "review this" signal); (4) a catalog gate stays silent when no catalog is available, since `find_skill` would return nothing. Added `hooks/omakase-repetition.test.mjs` covering SKIP, DENY_SIG, the kept-analysis case, composite workflows, the threshold, and the catalog gate.
+
 ## [0.5.0] — 2026-06-03
 
 ### Added

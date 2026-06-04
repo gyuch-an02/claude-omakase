@@ -228,7 +228,7 @@ Three opt-in [Claude Code hooks](https://docs.claude.com/en/docs/claude-code/hoo
 | Hook | Event | What it does |
 |---|---|---|
 | `omakase-session-start.mjs` | `SessionStart` | At the start of a fresh session (`startup`/`clear`, not resume), tells Claude to run the chef's onboarding routine now — so new users get the starter pack without asking. Fires at most once per cooldown window. |
-| `omakase-repetition.mjs` | `PostToolUse` (Bash) | Tracks command workflows (single commands **and** multi-step chains via n-gram detection) in one **cross-session** file with timestamps; when a task recurs 2× within a rolling window, nudges Claude to find a matching skill. Heredoc bodies and shell keywords are filtered out. |
+| `omakase-repetition.mjs` | `PostToolUse` (Bash) | Tracks command workflows (single commands **and** multi-step chains via n-gram detection) in one **cross-session** file with timestamps; when a task recurs 3× within a rolling window, nudges Claude to find a matching skill. Primitive tools (`grep`, `cut`, `find`, …) and VCS/build plumbing (`git status`, `npm run`, `gh pr`, …) are filtered out, so it fires on real *tasks*, not on the commands you run to do them. Stays silent if no catalog is available. |
 | `omakase-suggest.mjs` | `UserPromptSubmit` | Matches each prompt against the catalog; if a not-yet-installed skill clearly fits, suggests it once per session (with a cooldown). |
 
 Register them in your Claude Code `settings.json` (the installer prints this block with your real paths filled in):
@@ -255,7 +255,7 @@ Register them in your Claude Code `settings.json` (the installer prints this blo
 }
 ```
 
-Tunable via env vars: `OMAKASE_SESSION_COOLDOWN_HOURS` (default 24; set `0` to greet on every startup), `OMAKASE_REPETITION_THRESHOLD` (default 2), `OMAKASE_REPETITION_WINDOW_DAYS` (default 14), `OMAKASE_SUGGEST_THRESHOLD` (default 5), `OMAKASE_SUGGEST_COOLDOWN` (default 3 prompts). All are local-only — no network, no telemetry.
+Tunable via env vars: `OMAKASE_SESSION_COOLDOWN_HOURS` (default 24; set `0` to greet on every startup), `OMAKASE_REPETITION_THRESHOLD` (default 3), `OMAKASE_REPETITION_WINDOW_DAYS` (default 14), `OMAKASE_SUGGEST_THRESHOLD` (default 5), `OMAKASE_SUGGEST_COOLDOWN` (default 3 prompts). All are local-only — no network, no telemetry.
 
 ## Catalog
 
