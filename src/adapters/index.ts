@@ -48,9 +48,28 @@ export const adapters: Adapter[] = [
   },
 ];
 
-export async function fetchAll(): Promise<Entry[]> {
+export function adapterNames(): string[] {
+  return adapters.map((adapter) => adapter.name);
+}
+
+export function selectAdapters(names?: string[]): Adapter[] {
+  if (!names || names.length === 0) return adapters;
+  const wanted = new Set(names);
+  const selected = adapters.filter((adapter) => wanted.has(adapter.name));
+  const missing = [...wanted].filter(
+    (name) => !adapters.some((adapter) => adapter.name === name)
+  );
+  if (missing.length > 0) {
+    throw new Error(
+      `unknown adapter(s): ${missing.join(", ")}. Valid adapters: ${adapterNames().join(", ")}`
+    );
+  }
+  return selected;
+}
+
+export async function fetchAll(adapterNames?: string[]): Promise<Entry[]> {
   const byId = new Map<string, Entry>();
-  for (const adapter of adapters) {
+  for (const adapter of selectAdapters(adapterNames)) {
     let entries: Entry[];
     try {
       entries = await adapter.fetch();
