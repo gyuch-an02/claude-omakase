@@ -31,7 +31,7 @@ test("scaffold-adapter: creates adapter and beside-file test", async () => {
 
   assert.match(stdout, /Created src\/adapters\/example-source\.ts/);
   assert.match(adapter, /export async function fetch\(\): Promise<Entry\[]>/);
-  assert.match(adapter, /source: {\n      adapter: "example-source"/);
+  assert.match(adapter, /source: {\n {6}adapter: "example-source"/);
   assert.match(adapterTest, /normalizeExampleSource/);
   assert.match(adapterTest, /skips entries without an HTTPS SKILL\.md URL/);
 });
