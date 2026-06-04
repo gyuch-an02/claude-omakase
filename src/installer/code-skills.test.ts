@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
@@ -141,6 +141,30 @@ test("install: force replaces existing files and writes declared skill files", a
       assert.equal(result.skillDir, skillDir);
       assert.equal(existsSync(join(skillDir, "old.txt")), false);
       assert.equal(readFileSync(join(skillDir, "SKILL.md"), "utf8"), "replacement body");
+    } finally {
+      restoreFetch();
+    }
+  });
+});
+
+test("install: successful forced reinstall leaves no backup or staging residue", async () => {
+  await withSkillsDir(async (dir) => {
+    const restoreFetch = mockFetch("replacement body");
+    try {
+      const skillDir = join(dir, "demo-skill");
+      await import("node:fs").then(({ mkdirSync, writeFileSync }) => {
+        mkdirSync(skillDir, { recursive: true });
+        writeFileSync(join(skillDir, "old.txt"), "old", "utf8");
+      });
+
+      await install(entry(), { force: true });
+
+      // Content swapped in atomically...
+      assert.equal(readFileSync(join(skillDir, "SKILL.md"), "utf8"), "replacement body");
+      assert.equal(existsSync(join(skillDir, "old.txt")), false);
+      // ...and the backup-swap left nothing behind in the skills root.
+      const leftovers = readdirSync(dir).filter((n) => n.startsWith(".bak-") || n.startsWith(".tmp-"));
+      assert.deepEqual(leftovers, [], "no .bak-/.tmp- residue after a clean force reinstall");
     } finally {
       restoreFetch();
     }
