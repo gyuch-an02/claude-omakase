@@ -1,10 +1,30 @@
-# Claude Omakase
+<!-- ────────────────────────────  HERO  ──────────────────────────── -->
 
-[![npm version](https://img.shields.io/npm/v/claude-omakase.svg)](https://www.npmjs.com/package/claude-omakase) [![CI](https://github.com/gyuch-an02/claude-omakase/actions/workflows/ci.yml/badge.svg)](https://github.com/gyuch-an02/claude-omakase/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+<p align="center">
+  <img src="assets/logo.svg" alt="Claude Omakase — The chef picks. You approve." width="720">
+</p>
 
-> *The chef picks. You approve.*
+<p align="center">
+  An MCP server that turns Claude into a <strong>proactive skill curator</strong>.<br/>
+  It notices when you keep doing the same thing by hand — then offers the right skill.<br/>
+  No searching. No docs. Just say yes or no.
+</p>
 
-**Claude Omakase** is an MCP server that turns Claude into a proactive skill curator. Register it once, and Claude will notice when you keep doing the same thing manually — then offer to install the right skill for you. No searching, no reading docs. Just say yes or no.
+<p align="center">
+  <a href="https://www.npmjs.com/package/claude-omakase"><img src="https://img.shields.io/npm/v/claude-omakase.svg" alt="npm version"></a>
+  <a href="https://github.com/gyuch-an02/claude-omakase/actions/workflows/ci.yml"><img src="https://github.com/gyuch-an02/claude-omakase/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+  <img src="https://img.shields.io/badge/skills-400%2B-ff6b6b.svg" alt="400+ skills">
+  <img src="https://img.shields.io/badge/MCP-stdio-blueviolet.svg" alt="MCP stdio">
+</p>
+
+<p align="center">
+  <a href="#install"><b>Install</b></a> ·
+  <a href="#how-it-works"><b>How it works</b></a> ·
+  <a href="docs/ai-protocol.md"><b>AI protocol</b></a>
+</p>
+
+<!-- ──────────────────────────────────────────────────────────────── -->
 
 ```
 ┌──────────────────────────────────────────────────────────┐
