@@ -65,6 +65,7 @@ function readSkillsDir(): string[] {
   return readdirSync(dir, { withFileTypes: true })
     .filter((e) => e.isDirectory())
     .map((e) => e.name)
+    .filter((id) => !id.startsWith("."))
     .filter((id) => !isInternalSkillId(id))
     .sort();
 }
