@@ -76,3 +76,36 @@ test("list_installed_skills: ignores bundled omakase-chef for fresh-user counts"
   assert.equal(result.installed_count, 0);
   assert.match(result.next_step, /No skills installed/);
 });
+
+// Regression: the installer stages atomic installs as `.tmp-<id>-XXXX` dirs
+// inside ~/.claude/skills/. A crash before cleanup leaves an orphaned staging
+// dir; it (and any other hidden dir like .git) must not be reported as an
+// installed skill or counted.
+test("list_installed_skills: ignores orphaned dot-prefixed staging dirs", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "omakase-list-"));
+  const saved = {
+    data: process.env["XDG_DATA_HOME"],
+    skills: process.env["CLAUDE_OMAKASE_SKILLS_DIR"],
+  };
+  process.env["XDG_DATA_HOME"] = join(root, "data");
+  process.env["CLAUDE_OMAKASE_SKILLS_DIR"] = join(root, "skills");
+
+  await mkdir(join(root, "skills", "quick-review"), { recursive: true });
+  // Simulate an install killed mid-flight + an unrelated hidden dir.
+  await mkdir(join(root, "skills", ".tmp-quick-review-a1b2c3"), { recursive: true });
+  await mkdir(join(root, "skills", ".git"), { recursive: true });
+  await mkdir(join(root, "data", "claude-omakase", "installed"), { recursive: true });
+
+  t.after(async () => {
+    if (saved.data === undefined) delete process.env["XDG_DATA_HOME"];
+    else process.env["XDG_DATA_HOME"] = saved.data;
+    if (saved.skills === undefined) delete process.env["CLAUDE_OMAKASE_SKILLS_DIR"];
+    else process.env["CLAUDE_OMAKASE_SKILLS_DIR"] = saved.skills;
+    await rm(root, { recursive: true, force: true });
+  });
+
+  const result = await handle();
+
+  assert.deepEqual(result.raw_skills_dir, ["quick-review"], "only the real skill is listed");
+  assert.equal(result.installed_count, 1, "orphaned staging/hidden dirs are not counted");
+});

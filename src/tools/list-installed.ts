@@ -65,6 +65,12 @@ function readSkillsDir(): string[] {
   return readdirSync(dir, { withFileTypes: true })
     .filter((e) => e.isDirectory())
     .map((e) => e.name)
+    // Ignore dot-prefixed directories. Skill ids are never hidden, and the
+    // installer stages atomic installs as `.tmp-<id>-XXXX` dirs inside this
+    // same folder (so renameSync stays on one filesystem). If an install is
+    // killed before its cleanup runs, the orphaned staging dir must not be
+    // reported as an installed skill — nor should `.git`, `.DS_Store`, etc.
+    .filter((name) => !name.startsWith("."))
     .filter((id) => !isInternalSkillId(id))
     .sort();
 }
