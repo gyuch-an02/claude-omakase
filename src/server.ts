@@ -167,7 +167,7 @@ async function main(): Promise<void> {
 // Minimal Zod → JSON Schema. MCP clients only use a few field types.
 // We avoid pulling in a full zod-to-json-schema lib since our schemas are
 // small and shaped predictably.
-function zodToJsonSchema(schema: z.ZodTypeAny): Record<string, unknown> {
+export function zodToJsonSchema(schema: z.ZodTypeAny): Record<string, unknown> {
   if (schema instanceof z.ZodObject) {
     const shape = schema.shape as Record<string, z.ZodTypeAny>;
     const properties: Record<string, unknown> = {};
@@ -200,6 +200,13 @@ function zodToJsonSchema(schema: z.ZodTypeAny): Record<string, unknown> {
   }
   if (schema instanceof z.ZodRecord) {
     return { type: "object", additionalProperties: zodToJsonSchema(schema.valueSchema) };
+  }
+  if (schema instanceof z.ZodEffects) {
+    const out = zodToJsonSchema(schema.innerType());
+    if (schema.description && out["description"] === undefined) {
+      out["description"] = schema.description;
+    }
+    return out;
   }
   if (schema instanceof z.ZodOptional) return zodToJsonSchema(schema.unwrap());
   if (schema instanceof z.ZodDefault) return zodToJsonSchema(schema.removeDefault());
