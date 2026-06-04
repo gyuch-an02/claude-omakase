@@ -76,3 +76,29 @@ test("list_installed_skills: ignores bundled omakase-chef for fresh-user counts"
   assert.equal(result.installed_count, 0);
   assert.match(result.next_step, /No skills installed/);
 });
+
+test("list_installed_skills: ignores orphan hidden staging directories", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "omakase-list-"));
+  const saved = {
+    data: process.env["XDG_DATA_HOME"],
+    skills: process.env["CLAUDE_OMAKASE_SKILLS_DIR"],
+  };
+  process.env["XDG_DATA_HOME"] = join(root, "data");
+  process.env["CLAUDE_OMAKASE_SKILLS_DIR"] = join(root, "skills");
+
+  await mkdir(join(root, "skills", ".tmp-demo-skill-abc"), { recursive: true });
+  await mkdir(join(root, "skills", "real-skill"), { recursive: true });
+
+  t.after(async () => {
+    if (saved.data === undefined) delete process.env["XDG_DATA_HOME"];
+    else process.env["XDG_DATA_HOME"] = saved.data;
+    if (saved.skills === undefined) delete process.env["CLAUDE_OMAKASE_SKILLS_DIR"];
+    else process.env["CLAUDE_OMAKASE_SKILLS_DIR"] = saved.skills;
+    await rm(root, { recursive: true, force: true });
+  });
+
+  const result = await handle();
+
+  assert.deepEqual(result.raw_skills_dir, ["real-skill"]);
+  assert.equal(result.installed_count, 1);
+});
