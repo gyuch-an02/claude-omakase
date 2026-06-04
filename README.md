@@ -1,7 +1,7 @@
 <!-- ────────────────────────────  HERO  ──────────────────────────── -->
 
 <p align="center">
-  <img src="assets/logo.svg" alt="Claude Omakase — The chef picks. You approve." width="720">
+  <img src="assets/banner.png" alt="Claude Omakase — The chef picks. You approve." width="720">
 </p>
 
 <p align="center">
@@ -27,24 +27,22 @@
 <!-- ──────────────────────────────────────────────────────────────── -->
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│                      Claude Code                         │
-│                                                          │
-│  ┌─────────────────┐         ┌──────────────────────┐    │
-│  │ omakase-chef    │  calls  │ claude-omakase MCP   │    │
-│  │ SKILL.md        │ ──────▶│ server (stdio)       │    │
-│  │ (the behavior)  │         │ (registry + install) │    │
-│  └─────────────────┘         └──────────┬───────────┘    │
-└───────────────────────────────────────  │  ──────────────┘
-                                          │  fetched at build time
-                                          ▼
-         ┌───────────────────────────────────────────────┐
-         │  Federated catalog (400+ skills)              │
-         │  ├── handpicked/     verified seeds + overlay │
-         │  ├── mcp-servers-repo  Anthropic reference    │
-         │  ├── awesome-mcp       community list         │
-         │  └── skillsmp          public marketplace     │
-         └───────────────────────────────────────────────┘
+   Claude Code
+   ┌────────────────┐           ┌──────────────────────┐
+   │ omakase-chef   │           │ claude-omakase MCP   │
+   │ SKILL.md       │ calls ──▶ │ server (stdio)       │
+   │ (the behavior) │           │ (registry + install) │
+   └────────────────┘           └──────────────────────┘
+                                           │
+                                           │ fetched at build time
+                                           ▼
+   ┌─────────────────────────────────────────────────┐
+   │ Federated catalog (400+ skills)                 │
+   │ ├── handpicked/        verified seeds + overlay │
+   │ ├── mcp-servers-repo   Anthropic reference      │
+   │ ├── awesome-mcp        community list           │
+   │ └── skillsmp           public marketplace       │
+   └─────────────────────────────────────────────────┘
 ```
 
 ## How it works
@@ -200,13 +198,13 @@ It shows a health dashboard for every installed skill and lets you act on them:
 ```
 ┌  🍱  Claude Omakase — skill manager
 │
-◇  3 installed · 2 healthy · 1 need attention ───────────────╮
-│      Skill              SKILL.md  Receipt  Catalog         │
-│  ──────────────────────────────────────────────────────   │
-│  ✅  quick-review        ✓         ✓        ✓               │
-│  🔄  grill-me            ✓         ✓        update!         │
-│  ⚠️  understand-anything ✗ missing ✓        ✓               │
-╰────────────────────────────────────────────────────────────╯
+◇  3 installed · 2 healthy · 1 need attention ───────────╮
+│       Skill                SKILL.md   Receipt  Catalog │
+│   ──────────────────────────────────────────────────── │
+│   ✅  quick-review         ✓          ✓        ✓       │
+│   🔄  grill-me             ✓          ✓        update! │
+│   ⚠️  understand-anything  ✗ missing  ✓        ✓       │
+╰────────────────────────────────────────────────────────╯
 │
 ◇  What would you like to do?
 │  ● Re-run health check

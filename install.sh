@@ -101,7 +101,8 @@ for you:
       { "hooks": [ { "type": "command", "command": "node \"${hooks_dir}/omakase-session-start.mjs\"" } ] }
     ],
     "PostToolUse": [
-      { "matcher": "Bash", "hooks": [ { "type": "command", "command": "node \"${hooks_dir}/omakase-repetition.mjs\"" } ] }
+      { "matcher": "Bash", "hooks": [ { "type": "command", "command": "node \"${hooks_dir}/omakase-repetition.mjs\"" } ] },
+      { "matcher": "Edit|Write|MultiEdit|NotebookEdit", "hooks": [ { "type": "command", "command": "node \"${hooks_dir}/omakase-repetition.mjs\"" } ] }
     ],
     "UserPromptSubmit": [
       { "hooks": [ { "type": "command", "command": "node \"${hooks_dir}/omakase-suggest.mjs\"" } ] }
