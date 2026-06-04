@@ -20,12 +20,13 @@ export interface SearchResult {
 }
 
 export function search(entries: Entry[], query: string, limit = 5): SearchResult[] {
+  const exactQuery = query.trim().toLowerCase();
   const tokens = tokenize(query);
   if (tokens.length === 0) return [];
 
   const scored: SearchResult[] = [];
   for (const entry of entries) {
-    const { score, reasons } = scoreEntry(entry, tokens);
+    const { score, reasons } = scoreEntry(entry, tokens, exactQuery);
     if (score > 0) scored.push({ entry, score, reasons });
   }
 
@@ -33,15 +34,21 @@ export function search(entries: Entry[], query: string, limit = 5): SearchResult
   return scored.slice(0, limit);
 }
 
-function scoreEntry(entry: Entry, tokens: string[]): { score: number; reasons: string[] } {
+function scoreEntry(entry: Entry, tokens: string[], exactQuery: string): { score: number; reasons: string[] } {
   let score = 0;
   const reasons: string[] = [];
   const lowerName = entry.name.toLowerCase();
   const lowerDesc = entry.description.toLowerCase();
   const lowerTags = entry.tags.map((t) => t.toLowerCase());
+  const lowerId = entry.id.toLowerCase();
+
+  if (lowerId === exactQuery) {
+    score += 1000;
+    reasons.push(`id match (${entry.id})`);
+  }
 
   for (const tok of tokens) {
-    if (entry.id === tok) {
+    if (lowerId === tok) {
       score += 1000;
       reasons.push(`id match (${tok})`);
       continue;
