@@ -31,7 +31,7 @@
     "test:adapter": "node --enable-source-maps scripts/test-adapter.mjs",
     "dev": "tsc -w -p tsconfig.json",
     "start": "node dist/server.js",
-    "lint": "eslint src",
+    "lint": "eslint src scripts hooks",
     "test": "node --test --import tsx --test-reporter=spec src/**/*.test.ts scripts/*.test.mjs hooks/*.test.mjs",
     "typecheck": "tsc --noEmit",
     "verify:catalog-rollback": "node scripts/verify-catalog-rollback.mjs",

@@ -4,7 +4,7 @@
 
 import { existsSync, mkdirSync, mkdtempSync, renameSync, rmSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { claudeCodeSkillsDir } from "../paths.js";
 import type { Entry } from "../types.js";
 
@@ -106,8 +106,26 @@ function isSafeRelative(p: string): boolean {
 }
 
 function commitStage(stage: string, dest: string, force: boolean): void {
-  if (force) rmSync(dest, { recursive: true, force: true });
-  renameSync(stage, dest);
+  if (!force || !existsSync(dest)) {
+    renameSync(stage, dest);
+    return;
+  }
+  // Force-replace without a destructive window. The previous code did
+  // `rmSync(dest); renameSync(stage, dest)`, which deletes the working install
+  // BEFORE the new one is in place — if that rename then fails (permissions,
+  // EXDEV, a crash in between) the user is left with no skill at all, defeating
+  // the staged-install guarantee. Instead, move the old install aside first,
+  // swap in the staged copy, then drop the backup; on failure, restore it. The
+  // backup is dot-prefixed so the installed-skill listing ignores it.
+  const backup = join(dirname(dest), `.bak-${basename(dest)}-${process.pid}-${Date.now()}`);
+  renameSync(dest, backup);
+  try {
+    renameSync(stage, dest);
+  } catch (e) {
+    renameSync(backup, dest);
+    throw e;
+  }
+  rmSync(backup, { recursive: true, force: true });
 }
 
 function safeTempPrefix(id: string): string {

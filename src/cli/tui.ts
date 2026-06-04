@@ -4,6 +4,28 @@ import * as doctor from "../tools/doctor.js";
 import * as updateSkill from "../tools/update-skill.js";
 import * as uninstallSkill from "../tools/uninstall-skill.js";
 
+export interface OpResult {
+  id: string;
+  ok: boolean;
+  error?: string;
+}
+
+// Run a single per-skill operation (update/remove) without ever throwing, so
+// one failing skill — a network error mid-update, a permission error on
+// remove — can't abort the batch or crash the whole interactive session. The
+// caller reports the result and moves on to the next skill.
+export async function tryOp(
+  id: string,
+  op: (id: string) => Promise<unknown>
+): Promise<OpResult> {
+  try {
+    await op(id);
+    return { id, ok: true };
+  } catch (e) {
+    return { id, ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
 export function statusIcon(skill: doctor.SkillHealth): string {
   if (!skill.skill_md_exists) return "⚠️ ";
   if (skill.in_catalog && skill.catalog_version && skill.installed_version &&
@@ -93,10 +115,15 @@ export async function runTui(): Promise<void> {
       });
       if (!p.isCancel(picks) && Array.isArray(picks) && picks.length > 0) {
         const spin = p.spinner();
+        const failures: OpResult[] = [];
         for (const id of picks as string[]) {
           spin.start(`Updating ${id}…`);
-          await updateSkill.handle({ id });
-          spin.stop(`Updated ${id}`);
+          const r = await tryOp(id, (x) => updateSkill.handle({ id: x }));
+          spin.stop(r.ok ? `Updated ${id}` : `⚠️  ${id}: ${r.error}`);
+          if (!r.ok) failures.push(r);
+        }
+        if (failures.length > 0) {
+          p.log.error(`${failures.length} update(s) failed; the rest were applied.`);
         }
         health = await runHealthCheck();
       }
@@ -115,10 +142,15 @@ export async function runTui(): Promise<void> {
         });
         if (!p.isCancel(confirmed) && confirmed) {
           const spin = p.spinner();
+          const failures: OpResult[] = [];
           for (const id of picks as string[]) {
             spin.start(`Removing ${id}…`);
-            await uninstallSkill.handle({ id });
-            spin.stop(`Removed ${id}`);
+            const r = await tryOp(id, (x) => uninstallSkill.handle({ id: x }));
+            spin.stop(r.ok ? `Removed ${id}` : `⚠️  ${id}: ${r.error}`);
+            if (!r.ok) failures.push(r);
+          }
+          if (failures.length > 0) {
+            p.log.error(`${failures.length} removal(s) failed; the rest were removed.`);
           }
           health = await runHealthCheck();
         }

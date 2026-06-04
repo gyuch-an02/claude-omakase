@@ -1,6 +1,14 @@
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 
+const nodeGlobals = {
+  AbortSignal: "readonly",
+  URL: "readonly",
+  console: "readonly",
+  fetch: "readonly",
+  process: "readonly",
+};
+
 export default [
   {
     ignores: ["dist/**", "node_modules/**", "coverage/**"],
@@ -22,10 +30,11 @@ export default [
     },
   },
   {
-    files: ["scripts/**/*.mjs"],
+    files: ["scripts/**/*.mjs", "hooks/**/*.mjs"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",
+      globals: nodeGlobals,
     },
     rules: {
       "no-unused-vars": [

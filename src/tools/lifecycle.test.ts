@@ -98,6 +98,18 @@ test("doctor_skills: ignores bundled omakase-chef control skill", async (t) => {
   assert.equal(result.issues, 0);
 });
 
+test("doctor_skills: ignores orphan hidden staging directories", async (t) => {
+  const env = await isolate(t, []);
+
+  await mkdir(join(env.skillsDir, ".tmp-demo-skill-abc"), { recursive: true });
+
+  const result = await doctor();
+
+  assert.equal(result.total, 0);
+  assert.equal(result.healthy, 0);
+  assert.equal(result.issues, 0);
+});
+
 interface Env {
   skillsDir: string;
   receiptsDir: string;

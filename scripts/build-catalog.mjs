@@ -4,28 +4,45 @@
 //
 //   node scripts/build-catalog.mjs           # fast: no URL probing
 //   node scripts/build-catalog.mjs --probe   # also HEAD-checks skill_files URLs
+//   node scripts/build-catalog.mjs --adapter handpicked
 
 import { readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseCatalogArgs } from "./catalog-options.mjs";
+import { mergeSelectedAdapters } from "./catalog-merge.mjs";
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
-const probe = process.argv.includes("--probe");
+const { probe, adapterNames } = parseCatalogArgs(process.argv.slice(2));
 
 // Build the TS first so we can import adapter logic from dist/.
 const { fetchAll } = await import(join(repoRoot, "dist", "adapters", "index.js"));
 
-console.log("Fetching from all adapters …");
-const entries = await fetchAll();
+if (adapterNames.length > 0) {
+  console.log(`Fetching from selected adapter(s): ${adapterNames.join(", ")} …`);
+} else {
+  console.log("Fetching from all adapters …");
+}
+let refreshedEntries;
+try {
+  refreshedEntries = await fetchAll(adapterNames);
+} catch (error) {
+  console.error(`Error: ${error.message}`);
+  process.exit(1);
+}
+const outPath = join(repoRoot, "catalog.json");
+const previous = await readPreviousCatalog(outPath);
+const previousEntries = Array.isArray(previous?.entries) ? previous.entries : null;
+const entries =
+  adapterNames.length > 0 && previousEntries
+    ? mergeSelectedAdapters(previousEntries, refreshedEntries, adapterNames)
+    : refreshedEntries;
 
 if (probe) {
   console.log(`\nProbing skill_files URLs (${entries.length} entries) …`);
   await probeEntries(entries);
 }
 
-const outPath = join(repoRoot, "catalog.json");
-const previous = await readPreviousCatalog(outPath);
-const previousEntries = Array.isArray(previous?.entries) ? previous.entries : null;
 const previousGeneratedAtValid = typeof previous?.generated_at === "string";
 const entriesChanged =
   !previous ||
