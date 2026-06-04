@@ -20,6 +20,7 @@
     "web/dist",
     "catalog.json",
     "install.sh",
+    "assets",
     "README.md",
     "LICENSE"
   ],
