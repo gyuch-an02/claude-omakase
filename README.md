@@ -1,7 +1,13 @@
 <!-- ────────────────────────────  HERO  ──────────────────────────── -->
 
 <p align="center">
-  <img src="assets/logo.svg" alt="Claude Omakase — The chef picks. You approve." width="720">
+  <img src="assets/sushi-logo.png" alt="Claude Omakase" width="150">
+</p>
+
+<h1 align="center">Claude Omakase</h1>
+
+<p align="center">
+  <strong><em>The chef picks. You approve.</em></strong>
 </p>
 
 <p align="center">
@@ -27,24 +33,22 @@
 <!-- ──────────────────────────────────────────────────────────────── -->
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│                      Claude Code                         │
-│                                                          │
-│  ┌─────────────────┐         ┌──────────────────────┐    │
-│  │ omakase-chef    │  calls  │ claude-omakase MCP   │    │
-│  │ SKILL.md        │ ──────▶│ server (stdio)       │    │
-│  │ (the behavior)  │         │ (registry + install) │    │
-│  └─────────────────┘         └──────────┬───────────┘    │
-└───────────────────────────────────────  │  ──────────────┘
-                                          │  fetched at build time
-                                          ▼
-         ┌───────────────────────────────────────────────┐
-         │  Federated catalog (400+ skills)              │
-         │  ├── handpicked/     verified seeds + overlay │
-         │  ├── mcp-servers-repo  Anthropic reference    │
-         │  ├── awesome-mcp       community list         │
-         │  └── skillsmp          public marketplace     │
-         └───────────────────────────────────────────────┘
+   Claude Code
+   ┌────────────────┐           ┌──────────────────────┐
+   │ omakase-chef   │           │ claude-omakase MCP   │
+   │ SKILL.md       │ calls ──▶ │ server (stdio)       │
+   │ (the behavior) │           │ (registry + install) │
+   └────────────────┘           └──────────────────────┘
+                                           │
+                                           │ fetched at build time
+                                           ▼
+   ┌─────────────────────────────────────────────────┐
+   │ Federated catalog (400+ skills)                 │
+   │ ├── handpicked/        verified seeds + overlay │
+   │ ├── mcp-servers-repo   Anthropic reference      │
+   │ ├── awesome-mcp        community list           │
+   │ └── skillsmp           public marketplace       │
+   └─────────────────────────────────────────────────┘
 ```
 
 ## How it works
