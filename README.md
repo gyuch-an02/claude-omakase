@@ -1,13 +1,7 @@
 <!-- ────────────────────────────  HERO  ──────────────────────────── -->
 
 <p align="center">
-  <img src="assets/sushi-logo.png" alt="Claude Omakase" width="150">
-</p>
-
-<h1 align="center">Claude Omakase</h1>
-
-<p align="center">
-  <strong><em>The chef picks. You approve.</em></strong>
+  <img src="assets/logo.svg" alt="Claude Omakase — The chef picks. You approve." width="720">
 </p>
 
 <p align="center">
