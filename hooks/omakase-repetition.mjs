@@ -2,18 +2,35 @@
 /**
  * Omakase repetition detector — hard hook (deterministic).
  *
- * Registered as a PostToolUse(Bash) hook. After every Bash command it:
- *   1. Cleans the command into coarse "task signatures" (first token of each
- *      real command segment), discarding heredoc bodies, shell keywords, and
- *      non-command fragments.
- *   2. Records each signature with a timestamp in ONE persistent file that
- *      spans sessions (not reset per session).
- *   3. When a signature recurs THRESHOLD times within a rolling time window —
- *      or a multi-step workflow repeats THRESHOLD times — it tells Claude to
- *      find a matching skill (asking before install).
+ * Registered as a PostToolUse hook for Bash AND the edit tools (Edit / Write /
+ * MultiEdit / NotebookEdit). Two kinds of recurring work are detected:
+ *
+ *   Bash commands — after every command it:
+ *     1. Cleans the command into coarse "task signatures" (first token of each
+ *        real command segment), discarding heredoc bodies, shell keywords, and
+ *        non-command fragments.
+ *     2. Records each signature with a timestamp in ONE persistent file that
+ *        spans sessions (not reset per session).
+ *     3. When a signature recurs THRESHOLD times within a rolling time window —
+ *        or a multi-step workflow repeats THRESHOLD times — it tells Claude to
+ *        find a matching skill (asking before install).
+ *
+ *   File edits — the Bash signal misses tasks that never touch the shell:
+ *   repeatedly UPDATING A SPECIFIC DOC (changelog, status page, README) is a
+ *   recurring chore a skill can replace, but it shows up as Edit/Write, not a
+ *   command. So edit tools produce a signature `edit:<basename>`. Crucially we
+ *   count each file AT MOST ONCE PER SESSION — iterating on a file within one
+ *   session is normal coding, not a habit; editing the SAME doc across several
+ *   separate sessions is the real recurring-task signal. (If the host omits
+ *   session_id, the signature can't accumulate past 1, so edits simply never
+ *   fire — safe, no false positives.)
+ *
+ *   NOTE: some recurring work (e.g. "summarize this PR") leaves no tool trace
+ *   at all — neither a tracked command nor a file edit. That can only be caught
+ *   at the LLM layer by the omakase-chef SKILL.md, not by this hook.
  *
  * Cross-session by design: a task you do once per session across several days
- * still accumulates and eventually triggers. The command is never blocked.
+ * still accumulates and eventually triggers. The command/edit is never blocked.
  *
  * Noise discipline (so it fires when it MATTERS, not every run):
  *   - SKIP: primitive shell/text/file tools that are how you DO work, not a
@@ -94,6 +111,28 @@ const MULTI = new Set([
 // A plausible command name: starts with a letter, then letters/digits/._-.
 // Rejects fragments like `5.`, `##`, `)"`, `-d)`, `$NODE`, `mk()`, `auth"`.
 const COMMAND_RE = /^[a-zA-Z][a-zA-Z0-9._-]*$/;
+
+// Edit-family tools whose target is a file path, not a command.
+const EDIT_TOOLS = new Set(["Edit", "Write", "MultiEdit", "NotebookEdit"]);
+
+// Files whose repeated editing is plumbing/noise, not a recurring task a skill
+// stands in for: lockfiles, and the omakase state/config this very hook writes.
+const EDIT_SKIP = new Set([
+  "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "Cargo.lock",
+  "poetry.lock", "uv.lock", "go.sum", ".gitignore",
+  "session.json", "repetition.json", "suggest.json",
+]);
+
+// Build an edit signature from the tool input's file path. `edit:<basename>` so
+// updating the SAME named doc (CHANGELOG.md, status.md) recurs to a signature,
+// regardless of which dir it lives in. Returns null for noise / missing path.
+function editSignature(toolInput) {
+  const fp = toolInput?.file_path ?? toolInput?.notebook_path;
+  if (!fp || typeof fp !== "string") return null;
+  const base = fp.split("/").pop();
+  if (!base || EDIT_SKIP.has(base)) return null;
+  return `edit:${base}`;
+}
 
 function readStdin() {
   try {
@@ -194,9 +233,12 @@ function loadState(file) {
       events: s.events && typeof s.events === "object" ? s.events : {},
       seq: Array.isArray(s.seq) ? s.seq : [],
       nudged: Array.isArray(s.nudged) ? s.nudged : [],
+      // edit signature -> last session id that counted it (per-session dedupe).
+      editSessions:
+        s.editSessions && typeof s.editSessions === "object" ? s.editSessions : {},
     };
   } catch {
-    return { events: {}, seq: [], nudged: [] };
+    return { events: {}, seq: [], nudged: [], editSessions: {} };
   }
 }
 
@@ -207,10 +249,16 @@ function main() {
   } catch {
     process.exit(0);
   }
-  if (input.tool_name !== "Bash") process.exit(0);
+  const toolName = input.tool_name;
+  const isEdit = EDIT_TOOLS.has(toolName);
+  if (toolName !== "Bash" && !isEdit) process.exit(0);
 
-  const sigs = signatures(input.tool_input?.command || "");
+  const sigs = isEdit
+    ? [editSignature(input.tool_input)].filter(Boolean)
+    : signatures(input.tool_input?.command || "");
   if (sigs.length === 0) process.exit(0);
+
+  const sessionId = String(input.session_id || "default");
 
   const now = Date.now();
   const dir = join(homedir(), ".claude", "omakase-state");
@@ -225,14 +273,28 @@ function main() {
 
   // Record events (with timestamps) and the ordered stream.
   for (const sig of sigs) {
-    (state.events[sig] ??= []).push(now);
-    state.seq.push(sig);
+    if (isEdit) {
+      // Count a file at most once per session: iterating on it within a single
+      // session is normal coding, not a recurring chore. Editing the same doc
+      // across separate sessions is the real signal. Edits never join `seq` —
+      // they aren't ordered workflow steps.
+      if (state.editSessions[sig] === sessionId) continue;
+      state.editSessions[sig] = sessionId;
+      (state.events[sig] ??= []).push(now);
+    } else {
+      (state.events[sig] ??= []).push(now);
+      state.seq.push(sig);
+    }
   }
   // Prune each signature's timestamps to the rolling window; drop empties.
   for (const sig of Object.keys(state.events)) {
     const kept = state.events[sig].filter((t) => now - t <= WINDOW_MS);
     if (kept.length === 0) delete state.events[sig];
     else state.events[sig] = kept;
+  }
+  // Drop per-session edit markers whose signature aged out of the window.
+  for (const sig of Object.keys(state.editSessions)) {
+    if (!state.events[sig]) delete state.editSessions[sig];
   }
   // Cap distinct signatures (keep the most recently active).
   const sigKeys = Object.keys(state.events);
@@ -280,6 +342,14 @@ function main() {
         `Per the omakase-chef skill, call omakase.find_skill describing this end-to-end workflow (not just one step), ` +
         `pick the single best match (prefer verified), and propose installing it in one sentence with WHY. ` +
         `Ask before installing. Do this once; no menu. If nothing fits, offer omakase.propose_new_skill or stay quiet.`;
+    } else if (payload.pattern[0].startsWith("edit:")) {
+      const fileName = payload.pattern[0].slice("edit:".length);
+      context =
+        `[omakase auto-detect] The user has updated \`${fileName}\` in ${payload.reps} separate sessions ` +
+        `(within the rolling window) — a recurring document/file task. Per the omakase-chef skill, call ` +
+        `omakase.find_skill describing this "update ${fileName}" workflow, pick the single best match (prefer ` +
+        `verified), and propose installing it in one sentence with WHY. Ask before installing. Do this once; no menu. ` +
+        `If nothing fits, offer omakase.propose_new_skill or stay quiet.`;
     } else {
       context =
         `[omakase auto-detect] The user has run \`${payload.pattern[0]}\`-type commands ${payload.reps} times ` +
