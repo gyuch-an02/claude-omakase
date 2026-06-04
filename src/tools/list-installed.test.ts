@@ -43,3 +43,36 @@ test("list_installed_skills: installed_count counts distinct ids, not receipts +
   assert.equal(result.installed_count, 2, "distinct count is 2, not 4");
   assert.match(result.next_step, /2 skill/);
 });
+
+test("list_installed_skills: ignores bundled omakase-chef for fresh-user counts", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "omakase-list-"));
+  const saved = {
+    data: process.env["XDG_DATA_HOME"],
+    skills: process.env["CLAUDE_OMAKASE_SKILLS_DIR"],
+  };
+  process.env["XDG_DATA_HOME"] = join(root, "data");
+  process.env["CLAUDE_OMAKASE_SKILLS_DIR"] = join(root, "skills");
+
+  await mkdir(join(root, "skills", "omakase-chef"), { recursive: true });
+  await mkdir(join(root, "data", "claude-omakase", "installed"), { recursive: true });
+  await writeFile(
+    join(root, "data", "claude-omakase", "installed", "omakase-chef.json"),
+    JSON.stringify({ id: "omakase-chef" }),
+    "utf8"
+  );
+
+  t.after(async () => {
+    if (saved.data === undefined) delete process.env["XDG_DATA_HOME"];
+    else process.env["XDG_DATA_HOME"] = saved.data;
+    if (saved.skills === undefined) delete process.env["CLAUDE_OMAKASE_SKILLS_DIR"];
+    else process.env["CLAUDE_OMAKASE_SKILLS_DIR"] = saved.skills;
+    await rm(root, { recursive: true, force: true });
+  });
+
+  const result = await handle();
+
+  assert.equal(result.receipts.length, 0);
+  assert.equal(result.raw_skills_dir.length, 0);
+  assert.equal(result.installed_count, 0);
+  assert.match(result.next_step, /No skills installed/);
+});

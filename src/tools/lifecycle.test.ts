@@ -85,6 +85,19 @@ test("doctor_skills: reports healthy vs broken installs", async (t) => {
   assert.equal(orphan.in_catalog, false);
 });
 
+test("doctor_skills: ignores bundled omakase-chef control skill", async (t) => {
+  const env = await isolate(t, []);
+
+  await mkdir(join(env.skillsDir, "omakase-chef"), { recursive: true });
+  await writeFile(join(env.skillsDir, "omakase-chef", "SKILL.md"), "x", "utf8");
+
+  const result = await doctor();
+
+  assert.equal(result.total, 0);
+  assert.equal(result.healthy, 0);
+  assert.equal(result.issues, 0);
+});
+
 interface Env {
   skillsDir: string;
   receiptsDir: string;

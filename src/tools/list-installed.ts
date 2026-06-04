@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
 import { claudeCodeSkillsDir, installedRecordsDir } from "../paths.js";
+import { isInternalSkillId } from "../internal-skills.js";
 import type { InstalledRecord } from "../types.js";
 
 export const listInstalledInput = z.object({}).strict();
@@ -24,11 +25,13 @@ export async function handle() {
   // A skill installed via Omakase has BOTH a receipt and a ~/.claude/skills dir,
   // so receipts.length + skills.length double-counts. Count distinct ids — the
   // same union recommend_skills uses.
-  const installedCount = new Set([...receipts.map((r) => r.id), ...skills]).size;
+  const userReceiptIds = receipts.map((r) => r.id).filter((id) => !isInternalSkillId(id));
+  const userSkillIds = skills.filter((id) => !isInternalSkillId(id));
+  const installedCount = new Set([...userReceiptIds, ...userSkillIds]).size;
 
   return {
-    receipts,
-    raw_skills_dir: skills,
+    receipts: receipts.filter((r) => !isInternalSkillId(r.id)),
+    raw_skills_dir: userSkillIds,
     installed_count: installedCount,
     next_step:
       installedCount === 0
@@ -62,5 +65,6 @@ function readSkillsDir(): string[] {
   return readdirSync(dir, { withFileTypes: true })
     .filter((e) => e.isDirectory())
     .map((e) => e.name)
+    .filter((id) => !isInternalSkillId(id))
     .sort();
 }
