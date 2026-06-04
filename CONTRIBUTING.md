@@ -1,5 +1,11 @@
 # Contributing
 
+## Where to start
+
+New here? Pick a [**`good first issue`**](https://github.com/gyuch-an02/claude-omakase/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) — each is scoped to ~30 minutes with acceptance criteria. [`help wanted`](https://github.com/gyuch-an02/claude-omakase/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) issues are larger. To claim one, comment on it so a maintainer can assign you (avoids two people doing the same work), then branch and open a PR with `Closes #<n>` in the body. First run? Start with [`docs/contributor-quickstart.md`](docs/contributor-quickstart.md) — clone to green CI in ~30 min.
+
+## The five paths
+
 There are five ways to contribute, in roughly increasing order of effort:
 
 ## 1. Write a `handpicked/` overlay
