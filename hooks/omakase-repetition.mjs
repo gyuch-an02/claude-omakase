@@ -15,16 +15,27 @@
  * Cross-session by design: a task you do once per session across several days
  * still accumulates and eventually triggers. The command is never blocked.
  *
+ * Noise discipline (so it fires when it MATTERS, not every run):
+ *   - SKIP: primitive shell/text/file tools that are how you DO work, not a
+ *     task a skill replaces (grep, cut, sort, find, jq, tar, ...).
+ *   - DENY_SIG: VCS/build/pkg/infra plumbing subcommands (git status, npm run,
+ *     gh pr, cargo build, ...). Analysis-flavored ones (git diff/blame/show)
+ *     are kept — repeating those is a real "review this" signal.
+ *   - THRESHOLD default 3 (a task isn't a habit at 2).
+ *   - Catalog gate: stay silent if no catalog is available — find_skill would
+ *     return nothing, so a nudge would just burn a turn.
+ *
  * State: ~/.claude/omakase-state/repetition.json   (no network, no telemetry)
- * Tunables: OMAKASE_REPETITION_THRESHOLD (default 2)
+ * Tunables: OMAKASE_REPETITION_THRESHOLD (default 3)
  *           OMAKASE_REPETITION_WINDOW_DAYS (default 14)
  */
 
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const THRESHOLD = Number(process.env.OMAKASE_REPETITION_THRESHOLD || 2);
+const THRESHOLD = Number(process.env.OMAKASE_REPETITION_THRESHOLD || 3);
 const WINDOW_MS = Number(process.env.OMAKASE_REPETITION_WINDOW_DAYS || 14) * 24 * 60 * 60 * 1000;
 const KMAX = 8; // longest multi-step workflow (in signatures) we detect
 const SEQ_CAP = 80; // cap the ordered signature stream
@@ -42,6 +53,36 @@ const SKIP = new Set([
   "do", "done", "then", "else", "elif", "fi", "case", "esac", "for", "while",
   "until", "if", "in", "function", "return", "break", "continue", "local",
   "EOF", "EOL", "HEREDOC", "END",
+  // Primitive text/file/system tools: the plumbing of doing work, never a task
+  // a skill stands in for. Repeating these is noise, not a habit worth a nudge.
+  "grep", "egrep", "fgrep", "rg", "ag", "cut", "sort", "uniq", "find", "fd",
+  "xargs", "awk", "sed", "tee", "tr", "diff", "comm", "paste", "column",
+  "basename", "dirname", "realpath", "readlink", "seq", "yes", "watch",
+  "tar", "zip", "unzip", "gzip", "gunzip", "jq", "yq", "stat", "file", "tree",
+  "ln", "ps", "kill", "pkill", "df", "du", "free", "uname", "hostname",
+]);
+
+// Tool subcommands that are pure plumbing — running them repeatedly is how you
+// operate a repo/build/cluster, not a task a skill replaces. Matched against the
+// full "head sub" signature. Analysis-flavored subcommands (git diff/blame/show)
+// are deliberately NOT here: repeating those is a genuine "review this" signal.
+const DENY_SIG = new Set([
+  "git status", "git add", "git commit", "git push", "git pull", "git fetch",
+  "git log", "git checkout", "git switch", "git branch", "git stash",
+  "git config", "git remote", "git rebase", "git merge", "git reset",
+  "git clone", "git restore", "git tag", "git init",
+  "npm install", "npm i", "npm ci", "npm run", "npm test", "npm start",
+  "npm build", "npm publish", "npm version", "npm audit", "npm update", "npm ls",
+  "pnpm install", "pnpm run", "pnpm build", "pnpm test",
+  "yarn install", "yarn run", "yarn build", "yarn test",
+  "npx tsc", "npx eslint", "npx prettier", "npx vitest", "npx jest",
+  "gh pr", "gh issue", "gh run", "gh repo", "gh auth", "gh api",
+  "gh release", "gh workflow", "gh browse",
+  "cargo build", "cargo test", "cargo run", "cargo check", "cargo fmt", "cargo clippy",
+  "docker build", "docker run", "docker ps", "docker exec", "docker compose", "docker logs",
+  "kubectl get", "kubectl apply", "kubectl describe", "kubectl logs", "kubectl delete",
+  "pip install", "pip3 install", "poetry install", "uv pip", "uv run",
+  "go build", "go test", "go run", "go mod", "go get",
 ]);
 
 // Tools where the second token is the meaningful verb.
@@ -82,9 +123,10 @@ function classifyOne(segment) {
 
   const next = tokens[i + 1];
   if (MULTI.has(head) && next && COMMAND_RE.test(next)) {
-    return `${head} ${next}`;
+    const sig = `${head} ${next}`;
+    return DENY_SIG.has(sig) ? null : sig;
   }
-  return head;
+  return DENY_SIG.has(head) ? null : head;
 }
 
 /**
@@ -121,6 +163,28 @@ function trailingRepeats(seq, k) {
     } else break;
   }
   return reps;
+}
+
+// Catalog gate: if there is no catalog to search, a nudge to call find_skill
+// would return nothing — so stay silent rather than burn a turn. Mirrors the
+// path omakase-suggest.mjs uses (XDG cache first, bundled package copy second).
+function catalogPath() {
+  const base = process.env["XDG_CACHE_HOME"] ?? join(homedir(), ".cache");
+  const cached = join(base, "claude-omakase", "catalog.json");
+  if (existsSync(cached)) return cached;
+  const bundled = join(dirname(fileURLToPath(import.meta.url)), "..", "catalog.json");
+  return existsSync(bundled) ? bundled : null;
+}
+
+function catalogHasEntries() {
+  const p = catalogPath();
+  if (!p) return false;
+  try {
+    const data = JSON.parse(readFileSync(p, "utf8"));
+    return Array.isArray(data.entries) && data.entries.length > 0;
+  } catch {
+    return false;
+  }
 }
 
 function loadState(file) {
@@ -204,7 +268,10 @@ function main() {
     }
   }
 
-  if (payload && !state.nudged.includes(key)) {
+  // Catalog gate: only commit to a nudge if there's a catalog to search. When
+  // absent we leave `key` UNmarked so the same workflow can still trigger later
+  // once a catalog exists — we just don't fire a fruitless find_skill now.
+  if (payload && !state.nudged.includes(key) && catalogHasEntries()) {
     state.nudged.push(key);
     if (payload.kind === "composite") {
       const flow = payload.pattern.map((s) => `\`${s}\``).join(" → ");
