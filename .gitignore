@@ -11,6 +11,7 @@ docs/*
 !docs/contributor-quickstart.md
 !docs/ai-protocol.md
 !docs/automation.md
+!docs/TRUST.md
 !docs/demo-script.md
 !docs/distribution/
 !docs/distribution/*.md
