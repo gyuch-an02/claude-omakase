@@ -753,6 +753,51 @@
       }
     },
     {
+      "id": "caveman",
+      "name": "Caveman",
+      "type": "claude_code_skill",
+      "description": "Use an ultra-compressed communication mode that cuts filler while preserving technical accuracy.",
+      "category": "productivity",
+      "tags": [
+        "communication",
+        "productivity",
+        "tokens",
+        "compression",
+        "writing"
+      ],
+      "verified": true,
+      "author": {
+        "name": "JuliusBrussee",
+        "url": "https://github.com/JuliusBrussee"
+      },
+      "homepage": "https://github.com/JuliusBrussee/caveman/tree/main/skills/caveman",
+      "license": "MIT",
+      "install": {
+        "skill_files": [
+          {
+            "source": "https://raw.githubusercontent.com/JuliusBrussee/caveman/655b7d9c5431f822264b7732e9901c5578ac84cf/skills/caveman/SKILL.md",
+            "target": "SKILL.md"
+          }
+        ]
+      },
+      "source": {
+        "adapter": "handpicked",
+        "origin": "https://github.com/JuliusBrussee/caveman/tree/main/skills/caveman"
+      },
+      "audit": {
+        "audited_by": "Changwook Lee",
+        "audited_at": "2026-06-04",
+        "checks": [
+          "Publisher is the public JuliusBrussee/caveman repository.",
+          "Repository license is MIT.",
+          "Install source is an HTTPS raw SKILL.md URL pinned to commit 655b7d9c5431f822264b7732e9901c5578ac84cf and returned HTTP 200 during audit.",
+          "Install target is a single relative SKILL.md file.",
+          "No install command or post-install script is executed by Omakase.",
+          "Changwook Lee invoked the local caveman skill during hackathon work to reduce response verbosity while preserving technical detail."
+        ]
+      }
+    },
+    {
       "id": "chloropine-cgstack-scrape-skill-md",
       "name": "scrape",
       "type": "claude_code_skill",
