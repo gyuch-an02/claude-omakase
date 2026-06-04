@@ -147,6 +147,63 @@ test("install: force replaces existing files and writes declared skill files", a
   });
 });
 
+test("install: failed multi-file download leaves no partial skill directory", async () => {
+  await withSkillsDir(async (dir) => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async (input) => {
+      const url = String(input);
+      if (url.endsWith("/one.txt")) {
+        return new Response("one", { status: 200 });
+      }
+      return new Response("missing", { status: 404 });
+    };
+
+    try {
+      await assert.rejects(
+        install(
+          entry({
+            install: {
+              skill_files: [
+                { source: "https://example.com/one.txt", target: "one.txt" },
+                { source: "https://example.com/two.txt", target: "two.txt" },
+              ],
+            },
+          })
+        ),
+        /fetch https:\/\/example\.com\/two\.txt failed: 404/
+      );
+
+      assert.equal(existsSync(join(dir, "demo-skill")), false, "partial install must not remain");
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+});
+
+test("install: failed forced reinstall preserves existing skill directory", async () => {
+  await withSkillsDir(async (dir) => {
+    const skillDir = join(dir, "demo-skill");
+    await import("node:fs").then(({ mkdirSync, writeFileSync }) => {
+      mkdirSync(skillDir, { recursive: true });
+      writeFileSync(join(skillDir, "SKILL.md"), "existing", "utf8");
+    });
+
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => new Response("missing", { status: 404 });
+
+    try {
+      await assert.rejects(
+        install(entry(), { force: true }),
+        /fetch https:\/\/example\.com\/SKILL\.md failed: 404/
+      );
+
+      assert.equal(readFileSync(join(skillDir, "SKILL.md"), "utf8"), "existing");
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+});
+
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
