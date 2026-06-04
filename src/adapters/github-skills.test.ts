@@ -109,6 +109,62 @@ triggers:
   }
 });
 
+test("fetchGithubSkills: derives raw URLs for branches containing slashes", async () => {
+  const originalFetch = globalThis.fetch;
+  const originalToken = process.env["GITHUB_TOKEN"];
+  process.env["GITHUB_TOKEN"] = "test-token";
+
+  globalThis.fetch = async (input) => {
+    const url = String(input);
+    if (url.startsWith("https://api.github.com/search/code")) {
+      return new Response(
+        JSON.stringify({
+          items: [
+            {
+              path: "agents/review/SKILL.md",
+              html_url:
+                "https://github.com/acme/skills/blob/feature/skills/agents/review/SKILL.md",
+              repository: {
+                full_name: "acme/skills",
+                default_branch: "feature/skills",
+                owner: { login: "acme" },
+              },
+            },
+          ],
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      );
+    }
+
+    assert.equal(
+      url,
+      "https://raw.githubusercontent.com/acme/skills/feature/skills/agents/review/SKILL.md"
+    );
+    return new Response(
+      `---
+name: review
+description: Review pull requests using the house checklist.
+triggers: ["review this PR"]
+---
+`,
+      { status: 200, headers: { "content-type": "text/markdown" } }
+    );
+  };
+
+  try {
+    const entries = await fetchGithubSkills();
+
+    assert.equal(entries.length, 1);
+    assert.equal(
+      entries[0]!.install.skill_files?.[0]?.source,
+      "https://raw.githubusercontent.com/acme/skills/feature/skills/agents/review/SKILL.md"
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+    restoreToken(originalToken);
+  }
+});
+
 test("fetchGithubSkills: skips raw files without description frontmatter", async () => {
   const originalFetch = globalThis.fetch;
   const originalToken = process.env["GITHUB_TOKEN"];
