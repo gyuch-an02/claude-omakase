@@ -26,6 +26,7 @@ interface GitHubCodeSearchItem {
   repository?: {
     full_name?: string;
     html_url?: string;
+    default_branch?: string;
     owner?: { login?: string };
   };
 }
@@ -95,7 +96,7 @@ export function normalizeGithubSkills(skill: GithubSkillsSkill): Entry | null {
 }
 
 async function skillFromSearchItem(item: GitHubCodeSearchItem): Promise<GithubSkillsSkill | null> {
-  const rawUrl = rawSkillMdUrl(item.html_url);
+  const rawUrl = rawSkillMdUrl(item);
   if (!rawUrl) return null;
 
   const res = await globalThis.fetch(rawUrl, { headers: buildHeaders() });
@@ -121,8 +122,19 @@ async function skillFromSearchItem(item: GitHubCodeSearchItem): Promise<GithubSk
   };
 }
 
-function rawSkillMdUrl(htmlUrl: string | undefined): string | null {
+function rawSkillMdUrl(item: GitHubCodeSearchItem): string | null {
+  const htmlUrl = item.html_url;
   if (!htmlUrl) return null;
+
+  const defaultBranch = item.repository?.default_branch;
+  if (defaultBranch) {
+    const prefix = `https://github.com/${item.repository?.full_name}/blob/${defaultBranch}/`;
+    if (htmlUrl.startsWith(prefix) && htmlUrl.endsWith("SKILL.md")) {
+      const path = htmlUrl.slice(prefix.length);
+      return `https://raw.githubusercontent.com/${item.repository?.full_name}/${defaultBranch}/${path}`;
+    }
+  }
+
   const match = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+\/)?SKILL\.md$/.exec(htmlUrl);
   if (!match) return null;
   const [, owner, repo, branch, dir = ""] = match;
