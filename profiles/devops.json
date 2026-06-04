@@ -1,0 +1,38 @@
+{
+  "role": "devops",
+  "match": [
+    "devops",
+    "sre",
+    "site reliability",
+    "infrastructure",
+    "platform engineer",
+    "terraform",
+    "kubernetes",
+    "docker",
+    "ci/cd",
+    "cloud"
+  ],
+  "recommend": ["terraform-mcp-server", "azure-cli-mcp"],
+  "evidence": [
+    {
+      "match": ["devops", "ci/cd"],
+      "source": "https://cloud.google.com/devops/state-of-devops",
+      "note": "Google's DORA State of DevOps research names the DevOps and CI/CD audience and its delivery practices directly."
+    },
+    {
+      "match": ["sre", "site reliability", "platform engineer"],
+      "source": "https://sre.google/sre-book/introduction/",
+      "note": "Google's SRE book defines the site-reliability / platform-engineering role this profile targets."
+    },
+    {
+      "match": ["docker", "kubernetes"],
+      "source": "https://survey.stackoverflow.co/2024/technology",
+      "note": "Stack Overflow's 2024 technology results rank Docker and Kubernetes among the most-used and most-admired tools for operations work."
+    },
+    {
+      "match": ["terraform", "infrastructure", "cloud"],
+      "source": "https://developer.hashicorp.com/terraform/intro",
+      "note": "HashiCorp's Terraform intro describes infrastructure-as-code across cloud providers, matching the recommended Terraform and Azure CLI MCP servers."
+    }
+  ]
+}
