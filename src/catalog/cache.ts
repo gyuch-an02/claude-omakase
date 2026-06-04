@@ -5,7 +5,7 @@
 //   3. Else try the bundled catalog.json shipped inside the npm package.
 //   4. Else run adapters live (slow; only happens during dev without a build).
 
-import { existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { bundledCatalogPath, omakaseCacheDir } from "../paths.js";
@@ -97,6 +97,18 @@ function isCatalogShape(x: unknown): x is Catalog {
 }
 
 async function writeCache(catalog: Catalog): Promise<void> {
-  mkdirSync(omakaseCacheDir(), { recursive: true });
-  await writeFile(cachePath(), JSON.stringify(catalog, null, 2) + "\n", "utf8");
+  const dir = omakaseCacheDir();
+  mkdirSync(dir, { recursive: true });
+  const finalPath = cachePath();
+  const tmpPath = join(
+    dir,
+    `.catalog.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`
+  );
+  try {
+    await writeFile(tmpPath, JSON.stringify(catalog, null, 2) + "\n", "utf8");
+    renameSync(tmpPath, finalPath);
+  } catch (e) {
+    rmSync(tmpPath, { force: true });
+    throw e;
+  }
 }

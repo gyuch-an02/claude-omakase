@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { load } from "./cache.js";
@@ -75,6 +75,43 @@ test("load: remote catalog failure falls back to bundled catalog", async () => {
     } else {
       process.env["CLAUDE_OMAKASE_CATALOG_URL"] = originalRemote;
     }
+    await rm(cacheDir, { recursive: true, force: true });
+  }
+});
+
+test("load: valid remote catalog writes cache atomically without leaving temp files", async () => {
+  const cacheDir = await mkdtemp(join(tmpdir(), "omakase-cache-"));
+  const originalCache = process.env["XDG_CACHE_HOME"];
+  const originalRemote = process.env["CLAUDE_OMAKASE_CATALOG_URL"];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () =>
+    new Response(
+      JSON.stringify({
+        version: 1,
+        generated_at: "2026-06-04T00:00:00.000Z",
+        entries: [],
+      }),
+      { status: 200, headers: { "content-type": "application/json" } }
+    );
+  process.env["XDG_CACHE_HOME"] = cacheDir;
+  process.env["CLAUDE_OMAKASE_CATALOG_URL"] = "https://example.invalid/catalog.json";
+
+  try {
+    const catalog = await load();
+
+    assert.equal(catalog.generated_at, "2026-06-04T00:00:00.000Z");
+    const dir = join(cacheDir, "claude-omakase");
+    assert.deepEqual((await readdir(dir)).sort(), ["catalog.json"]);
+    assert.equal(
+      JSON.parse(await readFile(join(dir, "catalog.json"), "utf8")).generated_at,
+      "2026-06-04T00:00:00.000Z"
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalCache === undefined) delete process.env["XDG_CACHE_HOME"];
+    else process.env["XDG_CACHE_HOME"] = originalCache;
+    if (originalRemote === undefined) delete process.env["CLAUDE_OMAKASE_CATALOG_URL"];
+    else process.env["CLAUDE_OMAKASE_CATALOG_URL"] = originalRemote;
     await rm(cacheDir, { recursive: true, force: true });
   }
 });
