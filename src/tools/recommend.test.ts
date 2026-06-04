@@ -268,6 +268,33 @@ test("recommend_skills: explicit context outranks a strong profile match", async
   );
 });
 
+test("recommend_skills: profile IDE preferences participate in ranking", async (t) => {
+  await withIsolatedOmakaseState(
+    t,
+    [
+      starterEntry({
+        id: "jupyter-notebook",
+        name: "Jupyter Notebook",
+        description: "Work with notebooks and data analysis.",
+        tags: ["jupyter", "notebook", "python", "data"],
+      }),
+      starterEntry({
+        id: "playwright",
+        name: "Playwright",
+        description: "Browser automation and frontend testing.",
+        tags: ["browser", "testing", "frontend"],
+      }),
+    ],
+    ["seed-skill"],
+    { ides: ["Jupyter"] }
+  );
+
+  const result = await handle(recommendInput.parse({}));
+
+  assert.equal(result.mode, "profile-search");
+  assert.equal(result.recommendations[0]?.id, "jupyter-notebook");
+});
+
 // ── starter-pack picker (elicitation) ───────────────────────────────────────
 
 test("recommend_skills: picker accept installs exactly the checked starter skills", async (t) => {
