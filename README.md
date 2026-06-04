@@ -287,6 +287,17 @@ Everything Omakase writes stays on your machine:
 
 No telemetry. No accounts. Outbound calls happen only for catalog refresh and skill file downloads (when you approve an install).
 
+## Trust & safety
+
+Omakase installs third-party content into `~/.claude/skills/`, so it treats the
+catalog as a supply-chain surface. Two things are **never** automated: marking an
+entry `verified: true` (human audit only) and writing a skill to disk (you approve
+every install). Catalog entries pass three automated gates — schema, install
+resolvability, HTTPS-only sources — before they're trusted or merged.
+
+Full trust boundary, the `verified` definition, auto-merge guardrails, and the
+rollback path: [`docs/TRUST.md`](docs/TRUST.md).
+
 ## Develop
 
 ```bash

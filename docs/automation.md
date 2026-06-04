@@ -10,7 +10,10 @@ auto-merge the PR with a squash merge after required checks pass.
 Required setup:
 
 - Repository auto-merge must be enabled in GitHub settings.
-- Branch protection should require the `CI / build` check on `main`.
+- Branch protection should require the `CI / build` check on `main`. Note: as of
+  the matrixed CI, `build` is an **aggregate gate** that goes green only after
+  every Node matrix leg (`checks`) passes — so requiring `CI / build` alone still
+  gates on the full matrix. No branch-protection change is needed.
 - The pull request must be open, non-draft, and labeled `adapter`.
 
 Verification:
