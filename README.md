@@ -21,7 +21,6 @@
 <p align="center">
   <a href="#install"><b>Install</b></a> ·
   <a href="#how-it-works"><b>How it works</b></a> ·
-  <a href="#install"><b>Quick start</b></a> ·
   <a href="docs/ai-protocol.md"><b>AI protocol</b></a>
 </p>
 
