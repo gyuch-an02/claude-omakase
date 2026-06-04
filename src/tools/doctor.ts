@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { z } from "zod";
 import { load } from "../catalog/cache.js";
 import { claudeCodeSkillsDir, installedRecordsDir } from "../paths.js";
+import { isInternalSkillId } from "../internal-skills.js";
 import type { InstalledRecord } from "../types.js";
 
 export interface SkillHealth {
@@ -43,7 +44,9 @@ export async function handle(): Promise<DoctorResult> {
   const receiptsRoot = installedRecordsDir();
   const skillIds = readSkillIds(skillsRoot);
   const receipts = readReceipts(receiptsRoot);
-  const ids = new Set([...skillIds, ...receipts.keys()]);
+  const ids = new Set(
+    [...skillIds, ...receipts.keys()].filter((id) => !isInternalSkillId(id))
+  );
   const catalogById = new Map(catalog.entries.map((entry) => [entry.id, entry]));
 
   const skills = [...ids].sort().map((id): SkillHealth => {
@@ -78,6 +81,7 @@ function readSkillIds(root: string): Set<string> {
     readdirSync(root, { withFileTypes: true })
       .filter((entry) => entry.isDirectory())
       .map((entry) => entry.name)
+      .filter((id) => !isInternalSkillId(id))
   );
 }
 
@@ -88,6 +92,7 @@ function readReceipts(root: string): Map<string, InstalledRecord | null> {
   for (const file of readdirSync(root)) {
     if (!file.endsWith(".json")) continue;
     const id = file.slice(0, -".json".length);
+    if (isInternalSkillId(id)) continue;
     try {
       receipts.set(id, JSON.parse(readFileSync(join(root, file), "utf8")) as InstalledRecord);
     } catch {
