@@ -9,8 +9,26 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-06-04
+
+### Added
+- **GitHub SKILL.md search adapter** — federates community skills by searching GitHub code for `SKILL.md` files, deriving raw URLs and reading frontmatter for name/description/tags. Token-gated (`GITHUB_TOKEN`); scraped entries are always `verified: false`. Handles blob URLs whose branch names contain slashes via `repository.default_branch`.
+- **IDE/editor preferences in the profile** — `set_profile` now accepts `ides` (e.g. `["Claude Code", "VS Code", "Cursor"]`) and `recommend_skills` folds them into ranking tokens.
+- **Selected-adapter catalog builds** — `scripts/build-catalog.mjs` can build from a chosen subset of adapters for faster iteration.
+- **Hero logo + restructured README header.**
+
+### Fixed
+- **Bundled `omakase-chef` no longer shows up as a user skill** — it was counted in `list_installed_skills` and flagged by `doctor_skills`/the TUI as an unhealthy, receipt-less, not-in-catalog skill. An `isInternalSkillId()` choke point now excludes it from install counts, the health dashboard, and recommendation install-state — so a fresh user reads "0 installed" (and still gets the full starter pack) rather than "1".
+- **Atomic skill install** — files are staged in a temp dir and renamed into `~/.claude/skills/<id>/` only after every write succeeds; a failed download leaves no partial install, and a failed forced reinstall preserves the existing one. Orphan `.tmp-*` staging dirs are ignored by the lifecycle scans.
+- **Atomic catalog cache write** — the cache is written through a same-dir temp file and renamed into place, so an interrupted write can't truncate `catalog.json`.
+- **One failed skill no longer crashes the TUI batch** — update/remove operations are isolated per skill; a single failure is reported and the loop continues.
+- **Long skill ids are truncated in the TUI** — a very long scraped id (e.g. `summarize-github-pull-request-…`) used to overflow its column and collide with the `SKILL.md`/`Receipt`/`Catalog` markers. Names are now clipped to the column width with an ellipsis.
+- **Exact hyphenated skill-id matching** and **refined-zod tool-schema unwrapping** so tool inputs with `.refine()`/defaults expose correct JSON Schema.
+
 ### Changed
 - **Repetition hook fires on tasks, not tooling.** `hooks/omakase-repetition.mjs` was over-eager: default threshold 2 plus a `SKIP` list that only covered shell builtins meant ordinary dev noise (`grep`, `cut`, `git status`, `npm run`, `gh pr`, …) tripped a "find a skill" nudge — recommending on nearly every run instead of when it mattered. Now: (1) default `OMAKASE_REPETITION_THRESHOLD` raised 2 → 3; (2) `SKIP` extended with primitive text/file/system tools; (3) a new `DENY_SIG` set drops VCS/build/pkg/infra plumbing subcommands (analysis-flavored ones like `git diff`/`blame`/`show` are kept — repeating those is a real "review this" signal); (4) a catalog gate stays silent when no catalog is available, since `find_skill` would return nothing. Added `hooks/omakase-repetition.test.mjs` covering SKIP, DENY_SIG, the kept-analysis case, composite workflows, the threshold, and the catalog gate.
+- **`find_skill` description** aligned with the skill-only catalog.
+- **Lint coverage** extended to `scripts/` and `hooks/`.
 
 ## [0.5.0] — 2026-06-03
 
@@ -133,6 +151,8 @@ A suite of interactive flows built on **MCP elicitation** — the chat surface n
 - TypeScript MCP server, stdio transport
 - CI: lint, typecheck, tests, catalog-refresh workflow
 
-[Unreleased]: https://github.com/gyuch-an02/claude-omakase/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/gyuch-an02/claude-omakase/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/gyuch-an02/claude-omakase/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/gyuch-an02/claude-omakase/compare/v0.4.1...v0.5.0
 [0.2.0]: https://github.com/gyuch-an02/claude-omakase/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/gyuch-an02/claude-omakase/releases/tag/v0.1.0

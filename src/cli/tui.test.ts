@@ -5,7 +5,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { statusIcon, catalogCell, renderTable, tryOp } from "./tui.js";
+import { statusIcon, catalogCell, renderTable, clipName, tryOp } from "./tui.js";
 import type { SkillHealth } from "../tools/doctor.js";
 
 function health(overrides: Partial<SkillHealth> = {}): SkillHealth {
@@ -77,6 +77,23 @@ test("renderTable: header + divider + one row per skill", () => {
   assert.match(lines[0], /SKILL\.md/);
   assert.ok(lines[2].includes("alpha"));
   assert.ok(lines[3].includes("beta"));
+});
+
+test("renderTable: a very long id is truncated so it can't break column alignment", () => {
+  const longId = "summarize-github-pull-request-diff-and-promote";
+  const out = renderTable([health({ id: longId })]);
+  const row = out.split("\n")[2];
+  assert.doesNotMatch(row, /promote/, "the tail of the long id must be clipped off");
+  assert.match(row, /…/, "truncation is marked with an ellipsis");
+  // The clipped name must still leave the downstream columns intact.
+  assert.match(row, /✓/, "SKILL.md column survives next to a long id");
+});
+
+test("clipName: short ids pass through, long ids are ellipsized to the column width", () => {
+  assert.equal(clipName("alpha"), "alpha");
+  const clipped = clipName("x".repeat(40));
+  assert.equal(clipped.length, 22);
+  assert.ok(clipped.endsWith("…"));
 });
 
 test("renderTable: empty skill list still renders header + divider, no rows", () => {
