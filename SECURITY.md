@@ -14,6 +14,10 @@ We aim to acknowledge within **72 hours** and ship a fix or mitigation within **
 
 ## Threat model
 
+> For the full trust boundary — what runs automatically vs. requires a human, what
+> `verified: true` means, the auto-merge guardrails, and rollback — see
+> [`docs/TRUST.md`](docs/TRUST.md). The summary below is the security-report view.
+
 - **Malicious catalog entry → arbitrary code execution.** An attacker submits an adapter PR or `handpicked/` overlay whose `skill_files` source URL points at attacker-controlled content. Mitigation: every `verified: true` flag goes through human review; community entries display the source URL before install; the MCP server never auto-installs without explicit Claude→user approval.
 - **Skill file write outside the sandbox.** A bug in `installer/code-skills.ts` could write outside `~/.claude/skills/<id>/`. Mitigation: target paths are resolved and rejected if they escape the per-id directory. Adding to the write path requires tests.
 - **Profile / observation data exfiltration.** Mitigation: data stays on disk under `~/.local/share` and `~/.config`; the MCP server makes no outbound calls beyond the catalog refresh and skill file downloads.

@@ -6,15 +6,32 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  # Real work, run on every supported Node version. The package `engines` field
+  # declares `>=20`; publish.yml ships on 22 — so we must prove green on both.
+  checks:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["20", "22"]
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: "20"
-      - run: npm install --no-audit --no-fund
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run build
       - run: npm test
+
+  # Aggregate gate. Branch protection requires the `CI / build` check (see
+  # docs/automation.md); keeping a job literally named `build` preserves that
+  # required-check name while the matrix above does the real work. Goes green
+  # only when EVERY matrix leg passes.
+  build:
+    needs: checks
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "all CI matrix legs passed"
