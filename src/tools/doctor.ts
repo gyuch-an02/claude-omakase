@@ -81,6 +81,7 @@ function readSkillIds(root: string): Set<string> {
     readdirSync(root, { withFileTypes: true })
       .filter((entry) => entry.isDirectory())
       .map((entry) => entry.name)
+      .filter((id) => !id.startsWith("."))
       .filter((id) => !isInternalSkillId(id))
   );
 }
