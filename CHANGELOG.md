@@ -9,6 +9,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added
+- **AI-usage log back at `docs/ai-log.md`** — reverses the 0.5.0 removal below. The team submission guideline requires the AI-usage log to live in the product repo for review. Seeded as the merged/frozen log (sourced from the out-of-repo `ai_log/ai-log-frozen.md`), then kept current per PR via a **soft PR-template checklist item** — append a dated bullet entry when AI tools materially shaped the PR, skip otherwise. This is a reminder, **not** a CI gate: the `ai-log-check` workflow and the `CLAUDE.md` "Skill: ai-usage-log" section stay gone, so a missing entry never fails CI.
+
 ## [0.6.0] — 2026-06-04
 
 ### Added
