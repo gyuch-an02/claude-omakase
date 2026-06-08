@@ -16,5 +16,7 @@ docs/*
 !docs/demo-script.md
 !docs/distribution/
 !docs/distribution/*.md
+!docs/adr/
+!docs/adr/*.md
 .agents/
 demo.sh

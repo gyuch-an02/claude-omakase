@@ -20,9 +20,8 @@
  * Tunables: OMAKASE_SESSION_COOLDOWN_HOURS (default 24; set 0 to fire every start)
  */
 
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { homedir } from "node:os";
 import { join } from "node:path";
+import { readStdin, stateDir, loadJson, writeStateAtomic } from "./_shared.mjs";
 
 const cooldownHoursRaw = Number(process.env.OMAKASE_SESSION_COOLDOWN_HOURS);
 const cooldownHours = Number.isFinite(cooldownHoursRaw) ? Math.max(0, cooldownHoursRaw) : 24;
@@ -32,21 +31,9 @@ const COOLDOWN_MS = cooldownHours * 60 * 60 * 1000;
 // existing conversation is a continuation, not a fresh start.
 const FRESH_SOURCES = new Set(["startup", "clear"]);
 
-function readStdin() {
-  try {
-    return readFileSync(0, "utf8");
-  } catch {
-    return "";
-  }
-}
-
 function loadState(file) {
-  try {
-    const s = JSON.parse(readFileSync(file, "utf8"));
-    return { lastNudgeAt: Number(s.lastNudgeAt) || 0 };
-  } catch {
-    return { lastNudgeAt: 0 };
-  }
+  const s = loadJson(file, {});
+  return { lastNudgeAt: Number(s.lastNudgeAt) || 0 };
 }
 
 function main() {
@@ -61,8 +48,7 @@ function main() {
   if (!FRESH_SOURCES.has(source)) process.exit(0);
 
   const now = Date.now();
-  const dir = join(homedir(), ".claude", "omakase-state");
-  const file = join(dir, "session.json");
+  const file = join(stateDir(), "session.json");
   const state = loadState(file);
 
   // Cooldown: don't greet again within the window (unless cooldown is 0).
@@ -78,12 +64,7 @@ function main() {
     "the starter-pack checklist; install nothing without explicit approval.";
 
   state.lastNudgeAt = now;
-  try {
-    mkdirSync(dir, { recursive: true });
-    writeFileSync(file, JSON.stringify(state), "utf8");
-  } catch {
-    /* best-effort; still emit the nudge */
-  }
+  writeStateAtomic(file, state);
 
   process.stdout.write(
     JSON.stringify({

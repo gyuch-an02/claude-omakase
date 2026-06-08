@@ -398,7 +398,10 @@ async function assertPackageResolves(
     registry === "npm"
       ? `https://registry.npmjs.org/${packageName.replace("/", "%2F")}`
       : `https://pypi.org/pypi/${encodeURIComponent(packageName)}/json`;
-  const response = await fetch(url, { method: "HEAD" });
+  const response = await fetch(url, {
+    method: "HEAD",
+    signal: AbortSignal.timeout(15_000),
+  });
 
   if (!response.ok) {
     throw new Error(

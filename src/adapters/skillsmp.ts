@@ -82,7 +82,10 @@ export async function fetch(): Promise<Entry[]> {
 
 async function searchOnce(query: string, headers: Record<string, string>): Promise<SkillsmpHit[]> {
   const url = `${BASE}?q=${encodeURIComponent(query)}&limit=${PER_QUERY_LIMIT}`;
-  const res = await globalThis.fetch(url, { headers });
+  const res = await globalThis.fetch(url, {
+    signal: AbortSignal.timeout(20_000),
+    headers,
+  });
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}`);
   }

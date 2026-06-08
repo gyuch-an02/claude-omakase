@@ -19,14 +19,23 @@
  * State: ~/.claude/omakase-state/suggest.json. No network, no telemetry.
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
+import {
+  readStdin,
+  stateDir,
+  loadCatalogEntries,
+  loadJson,
+  writeStateAtomic,
+  cleanText,
+} from "./_shared.mjs";
 
 const THRESHOLD = Number(process.env.OMAKASE_SUGGEST_THRESHOLD || 5);
 const COOLDOWN = Number(process.env.OMAKASE_SUGGEST_COOLDOWN || 3); // prompts between suggestions
 const MIN_PROMPT_CHARS = 12;
+// Cap tracked sessions so suggest.json can't grow unbounded; env-tunable for tests.
+const MAX_SESSIONS = Number(process.env.OMAKASE_SUGGEST_MAX_SESSIONS || 200);
 
 // Words too generic to imply any particular skill.
 const STOP = new Set([
@@ -35,34 +44,6 @@ const STOP = new Set([
   "help", "want", "need", "make", "get", "use", "have", "be", "will", "should",
   "claude", "code", "skill", "skills", "omakase", "file", "files",
 ]);
-
-function readStdin() {
-  try {
-    return readFileSync(0, "utf8");
-  } catch {
-    return "";
-  }
-}
-
-function catalogPath() {
-  const base = process.env["XDG_CACHE_HOME"] ?? join(homedir(), ".cache");
-  const cached = join(base, "claude-omakase", "catalog.json");
-  if (existsSync(cached)) return cached;
-  // Fallback: catalog.json bundled next to the repo/package root (../ from hooks/).
-  const bundled = join(dirname(fileURLToPath(import.meta.url)), "..", "catalog.json");
-  return existsSync(bundled) ? bundled : null;
-}
-
-function loadCatalog() {
-  const p = catalogPath();
-  if (!p) return [];
-  try {
-    const data = JSON.parse(readFileSync(p, "utf8"));
-    return Array.isArray(data.entries) ? data.entries : [];
-  } catch {
-    return [];
-  }
-}
 
 function installedIds() {
   const dir = process.env["CLAUDE_OMAKASE_SKILLS_DIR"] || join(homedir(), ".claude", "skills");
@@ -117,12 +98,15 @@ function scoreEntry(entry, tokens) {
   return { score, reasons: [...new Set(reasons)] };
 }
 
-function loadState(file) {
-  try {
-    return JSON.parse(readFileSync(file, "utf8"));
-  } catch {
-    return { sessions: {} };
-  }
+// Evict the least-recently-touched sessions once the map exceeds MAX_SESSIONS,
+// so a long-lived suggest.json can't accumulate one entry per session forever.
+function pruneSessions(state) {
+  const ids = Object.keys(state.sessions);
+  if (ids.length <= MAX_SESSIONS) return;
+  ids
+    .sort((a, b) => (state.sessions[a].ts ?? 0) - (state.sessions[b].ts ?? 0))
+    .slice(0, ids.length - MAX_SESSIONS)
+    .forEach((id) => delete state.sessions[id]);
 }
 
 function main() {
@@ -139,17 +123,18 @@ function main() {
   const tokens = tokenize(prompt);
   if (tokens.size === 0) process.exit(0);
 
-  const catalog = loadCatalog();
+  const catalog = loadCatalogEntries();
   if (catalog.length === 0) process.exit(0);
 
   const installed = installedIds();
   const sessionId = input.session_id || "default";
-  const dir = join(homedir(), ".claude", "omakase-state");
-  const file = join(dir, "suggest.json");
+  const file = join(stateDir(), "suggest.json");
 
-  const state = loadState(file);
+  const state = loadJson(file, { sessions: {} });
+  if (!state.sessions || typeof state.sessions !== "object") state.sessions = {};
   const sess = (state.sessions[sessionId] ??= { suggested: [], sincelast: COOLDOWN });
   sess.sincelast = (sess.sincelast ?? 0) + 1;
+  sess.ts = Date.now(); // touch for LRU pruning
 
   // Cooldown: only consider suggesting once every COOLDOWN prompts.
   let context = null;
@@ -168,21 +153,19 @@ function main() {
       sess.sincelast = 0;
       const e = best.entry;
       const why = best.reasons.slice(0, 3).join(", ");
+      const name = cleanText(e.name);
+      const description = cleanText(e.description);
       context =
         `[omakase suggest] The user's request looks related to: ${why}. ` +
-        `An installable skill matches and is NOT yet installed: "${e.name}" (id: ${e.id}) — ${e.description} ` +
+        `An installable skill matches and is NOT yet installed: "${name}" (id: ${e.id}) — ${description} ` +
         `If it genuinely fits what they're doing right now, mention it in ONE sentence with WHY and ask if they ` +
         `want it installed (omakase.install_skill, ask first). If it does not actually fit, say nothing and carry on. ` +
         `Do not show a list; this is a single optional suggestion.`;
     }
   }
 
-  try {
-    mkdirSync(dir, { recursive: true });
-    writeFileSync(file, JSON.stringify(state), "utf8");
-  } catch {
-    /* best-effort */
-  }
+  pruneSessions(state);
+  writeStateAtomic(file, state);
 
   if (context) {
     process.stdout.write(

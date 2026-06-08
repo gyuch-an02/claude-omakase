@@ -8,6 +8,11 @@ import { basename, dirname, join } from "node:path";
 import { claudeCodeSkillsDir } from "../paths.js";
 import type { Entry } from "../types.js";
 
+// Bound each skill-file download so a slow or hostile source can't hang the
+// install or exhaust memory.
+const DOWNLOAD_TIMEOUT_MS = 30_000;
+const MAX_SKILL_FILE_BYTES = 5 * 1024 * 1024; // 5 MiB per file
+
 export async function install(
   entry: Entry,
   options: { force?: boolean } = {}
@@ -58,11 +63,7 @@ SKILL.md content from the upstream source:
       }
       const target = join(stage, file.target);
       mkdirSync(dirname(target), { recursive: true });
-      const res = await fetch(file.source);
-      if (!res.ok) {
-        throw new Error(`fetch ${file.source} failed: ${res.status}`);
-      }
-      const buf = Buffer.from(await res.arrayBuffer());
+      const buf = await downloadCapped(file.source);
       await writeFile(target, buf);
     }
 
@@ -80,18 +81,68 @@ export function uninstall(id: string): void {
   if (existsSync(dir)) rmSync(dir, { recursive: true, force: true });
 }
 
+// Download a skill file with a hard timeout and a size cap, so a hung endpoint
+// can't stall the install and a hostile/huge body can't exhaust memory. Reads the
+// body incrementally and aborts the moment it exceeds the cap.
+async function downloadCapped(url: string): Promise<Buffer> {
+  const res = await fetch(url, { signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS) });
+  if (!res.ok) {
+    throw new Error(`fetch ${url} failed: ${res.status}`);
+  }
+  const declared = Number(res.headers.get("content-length"));
+  if (Number.isFinite(declared) && declared > MAX_SKILL_FILE_BYTES) {
+    throw new Error(`skill file too large (${declared} bytes > ${MAX_SKILL_FILE_BYTES}): ${url}`);
+  }
+  if (!res.body) {
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (buf.byteLength > MAX_SKILL_FILE_BYTES) {
+      throw new Error(`skill file too large (> ${MAX_SKILL_FILE_BYTES} bytes): ${url}`);
+    }
+    return buf;
+  }
+  const chunks: Buffer[] = [];
+  let total = 0;
+  const reader = res.body.getReader();
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) {
+      total += value.byteLength;
+      if (total > MAX_SKILL_FILE_BYTES) {
+        await reader.cancel();
+        throw new Error(`skill file too large (> ${MAX_SKILL_FILE_BYTES} bytes): ${url}`);
+      }
+      chunks.push(Buffer.from(value));
+    }
+  }
+  return Buffer.concat(chunks);
+}
+
 // A skill id becomes a path segment under ~/.claude/skills/ and is fed to
 // mkdir/rm. A scraped or remote-overridden catalog can carry a hostile id, so
-// reject anything that could escape the skills root (absolute, backslash, or a
-// ".." segment) before it reaches the filesystem. install-skill/update-skill
-// don't validate the id themselves, so this is the single choke point.
+// reject anything that could escape the skills root before it reaches the
+// filesystem: absolute paths, backslashes, and any empty / "." / ".." path
+// segment. The "." case is the dangerous one — join(root, ".") === root, so an
+// id of "." would make uninstall(".") delete the ENTIRE skills directory.
+// install-skill/update-skill don't validate the id themselves, so this is the
+// single choke point.
+// True when `id` is safe to use as a path under the skills root. Rejects
+// absolute paths, backslashes, and any empty / "." / ".." segment. Exported so
+// every destructive entry point (install, uninstall, and the uninstall_skill
+// MCP tool) shares ONE definition instead of drifting copies — the "." case
+// once slipped through a duplicate validator and could delete the whole root.
+export function isSafeId(id: string): boolean {
+  const segments = id.split("/");
+  return (
+    id.length > 0 &&
+    !id.startsWith("/") &&
+    !id.includes("\\") &&
+    !segments.some((s) => s === "" || s === "." || s === "..")
+  );
+}
+
 function assertSafeId(id: string): void {
-  if (
-    id.length === 0 ||
-    id.startsWith("/") ||
-    id.includes("\\") ||
-    id.split("/").includes("..")
-  ) {
+  if (!isSafeId(id)) {
     throw new Error(`unsafe skill id: ${JSON.stringify(id)}`);
   }
 }

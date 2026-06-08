@@ -3,6 +3,13 @@
 
 export type EntryKind = "claude_skill" | "claude_code_skill";
 
+// Provenance trust of the source an entry came from. Distinct from `verified`,
+// which means a HUMAN audited the entry (handpicked overlay). `source_trust:
+// "official"` means the entry came from an official/first-party source (e.g. the
+// Anthropic MCP reference repo) but was NOT human-audited. Undefined = community.
+// See docs/adr/0003-source-trust-vs-verified.md.
+export type SourceTrust = "official" | "community";
+
 export type UserParamType =
   | "directory_picker"
   | "file_picker"
@@ -55,6 +62,7 @@ export interface Entry {
   category?: string;
   tags: string[];
   verified: boolean;
+  source_trust?: SourceTrust;
   author: { name: string; url?: string };
   homepage?: string;
   version?: string;

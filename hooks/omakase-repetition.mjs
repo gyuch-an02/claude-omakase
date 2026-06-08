@@ -47,10 +47,14 @@
  *           OMAKASE_REPETITION_WINDOW_DAYS (default 14)
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
-import { homedir } from "node:os";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import {
+  readStdin,
+  stateDir,
+  catalogPath,
+  writeStateAtomic,
+} from "./_shared.mjs";
 
 const THRESHOLD = Number(process.env.OMAKASE_REPETITION_THRESHOLD || 3);
 const WINDOW_MS = Number(process.env.OMAKASE_REPETITION_WINDOW_DAYS || 14) * 24 * 60 * 60 * 1000;
@@ -134,14 +138,6 @@ function editSignature(toolInput) {
   return `edit:${base}`;
 }
 
-function readStdin() {
-  try {
-    return readFileSync(0, "utf8");
-  } catch {
-    return "";
-  }
-}
-
 /** Classify a single command segment into a coarse signature, or null. */
 function classifyOne(segment) {
   // Strip rtk proxy/hook wrappers so `rtk git status` counts as `git status`.
@@ -205,16 +201,8 @@ function trailingRepeats(seq, k) {
 }
 
 // Catalog gate: if there is no catalog to search, a nudge to call find_skill
-// would return nothing — so stay silent rather than burn a turn. Mirrors the
-// path omakase-suggest.mjs uses (XDG cache first, bundled package copy second).
-function catalogPath() {
-  const base = process.env["XDG_CACHE_HOME"] ?? join(homedir(), ".cache");
-  const cached = join(base, "claude-omakase", "catalog.json");
-  if (existsSync(cached)) return cached;
-  const bundled = join(dirname(fileURLToPath(import.meta.url)), "..", "catalog.json");
-  return existsSync(bundled) ? bundled : null;
-}
-
+// would return nothing — so stay silent rather than burn a turn. Uses the shared
+// catalogPath (XDG cache first, bundled package copy second).
 function catalogHasEntries() {
   const p = catalogPath();
   if (!p) return false;
@@ -261,13 +249,7 @@ function main() {
   const sessionId = String(input.session_id || "default");
 
   const now = Date.now();
-  const dir = join(homedir(), ".claude", "omakase-state");
-  const file = join(dir, "repetition.json");
-  try {
-    mkdirSync(dir, { recursive: true });
-  } catch {
-    process.exit(0);
-  }
+  const file = join(stateDir(), "repetition.json");
 
   const state = loadState(file);
 
@@ -361,7 +343,7 @@ function main() {
   }
 
   try {
-    writeFileSync(file, JSON.stringify(state), "utf8");
+    writeStateAtomic(file, state);
   } catch {
     /* best-effort */
   }

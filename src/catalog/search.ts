@@ -8,8 +8,9 @@
 //   tag prefix match          →   30
 //   category match            →   20
 //
-// Multi-token queries sum per token. Verified entries get a +25 nudge as a
-// tiebreaker, NOT a way to outrank a clear match.
+// Multi-token queries sum per token. Trust adds a small tiebreaker, NOT a way to
+// outrank a clear match: verified (human-audited) +25, else source_trust
+// "official" (first-party provenance) +10.
 
 import type { Entry } from "../types.js";
 
@@ -79,7 +80,12 @@ function scoreEntry(entry: Entry, tokens: string[], exactQuery: string): { score
     }
   }
 
-  if (score > 0 && entry.verified) score += 25;
+  // Trust tiebreakers (never enough to outrank a real keyword match):
+  // human-audited > official-provenance > community.
+  if (score > 0) {
+    if (entry.verified) score += 25;
+    else if (entry.source_trust === "official") score += 10;
+  }
   return { score, reasons };
 }
 

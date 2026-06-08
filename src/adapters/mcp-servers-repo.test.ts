@@ -29,7 +29,9 @@ test("parseReadme: extracts table rows", () => {
   const fs = entries.find((e) => e.name === "Filesystem");
   assert.ok(fs, "expected Filesystem entry");
   assert.equal(fs!.type, "claude_code_skill");
-  assert.equal(fs!.verified, true);
+  // Automated scrape of an official source: official provenance, NOT human-audited.
+  assert.equal(fs!.verified, false);
+  assert.equal(fs!.source_trust, "official");
   assert.ok(fs!.install.skill_files && fs!.install.skill_files.length > 0);
   assert.ok(
     fs!.install.skill_files![0]!.source.includes("filesystem/SKILL.md"),
@@ -66,7 +68,8 @@ test("parseReadme: community section entries not duplicated", () => {
   const entries = parseReadme(SAMPLE_README);
   const weather = entries.find((e) => e.name === "Weather");
   assert.ok(weather);
-  assert.equal(weather!.verified, true);
+  assert.equal(weather!.verified, false);
+  assert.equal(weather!.source_trust, "official");
   const weatherCount = entries.filter((e) => e.name === "Weather").length;
   assert.equal(weatherCount, 1, "no duplicates");
 });

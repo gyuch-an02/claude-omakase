@@ -72,25 +72,29 @@ if (entriesChanged) {
 // ---------------------------------------------------------------------------
 
 async function probeEntries(entries) {
-  const withUrls = entries.filter(
-    (e) => e.install?.skill_files?.length > 0
+  // Probe EVERY skill_file, not just the first — a skill whose SKILL.md resolves
+  // but whose later assets 404 is still broken at install time. Flatten to one
+  // probe per (entry, file).
+  const targets = [];
+  for (const e of entries) {
+    for (const f of e.install?.skill_files ?? []) {
+      if (f?.source) targets.push({ id: e.id, url: f.source, target: f.target });
+    }
+  }
+  const withUrls = new Set(targets.map((t) => t.id));
+  console.log(
+    `  ${withUrls.size} entries / ${targets.length} skill_files to probe`
   );
-  console.log(`  ${withUrls.length} entries have skill_files to probe`);
 
   const CONCURRENCY = 20;
   let ok = 0;
   let dead = 0;
   const deadList = [];
 
-  const chunks = [];
-  for (let i = 0; i < withUrls.length; i += CONCURRENCY) {
-    chunks.push(withUrls.slice(i, i + CONCURRENCY));
-  }
-
-  for (const chunk of chunks) {
+  for (let i = 0; i < targets.length; i += CONCURRENCY) {
+    const chunk = targets.slice(i, i + CONCURRENCY);
     await Promise.all(
-      chunk.map(async (entry) => {
-        const url = entry.install.skill_files[0].source;
+      chunk.map(async ({ id, url, target }) => {
         try {
           const res = await fetch(url, {
             method: "HEAD",
@@ -101,23 +105,25 @@ async function probeEntries(entries) {
             ok++;
           } else {
             dead++;
-            deadList.push({ id: entry.id, url, status: res.status });
+            deadList.push({ id, url, target, status: res.status });
           }
         } catch {
           dead++;
-          deadList.push({ id: entry.id, url, status: "unreachable" });
+          deadList.push({ id, url, target, status: "unreachable" });
         }
       })
     );
   }
 
+  const deadEntries = new Set(deadList.map((d) => d.id));
   console.log(`\nHealth report:`);
-  console.log(`  ✅ reachable: ${ok}`);
-  console.log(`  ❌ dead/unreachable: ${dead}`);
-  if (deadList.length > 0) {
-    console.log(`\nDead entries (first 20):`);
+  console.log(`  ✅ reachable files: ${ok}`);
+  console.log(`  ❌ dead/unreachable files: ${dead}`);
+  if (deadEntries.size > 0) {
+    console.log(`  ⚠️  ${deadEntries.size} entr${deadEntries.size === 1 ? "y has" : "ies have"} at least one dead file`);
+    console.log(`\nDead files (first 20):`);
     for (const d of deadList.slice(0, 20)) {
-      console.log(`  ${d.id}: ${d.status} — ${d.url}`);
+      console.log(`  ${d.id} [${d.target}]: ${d.status} — ${d.url}`);
     }
   }
 }

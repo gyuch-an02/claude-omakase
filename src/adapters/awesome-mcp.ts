@@ -18,6 +18,7 @@ const README_URL =
 
 export async function fetch(): Promise<Entry[]> {
   const res = await globalThis.fetch(README_URL, {
+    signal: AbortSignal.timeout(20_000),
     headers: {
       Accept: "text/plain",
       "User-Agent":
