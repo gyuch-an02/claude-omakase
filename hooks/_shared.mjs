@@ -53,6 +53,19 @@ export function loadCatalogEntries() {
   }
 }
 
+/**
+ * Skill ids the user permanently declined ("never recommend again"). Written by
+ * the MCP server's offer_skill tool to $XDG_DATA_HOME/claude-omakase/declined.json
+ * (~/.local/share by default — a DIFFERENT root than stateDir()). Hooks must
+ * honor it too: a proactive nudge for an explicitly declined skill breaks the
+ * "never" promise the user was given.
+ */
+export function declinedIds() {
+  const base = process.env["XDG_DATA_HOME"] ?? join(homedir(), ".local", "share");
+  const data = loadJson(join(base, "claude-omakase", "declined.json"), null);
+  return new Set(Array.isArray(data?.declined) ? data.declined : []);
+}
+
 /** Read + JSON.parse a state file, returning `fallback` on any failure. */
 export function loadJson(file, fallback) {
   try {

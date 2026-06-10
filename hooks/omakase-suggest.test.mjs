@@ -97,6 +97,37 @@ test("an already-installed skill is never suggested", () => {
   assert.equal(run("build a python cli tool", { home, cache }).stdout.trim(), "");
 });
 
+test("a permanently declined skill ('never') is not suggested", () => {
+  const home = freshHome();
+  const cache = makeCache([ENTRY]);
+  // offer_skill writes declines to $XDG_DATA_HOME/claude-omakase/declined.json.
+  const data = mkdtempSync(join(tmpdir(), "omk-data-"));
+  mkdirSync(join(data, "claude-omakase"), { recursive: true });
+  writeFileSync(
+    join(data, "claude-omakase", "declined.json"),
+    JSON.stringify({ declined: ["python-cli"] })
+  );
+  const env = { XDG_DATA_HOME: data };
+
+  assert.equal(
+    run("build a python cli tool", { home, cache, env }).stdout.trim(),
+    "",
+    "declined skill must stay silent"
+  );
+
+  // Sanity: same prompt with an EMPTY data dir does suggest.
+  const emptyData = mkdtempSync(join(tmpdir(), "omk-data-"));
+  assert.notEqual(
+    run("build a python cli tool", {
+      home: freshHome(),
+      cache,
+      env: { XDG_DATA_HOME: emptyData },
+    }).stdout.trim(),
+    "",
+    "control: suggests when not declined"
+  );
+});
+
 test("control characters in catalog text are stripped from the nudge", () => {
   const home = freshHome();
   const cache = makeCache([{ ...ENTRY, name: "Python\nCLI\tHelper" }]);

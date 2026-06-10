@@ -11,7 +11,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseCatalogArgs } from "./catalog-options.mjs";
-import { mergeSelectedAdapters } from "./catalog-merge.mjs";
+import { mergeSelectedAdapters, carryOverEnrichment } from "./catalog-merge.mjs";
 import { loadDotEnv } from "./enrich-catalog.mjs";
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -46,10 +46,13 @@ try {
 const outPath = join(repoRoot, "catalog.json");
 const previous = await readPreviousCatalog(outPath);
 const previousEntries = Array.isArray(previous?.entries) ? previous.entries : null;
-const entries =
+const merged =
   adapterNames.length > 0 && previousEntries
     ? mergeSelectedAdapters(previousEntries, refreshedEntries, adapterNames)
     : refreshedEntries;
+// Adapters never emit search_terms (LLM enrichment is a separate maintainer
+// step) — restore the previous catalog's terms so a refresh can't wipe them.
+const entries = carryOverEnrichment(previousEntries, merged);
 
 let finalEntries = entries;
 if (probe) {

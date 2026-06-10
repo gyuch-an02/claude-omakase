@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
 import { load } from "../catalog/cache.js";
@@ -10,6 +10,8 @@ export interface SkillHealth {
   id: string;
   skill_dir: string;
   skill_md_exists: boolean;
+  /** SKILL.md exists but is zero bytes — Claude Code silently ignores it. */
+  skill_md_empty: boolean;
   receipt_exists: boolean;
   in_catalog: boolean;
   catalog_version?: string;
@@ -52,18 +54,23 @@ export async function handle(): Promise<DoctorResult> {
   const skills = [...ids].sort().map((id): SkillHealth => {
     const skillDir = join(skillsRoot, id);
     const catalogEntry = catalogById.get(id);
+    const skillMdPath = join(skillDir, "SKILL.md");
+    const skillMdExists = existsSync(skillMdPath);
 
     return {
       id,
       skill_dir: skillDir,
-      skill_md_exists: existsSync(join(skillDir, "SKILL.md")),
+      skill_md_exists: skillMdExists,
+      skill_md_empty: skillMdExists && skillMdSize(skillMdPath) === 0,
       receipt_exists: existsSync(join(receiptsRoot, `${id}.json`)),
       in_catalog: catalogEntry !== undefined,
       catalog_version: catalogEntry?.version,
       installed_version: receipts.get(id)?.source_version,
     };
   });
-  const healthy = skills.filter((skill) => skill.skill_md_exists && skill.receipt_exists).length;
+  const healthy = skills.filter(
+    (skill) => skill.skill_md_exists && !skill.skill_md_empty && skill.receipt_exists
+  ).length;
   const issues = skills.length - healthy;
 
   return {
@@ -73,6 +80,16 @@ export async function handle(): Promise<DoctorResult> {
     skills,
     summary: `${skills.length} skills checked. ${healthy} healthy. ${issues} issues.`,
   };
+}
+
+// statSync can race against a concurrent uninstall (exists check passed, file
+// gone by stat) — treat that as size 0 rather than crashing the health check.
+function skillMdSize(path: string): number {
+  try {
+    return statSync(path).size;
+  } catch {
+    return 0;
+  }
 }
 
 function readSkillIds(root: string): Set<string> {

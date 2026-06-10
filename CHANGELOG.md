@@ -7,6 +7,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
+## [Unreleased]
+
+### Fixed
+- **The proactive suggest hook honors "never recommend again".** `offer_skill`'s permanent declines (`declined.json`) were excluded by `find_skill`/`recommend_skills` but NOT by the `UserPromptSubmit` hook — a declined skill kept being re-suggested once per session on every matching prompt. The hook now reads the decline list (`$XDG_DATA_HOME/claude-omakase/declined.json`) and skips those ids.
+- **Catalog refresh no longer wipes LLM enrichment.** `enrich-catalog.mjs` writes `search_terms` into catalog.json, but adapters never emit that field — so every full `build:catalog` (including the daily CI refresh) silently dropped all enrichment. `build-catalog.mjs` now carries `search_terms` forward from the previous catalog by id (a refreshed entry with its own terms still wins).
+- **`doctor_skills` flags empty SKILL.md files.** A zero-byte `SKILL.md` (truncated download, interrupted write) counted as healthy even though Claude Code ignores it. Doctor now reports `skill_md_empty` and excludes such skills from the healthy count; the TUI shows `✗ empty`.
+
+### Added
+- **TUI: install from catalog.** `claude-omakase tui` gains an "Install skill(s) from catalog (search)" action — keyword search through the same ranking as `find_skill` (declined skills excluded), multi-select, per-skill failure isolation. The TUI now covers the full lifecycle (install/update/remove/health) instead of only the second half.
+
 ## [0.7.1] — 2026-06-11
 
 ### Fixed

@@ -13,6 +13,7 @@ function health(overrides: Partial<SkillHealth> = {}): SkillHealth {
     id: "demo-skill",
     skill_dir: "/skills/demo-skill",
     skill_md_exists: true,
+    skill_md_empty: false,
     receipt_exists: true,
     in_catalog: true,
     ...overrides,
@@ -41,6 +42,15 @@ test("statusIcon: an available update (version drift) → 🔄, taking priority 
 
 test("statusIcon: present SKILL.md but no receipt → warning (incomplete install)", () => {
   assert.equal(statusIcon(health({ receipt_exists: false })), "⚠️ ");
+});
+
+test("statusIcon: empty SKILL.md → warning even with receipt and catalog match", () => {
+  assert.equal(statusIcon(health({ skill_md_empty: true })), "⚠️ ");
+});
+
+test("renderTable: an empty SKILL.md is marked '✗ empty', not '✓'", () => {
+  const out = renderTable([health({ id: "hollow", skill_md_empty: true })]);
+  assert.match(out, /✗ empty/);
 });
 
 test("statusIcon: equal versions do not trigger the update glyph", () => {
