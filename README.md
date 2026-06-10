@@ -209,16 +209,18 @@ It shows a health dashboard for every installed skill and lets you act on them:
 │
 ◇  What would you like to do?
 │  ● Re-run health check
+│  ○ Install skill(s) from catalog (search)
 │  ○ Update skill(s) from catalog
 │  ○ Remove skill(s)
 │  ○ Quit
 ```
 
-- **Health check** — flags skills with a missing `SKILL.md`, a missing install receipt, or a newer version available in the catalog.
+- **Health check** — flags skills with a missing or empty `SKILL.md`, a missing install receipt, or a newer version available in the catalog.
+- **Install** — search the catalog by keywords (same ranking as `find_skill`) and install picked matches (multi-select).
 - **Update** — re-downloads selected skills' files from the catalog (multi-select).
 - **Remove** — deletes selected skills and their receipts, with a confirmation prompt.
 
-The same operations are available to Claude as the `doctor_skills`, `update_skill`, and `uninstall_skill` MCP tools.
+The same operations are available to Claude as the `find_skill`/`install_skill`, `doctor_skills`, `update_skill`, and `uninstall_skill` MCP tools.
 
 ## Proactive hooks (optional)
 

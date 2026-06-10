@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mergeSelectedAdapters } from "./catalog-merge.mjs";
+import { mergeSelectedAdapters, carryOverEnrichment } from "./catalog-merge.mjs";
 
 test("mergeSelectedAdapters: default mode returns refreshed entries", () => {
   const refreshed = [entry("new", "handpicked")];
@@ -34,6 +34,31 @@ test("mergeSelectedAdapters: duplicate id across adapters keeps the preserved en
     ["fresh", "shared"]
   );
   assert.equal(merged.find((e) => e.id === "shared").source.adapter, "handpicked");
+});
+
+test("carryOverEnrichment: a full refresh restores previous search_terms", () => {
+  const previous = [
+    { ...entry("enriched", "skillsmp"), search_terms: ["crawl", "spider"] },
+    entry("plain", "skillsmp"),
+  ];
+  // Fresh adapter output never carries search_terms.
+  const refreshed = [entry("enriched", "skillsmp"), entry("plain", "skillsmp")];
+
+  const out = carryOverEnrichment(previous, refreshed);
+  assert.deepEqual(out.find((e) => e.id === "enriched").search_terms, ["crawl", "spider"]);
+  assert.equal(out.find((e) => e.id === "plain").search_terms, undefined);
+});
+
+test("carryOverEnrichment: refreshed entry's own terms win over previous", () => {
+  const previous = [{ ...entry("x", "skillsmp"), search_terms: ["old"] }];
+  const refreshed = [{ ...entry("x", "skillsmp"), search_terms: ["new"] }];
+  assert.deepEqual(carryOverEnrichment(previous, refreshed)[0].search_terms, ["new"]);
+});
+
+test("carryOverEnrichment: no previous catalog is a no-op", () => {
+  const refreshed = [entry("x", "skillsmp")];
+  assert.equal(carryOverEnrichment(null, refreshed), refreshed);
+  assert.equal(carryOverEnrichment([], refreshed), refreshed);
 });
 
 function entry(id, adapter) {

@@ -29,6 +29,7 @@ import {
   loadJson,
   writeStateAtomic,
   cleanText,
+  declinedIds,
 } from "./_shared.mjs";
 // Same relevance engine the MCP find_skill / recommend tools use, so the skill
 // this hook suggests automatically matches what an explicit search would pick —
@@ -82,6 +83,9 @@ function main() {
   if (catalog.length === 0) process.exit(0);
 
   const installed = installedIds();
+  // Skills the user told offer_skill to NEVER suggest again. find_skill and
+  // recommend_skills already exclude these; the proactive hook must too.
+  const declined = declinedIds();
   const sessionId = input.session_id || "default";
   const file = join(stateDir(), "suggest.json");
 
@@ -101,6 +105,7 @@ function main() {
     for (const r of rank(catalog, prompt)) {
       if (r.score < THRESHOLD) break; // sorted desc — nothing below clears it
       if (installed.has(r.entry.id)) continue;
+      if (declined.has(r.entry.id)) continue;
       if (sess.suggested.includes(r.entry.id)) continue;
       best = r;
       break;
