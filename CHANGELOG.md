@@ -7,7 +7,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
-## [Unreleased]
+## [0.7.2] — 2026-06-11
 
 ### Fixed
 - **The proactive suggest hook honors "never recommend again".** `offer_skill`'s permanent declines (`declined.json`) were excluded by `find_skill`/`recommend_skills` but NOT by the `UserPromptSubmit` hook — a declined skill kept being re-suggested once per session on every matching prompt. The hook now reads the decline list (`$XDG_DATA_HOME/claude-omakase/declined.json`) and skips those ids.
