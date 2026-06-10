@@ -14,7 +14,7 @@
   <a href="https://www.npmjs.com/package/claude-omakase"><img src="https://img.shields.io/npm/v/claude-omakase.svg" alt="npm version"></a>
   <a href="https://github.com/gyuch-an02/claude-omakase/actions/workflows/ci.yml"><img src="https://github.com/gyuch-an02/claude-omakase/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
-  <img src="https://img.shields.io/badge/skills-400%2B-ff6b6b.svg" alt="400+ skills">
+  <img src="https://img.shields.io/badge/skills-daily_catalog-ff6b6b.svg" alt="Daily skill catalog">
   <img src="https://img.shields.io/badge/MCP-stdio-blueviolet.svg" alt="MCP stdio">
 </p>
 
@@ -37,11 +37,10 @@
                                            │ fetched at build time
                                            ▼
    ┌─────────────────────────────────────────────────┐
-   │ Federated catalog (400+ skills)                 │
+   │ Daily federated catalog                         │
    │ ├── handpicked/        verified seeds + overlay │
-   │ ├── mcp-servers-repo   Anthropic reference      │
-   │ ├── awesome-mcp        community list           │
-   │ └── skillsmp           public marketplace       │
+   │ ├── skillsmp           public marketplace       │
+   │ └── github-skills      GitHub SKILL.md search   │
    └─────────────────────────────────────────────────┘
 ```
 
@@ -257,14 +256,13 @@ Tunable via env vars: `OMAKASE_SESSION_COOLDOWN_HOURS` (default 24; set `0` to g
 
 ## Catalog
 
-The catalog is federated from multiple sources at build time. Nothing is hand-curated — adapters generate entries, and a daily CI job opens a PR if the catalog drifts.
+The catalog is federated from multiple sources in CI. Adapters generate entries, and a daily CI job opens a PR if the committed catalog drifts. Runtime serving reads the committed/cached catalog; it does not scrape upstream sources on the user's machine.
 
 | Adapter | Source | Notes |
 |---|---|---|
 | `handpicked` | `handpicked/*.json` in this repo | Manually audited, `verified: true` |
-| `mcp-servers-repo` | [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers) | Anthropic reference servers |
-| `awesome-mcp` | [punkpeye/awesome-mcp-servers](https://github.com/punkpeye/awesome-mcp-servers) | Community list |
-| `skillsmp` | [skillsmp.com](https://skillsmp.com) | Public marketplace |
+| `skillsmp` | [skillsmp.com](https://skillsmp.com) | Public marketplace, expanded daily in CI via category + intent seeds |
+| `github-skills` | GitHub code search | Public `SKILL.md` files, requires `GITHUB_TOKEN` during catalog builds |
 
 Want to add a source? See `src/adapters/README.md` and run:
 
@@ -281,9 +279,9 @@ Everything Omakase writes stays on your machine:
 | `~/.claude/skills/<id>/` | Installed skill files |
 | `~/.config/claude-omakase/profile.json` | Your profile (role, languages, tools) |
 | `~/.local/share/claude-omakase/installed/` | Install receipts |
-| `~/.cache/claude-omakase/catalog.json` | Cached catalog (refreshed every 6h) |
+| `~/.cache/claude-omakase/catalog.json` | Cached remote catalog, when `CLAUDE_OMAKASE_CATALOG_URL` is configured |
 
-No telemetry. No accounts. Outbound calls happen only for catalog refresh and skill file downloads (when you approve an install).
+No telemetry. No accounts. Outbound calls happen only for configured remote catalog refresh and skill file downloads (when you approve an install).
 
 ## Trust & safety
 

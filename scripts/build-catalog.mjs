@@ -7,12 +7,25 @@
 //   node scripts/build-catalog.mjs --adapter handpicked
 
 import { readFile, writeFile } from "node:fs/promises";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseCatalogArgs } from "./catalog-options.mjs";
 import { mergeSelectedAdapters } from "./catalog-merge.mjs";
+import { loadDotEnv } from "./enrich-catalog.mjs";
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
+
+// Load .env (gitignored) so a maintainer can keep CLAUDE_OMAKASE_SKILLSMP_TOKEN
+// / GITHUB_TOKEN there and have adapters pick them up — they read process.env.
+// Real env vars win. (CI passes tokens as real env, so this is a no-op there.)
+const envPath = join(repoRoot, ".env");
+if (existsSync(envPath)) {
+  for (const [k, v] of Object.entries(loadDotEnv(readFileSync(envPath, "utf8")))) {
+    if (process.env[k] === undefined) process.env[k] = v;
+  }
+}
+
 const { probe, adapterNames } = parseCatalogArgs(process.argv.slice(2));
 
 // Build the TS first so we can import adapter logic from dist/.
@@ -38,9 +51,10 @@ const entries =
     ? mergeSelectedAdapters(previousEntries, refreshedEntries, adapterNames)
     : refreshedEntries;
 
+let finalEntries = entries;
 if (probe) {
   console.log(`\nProbing skill_files URLs (${entries.length} entries) …`);
-  await probeEntries(entries);
+  finalEntries = await probeEntries(entries);
 }
 
 const previousGeneratedAtValid = typeof previous?.generated_at === "string";
@@ -50,8 +64,8 @@ const entriesChanged =
   !previousEntries ||
   !previousGeneratedAtValid ||
   JSON.stringify(stableEntries(previousEntries)) !==
-    JSON.stringify(stableEntries(entries));
-const catalogEntries = entriesChanged ? entries : previousEntries;
+    JSON.stringify(stableEntries(finalEntries));
+const catalogEntries = entriesChanged ? finalEntries : previousEntries;
 
 const catalog = {
   version: 1,
@@ -62,35 +76,39 @@ const catalog = {
 await writeFile(outPath, JSON.stringify(catalog, null, 2) + "\n");
 
 if (entriesChanged) {
-  console.log(`Wrote ${entries.length} entries to ${outPath}`);
+  console.log(`Wrote ${finalEntries.length} entries to ${outPath}`);
 } else {
   console.log(
-    `Catalog entries unchanged; preserved generated_at and wrote ${entries.length} entries to ${outPath}`
+    `Catalog entries unchanged; preserved generated_at and wrote ${finalEntries.length} entries to ${outPath}`
   );
 }
 
 // ---------------------------------------------------------------------------
 
 async function probeEntries(entries) {
-  const withUrls = entries.filter(
-    (e) => e.install?.skill_files?.length > 0
+  // Probe EVERY skill_file, not just the first — a skill whose SKILL.md resolves
+  // but whose later assets 404 is still broken at install time. Flatten to one
+  // probe per (entry, file).
+  const targets = [];
+  for (const e of entries) {
+    for (const f of e.install?.skill_files ?? []) {
+      if (f?.source) targets.push({ id: e.id, url: f.source, target: f.target });
+    }
+  }
+  const withUrls = new Set(targets.map((t) => t.id));
+  console.log(
+    `  ${withUrls.size} entries / ${targets.length} skill_files to probe`
   );
-  console.log(`  ${withUrls.length} entries have skill_files to probe`);
 
   const CONCURRENCY = 20;
   let ok = 0;
   let dead = 0;
   const deadList = [];
 
-  const chunks = [];
-  for (let i = 0; i < withUrls.length; i += CONCURRENCY) {
-    chunks.push(withUrls.slice(i, i + CONCURRENCY));
-  }
-
-  for (const chunk of chunks) {
+  for (let i = 0; i < targets.length; i += CONCURRENCY) {
+    const chunk = targets.slice(i, i + CONCURRENCY);
     await Promise.all(
-      chunk.map(async (entry) => {
-        const url = entry.install.skill_files[0].source;
+      chunk.map(async ({ id, url, target }) => {
         try {
           const res = await fetch(url, {
             method: "HEAD",
@@ -101,25 +119,39 @@ async function probeEntries(entries) {
             ok++;
           } else {
             dead++;
-            deadList.push({ id: entry.id, url, status: res.status });
+            deadList.push({ id, url, target, status: res.status });
           }
         } catch {
           dead++;
-          deadList.push({ id: entry.id, url, status: "unreachable" });
+          deadList.push({ id, url, target, status: "unreachable" });
         }
       })
     );
   }
 
+  const deadEntries = new Set(deadList.map((d) => d.id));
   console.log(`\nHealth report:`);
-  console.log(`  ✅ reachable: ${ok}`);
-  console.log(`  ❌ dead/unreachable: ${dead}`);
-  if (deadList.length > 0) {
-    console.log(`\nDead entries (first 20):`);
+  console.log(`  ✅ reachable files: ${ok}`);
+  console.log(`  ❌ dead/unreachable files: ${dead}`);
+  if (deadEntries.size > 0) {
+    console.log(`  ⚠️  ${deadEntries.size} entr${deadEntries.size === 1 ? "y has" : "ies have"} at least one dead file`);
+    console.log(`\nDead files (first 20):`);
     for (const d of deadList.slice(0, 20)) {
-      console.log(`  ${d.id}: ${d.status} — ${d.url}`);
+      console.log(`  ${d.id} [${d.target}]: ${d.status} — ${d.url}`);
     }
   }
+
+  // Drop entries with any dead skill_file. An entry that declares skill_files but
+  // can't fetch one of them is uninstallable — keeping it only pollutes search
+  // and 404s at install time. Entries WITHOUT skill_files are kept (they install
+  // a SKILL.md stub, which is a valid, intentional state).
+  const survivors = entries.filter((e) => !deadEntries.has(e.id));
+  console.log(
+    `\nPruned ${deadEntries.size} uninstallable entr${
+      deadEntries.size === 1 ? "y" : "ies"
+    }: ${entries.length} → ${survivors.length}`
+  );
+  return survivors;
 }
 
 async function readPreviousCatalog(path) {

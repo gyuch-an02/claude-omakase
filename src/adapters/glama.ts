@@ -81,6 +81,7 @@ async function fetchPage(after?: string): Promise<GlamaResponse> {
   if (after) url.searchParams.set("after", after);
 
   const res = await globalThis.fetch(url, {
+    signal: AbortSignal.timeout(20_000),
     headers: {
       Accept: "application/json",
       "User-Agent":

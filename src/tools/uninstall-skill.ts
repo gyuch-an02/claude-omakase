@@ -2,18 +2,16 @@ import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
 import { claudeCodeSkillsDir, installedRecordsDir } from "../paths.js";
+import { isSafeId } from "../installer/code-skills.js";
 
 export const uninstallSkillInput = z.object({
   id: z
     .string()
     .min(1)
-    .refine(
-      (id) =>
-        !id.startsWith("/") &&
-        !id.includes("\\") &&
-        !id.split("/").includes(".."),
-      "id must be a safe relative skill id"
-    )
+    // Same single safe-id check the installer uses. Critically this rejects "."
+    // (and empty segments): join(skillsRoot, ".") === skillsRoot, so a "." id
+    // here would rmSync the ENTIRE skills directory.
+    .refine(isSafeId, "id must be a safe relative skill id")
     .describe("Installed skill id to uninstall."),
 });
 

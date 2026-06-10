@@ -3,7 +3,8 @@
 //   2. Else if a cached copy under ~/.cache/claude-omakase/catalog.json is
 //      newer than TTL → use it.
 //   3. Else try the bundled catalog.json shipped inside the npm package.
-//   4. Else run adapters live (slow; only happens during dev without a build).
+//   4. Else fail loud with an EMPTY catalog. A live adapter run is only an
+//      explicit opt-in via OMAKASE_ALLOW_LIVE_FETCH=1 (never silent).
 
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
@@ -40,8 +41,27 @@ async function loadRaw(): Promise<Catalog> {
   const bundled = readBundled();
   if (bundled) return bundled;
 
-  // Last resort: live adapter run. Pulled in lazily so the MCP server doesn't
-  // import fetch logic unless absolutely required.
+  // No remote, no fresh cache, no bundled catalog. By design the serving path
+  // does NOT fetch sources live (see claude-omakase/CLAUDE.md) — federation is a
+  // build-time, human-reviewed step. So we fail LOUD with an empty catalog rather
+  // than silently turning the stdio server into a slow live web scraper.
+  //
+  // The live adapter run is kept only as an explicit, opt-in escape hatch behind
+  // OMAKASE_ALLOW_LIVE_FETCH (e.g. local dev before the first `build:catalog`).
+  if (process.env["OMAKASE_ALLOW_LIVE_FETCH"] !== "1") {
+    console.error(
+      "catalog: no remote, no fresh cache, and no bundled catalog.json found. " +
+        "Serving an EMPTY catalog. Run `npm run build:catalog` (or ship catalog.json) " +
+        "to populate it. To allow a one-off live federation instead, set " +
+        "OMAKASE_ALLOW_LIVE_FETCH=1 (slow; bypasses the human catalog review gate)."
+    );
+    return { version: 1, generated_at: new Date().toISOString(), entries: [] };
+  }
+
+  console.error(
+    "catalog: OMAKASE_ALLOW_LIVE_FETCH=1 — running a live federation as a fallback. " +
+      "This is slow and bypasses the human catalog review gate; prefer a built catalog.json."
+  );
   const { fetchAll } = await import("../adapters/index.js");
   const entries = await fetchAll();
   const catalog: Catalog = {
@@ -54,7 +74,9 @@ async function loadRaw(): Promise<Catalog> {
 }
 
 async function loadRemote(url: string): Promise<Catalog> {
-  const res = await fetch(url);
+  // Timeout so a hung remote can't stall the serving path — the loader's catch
+  // logs and falls through to the cached/bundled catalog instead.
+  const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
   if (!res.ok) throw new Error(`catalog fetch ${url}: ${res.status}`);
   const catalog = (await res.json()) as unknown;
   if (!isCatalogShape(catalog)) {

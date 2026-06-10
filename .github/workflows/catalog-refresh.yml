@@ -20,7 +20,26 @@ jobs:
           node-version: "20"
       - run: npm ci --no-audit --no-fund
       - run: npm run build
-      - run: npm run build:catalog
+        # --probe drops entries whose skill_files 404 so the daily refresh does
+        # not commit uninstallable community entries.
+      - run: npm run build:catalog -- --probe
+        env:
+          # Tokens live HERE — in CI, used only at federation (build) time. The
+          # GITHUB_TOKEN is auto-injected by Actions (no setup); it lets the
+          # github-skills adapter use code search. CLAUDE_OMAKASE_SKILLSMP_TOKEN
+          # is an optional repo secret. These knobs expand the daily CI-side
+          # skillsmp federation; end users NEVER need them because they read the
+          # committed catalog.json, no upstream fetch.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CLAUDE_OMAKASE_SKILLSMP_TOKEN: ${{ secrets.CLAUDE_OMAKASE_SKILLSMP_TOKEN }}
+          # Use most of the authenticated daily budget (500/day, 30/min). The
+          # adapter spaces requests ~3s apart, so ~450 requests ≈ 22min — well
+          # within a CI run, on a fresh daily quota (unlike a dev box that has
+          # already spent the day's requests iterating).
+          OMAKASE_SKILLSMP_MAX_REQUESTS: "450"
+          OMAKASE_SKILLSMP_MAX_PAGES_PER_SEED: "6"
+          OMAKASE_SKILLSMP_MAX_REQUESTS: "180"
+          OMAKASE_SKILLSMP_MAX_PAGES_PER_SEED: "2"
       - name: Adapter smoke test
         run: npm run test:adapter -- --out adapter-smoke-report.json
         continue-on-error: true

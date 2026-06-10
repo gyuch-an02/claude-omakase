@@ -2,7 +2,7 @@
 // again"). Persisted locally so the choice survives across sessions. Both
 // find_skill and recommend_skills exclude these ids.
 
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { omakaseStateDir } from "./paths.js";
 
@@ -31,5 +31,16 @@ export function add(id: string): void {
   set.add(id);
   const dir = omakaseStateDir();
   mkdirSync(dir, { recursive: true });
-  writeFileSync(file(), JSON.stringify({ declined: [...set] }, null, 2) + "\n", "utf8");
+  // Atomic write: a concurrent decline or a crash mid-write must not leave a
+  // truncated declined.json (which load() would silently treat as empty, losing
+  // every prior decline).
+  const finalPath = file();
+  const tmp = join(dir, `.declined.${process.pid}.${Date.now()}.tmp`);
+  try {
+    writeFileSync(tmp, JSON.stringify({ declined: [...set] }, null, 2) + "\n", "utf8");
+    renameSync(tmp, finalPath);
+  } catch (e) {
+    rmSync(tmp, { force: true });
+    throw e;
+  }
 }

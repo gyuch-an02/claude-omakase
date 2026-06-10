@@ -5,9 +5,11 @@
 //   1. Table rows: `| [Name](url) | description |`
 //   2. List items: `- **[Name](url)** - description` or `- [Name](url) - description`
 //
-// Entries are marked `verified: true` since the source is the official
-// Anthropic MCP repo. skill_files point to a speculative SKILL.md URL derived
-// from the source link — installs fall back to a stub if the file doesn't exist.
+// Entries are marked `source_trust: "official"` (first-party provenance) but
+// `verified: false` — `verified` is reserved for human-audited handpicked
+// entries, not an automated scrape (see ADR 0003). skill_files point to a
+// speculative SKILL.md URL derived from the source link — installs fall back to
+// a stub if the file doesn't exist.
 //
 // Rate limits: uses GITHUB_TOKEN env var when available (5000 req/hr),
 // otherwise unauthenticated (60 req/hr). A single README fetch keeps us
@@ -24,7 +26,10 @@ const RAW_BASE =
 
 export async function fetch(): Promise<Entry[]> {
   const headers = buildHeaders();
-  const res = await globalThis.fetch(README_URL, { headers });
+  const res = await globalThis.fetch(README_URL, {
+    signal: AbortSignal.timeout(20_000),
+    headers,
+  });
   if (!res.ok) throw new Error(`HTTP ${res.status} fetching README`);
   const text = await res.text();
   return parseReadme(text);
@@ -99,7 +104,12 @@ export function normalizeMatch(
     type: "claude_code_skill",
     description,
     tags,
-    verified: true,
+    // NOT verified: `verified` means a human audited the entry. This is an
+    // automated scrape of an official source, so it carries `source_trust:
+    // "official"` (a first-party-provenance signal) instead. A human must add it
+    // to the handpicked overlay to earn `verified: true`. See ADR 0003.
+    verified: false,
+    source_trust: "official",
     author: { name: "Anthropic", url: "https://github.com/modelcontextprotocol" },
     homepage,
     install: {

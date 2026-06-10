@@ -1,6 +1,6 @@
 {
   "name": "claude-omakase",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Skill Suggester MCP for Claude — proactive omakase-style skill discovery, installation, and generation.",
   "license": "MIT",
   "type": "module",
@@ -27,6 +27,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "build:catalog": "node --enable-source-maps scripts/build-catalog.mjs",
+    "enrich:catalog": "node --enable-source-maps scripts/enrich-catalog.mjs",
     "scaffold:adapter": "node scripts/scaffold-adapter.mjs",
     "test:adapter": "node --enable-source-maps scripts/test-adapter.mjs",
     "dev": "tsc -w -p tsconfig.json",

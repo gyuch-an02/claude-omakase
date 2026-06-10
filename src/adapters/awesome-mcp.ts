@@ -7,8 +7,11 @@
 //   `- [Name](github-url) - description` → one Entry per line
 //
 // Entries are marked `verified: false` (community, not audited).
-// skill_files point to a speculative SKILL.md URL; the installer writes a
-// stub automatically if the file doesn't exist upstream.
+// skill_files point to a SPECULATIVE `…/main/SKILL.md` URL. Most awesome-mcp
+// repos are MCP servers and ship no SKILL.md, so these 404 at install time —
+// run `build-catalog --probe` (or scripts/prune-catalog.mjs) to drop the dead
+// ones. The installer only writes a stub when skill_files is EMPTY; a declared
+// URL that 404s makes the install THROW, it is not silently stubbed.
 
 import type { Entry } from "../types.js";
 import { sanitizeTags } from "../catalog/sanitize.js";
@@ -18,6 +21,7 @@ const README_URL =
 
 export async function fetch(): Promise<Entry[]> {
   const res = await globalThis.fetch(README_URL, {
+    signal: AbortSignal.timeout(20_000),
     headers: {
       Accept: "text/plain",
       "User-Agent":

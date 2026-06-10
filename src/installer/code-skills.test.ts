@@ -4,7 +4,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { install } from "./code-skills.js";
+import { install, uninstall } from "./code-skills.js";
 import type { Entry } from "../types.js";
 
 const entry = (overrides: Partial<Entry> = {}): Entry => ({
@@ -222,6 +222,73 @@ test("install: failed forced reinstall preserves existing skill directory", asyn
       );
 
       assert.equal(readFileSync(join(skillDir, "SKILL.md"), "utf8"), "existing");
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+});
+
+test("install: rejects a '.' id (which would target the skills root itself)", async () => {
+  await withSkillsDir(async () => {
+    await assert.rejects(install(entry({ id: "." })), /unsafe skill id/);
+  });
+});
+
+test("uninstall: rejects a '.' id so it can't wipe the entire skills root", async () => {
+  await withSkillsDir(async (dir) => {
+    await import("node:fs").then(({ mkdirSync, writeFileSync }) => {
+      mkdirSync(join(dir, "keep-me"), { recursive: true });
+      writeFileSync(join(dir, "keep-me", "SKILL.md"), "x", "utf8");
+    });
+    assert.throws(() => uninstall("."), /unsafe skill id/);
+    assert.equal(existsSync(join(dir, "keep-me")), true, "other skills must survive");
+  });
+});
+
+test("install: rejects an empty path segment in the id", async () => {
+  await withSkillsDir(async () => {
+    await assert.rejects(install(entry({ id: "a//b" })), /unsafe skill id/);
+  });
+});
+
+test("install: rejects a skill file whose declared size exceeds the cap", async () => {
+  await withSkillsDir(async (dir) => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () =>
+      new Response("x", {
+        status: 200,
+        headers: { "content-length": String(6 * 1024 * 1024) },
+      });
+    try {
+      await assert.rejects(install(entry()), /too large/);
+      assert.equal(existsSync(join(dir, "demo-skill")), false, "no partial install");
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+});
+
+test("install: aborts a streamed download once it exceeds the cap", async () => {
+  await withSkillsDir(async (dir) => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => {
+      let sent = 0;
+      const stream = new ReadableStream({
+        pull(controller) {
+          if (sent >= 6) {
+            controller.close();
+            return;
+          }
+          sent++;
+          controller.enqueue(new Uint8Array(1024 * 1024)); // 1 MiB per chunk
+        },
+      });
+      // No content-length → forces the streaming-cap path.
+      return new Response(stream, { status: 200 });
+    };
+    try {
+      await assert.rejects(install(entry()), /too large/);
+      assert.equal(existsSync(join(dir, "demo-skill")), false, "no partial install");
     } finally {
       globalThis.fetch = originalFetch;
     }
