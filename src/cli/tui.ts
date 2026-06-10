@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import * as p from "@clack/prompts";
 import * as doctor from "../tools/doctor.js";
+import * as findSkill from "../tools/find-skill.js";
+import * as installSkill from "../tools/install-skill.js";
 import * as updateSkill from "../tools/update-skill.js";
 import * as uninstallSkill from "../tools/uninstall-skill.js";
 
@@ -27,7 +29,7 @@ export async function tryOp(
 }
 
 export function statusIcon(skill: doctor.SkillHealth): string {
-  if (!skill.skill_md_exists) return "⚠️ ";
+  if (!skill.skill_md_exists || skill.skill_md_empty) return "⚠️ ";
   if (skill.in_catalog && skill.catalog_version && skill.installed_version &&
       skill.catalog_version !== skill.installed_version) return "🔄";
   if (skill.skill_md_exists && skill.receipt_exists) return "✅";
@@ -55,7 +57,7 @@ export function renderTable(skills: doctor.SkillHealth[]): string {
   const rows = skills.map((s) => {
     const icon = statusIcon(s);
     const name = clipName(s.id).padEnd(NAME_W);
-    const skillMd = s.skill_md_exists ? "✓        " : "✗ missing";
+    const skillMd = !s.skill_md_exists ? "✗ missing" : s.skill_md_empty ? "✗ empty  " : "✓        ";
     const receipt = s.receipt_exists ? "✓      " : "✗ missing";
     const catalog = catalogCell(s);
     return `│  ${icon}  ${name}${skillMd} ${receipt} ${catalog}`;
@@ -87,6 +89,7 @@ export async function runTui(): Promise<void> {
       message: "What would you like to do?",
       options: [
         { value: "check", label: "Re-run health check" },
+        { value: "install", label: "Install skill(s) from catalog (search)" },
         { value: "update", label: "Update skill(s) from catalog" },
         { value: "remove", label: "Remove skill(s)" },
         { value: "quit", label: "Quit" },
@@ -100,6 +103,51 @@ export async function runTui(): Promise<void> {
 
     if (action === "check") {
       health = await runHealthCheck();
+      continue;
+    }
+
+    if (action === "install") {
+      const query = await p.text({
+        message: "What should the skill help with? (keywords or a sentence)",
+        validate: (v) => (!v || v.trim().length === 0 ? "Type a few keywords." : undefined),
+      });
+      if (p.isCancel(query)) continue;
+
+      // Same search path as the MCP find_skill tool — declined skills excluded,
+      // same ranking the chef uses.
+      const found = await findSkill.handle({ task_description: query as string, limit: 8 });
+      const installedIds = new Set(health.skills.map((s) => s.id));
+      const candidates = found.matches.filter((m) => !installedIds.has(m.id));
+      if (candidates.length === 0) {
+        p.log.info("No matching catalog skills (or all matches are already installed).");
+        continue;
+      }
+
+      const picks = await p.multiselect({
+        message: "Select skills to install:",
+        options: candidates.map((m) => ({
+          value: m.id,
+          label: `${m.verified ? "✅" : "  "} ${m.id}`,
+          hint: clipName(m.description ?? "", 60),
+        })),
+        required: false,
+      });
+      if (!p.isCancel(picks) && Array.isArray(picks) && picks.length > 0) {
+        const spin = p.spinner();
+        const failures: OpResult[] = [];
+        for (const id of picks as string[]) {
+          spin.start(`Installing ${id}…`);
+          const r = await tryOp(id, (x) =>
+            installSkill.handle({ id: x, force: false, inputs: {} })
+          );
+          spin.stop(r.ok ? `Installed ${id}` : `⚠️  ${id}: ${r.error}`);
+          if (!r.ok) failures.push(r);
+        }
+        if (failures.length > 0) {
+          p.log.error(`${failures.length} install(s) failed; the rest were installed.`);
+        }
+        health = await runHealthCheck();
+      }
       continue;
     }
 
