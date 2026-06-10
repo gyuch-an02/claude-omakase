@@ -144,6 +144,31 @@ test("propose_new_skill: unresolved install command is rejected before write", a
   assert.equal(existsSync(join(skillsDir, "safe-skill", "SKILL.md")), false);
 });
 
+test("propose_new_skill: a failing concept-edit form does not fail the draft", async (t) => {
+  const skillsDir = await withTempSkillsDir(t);
+  const server = {
+    getClientCapabilities: () => ({ elicitation: {} }),
+    elicitInput: async () => {
+      throw new Error("elicitation timed out");
+    },
+    createMessage: async () => ({ content: { type: "text", text: validDraft } }),
+  } as never as Server;
+
+  const result = await handle(
+    {
+      task_description: "safe workflow helper for repeated local repository work",
+      slug: "safe-skill",
+      triggers: ["safe workflow"],
+    },
+    server
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(result.concept_edited, false);
+  assert.match(result.concept_form_error ?? "", /form failed/i);
+  assert.equal(existsSync(join(skillsDir, "safe-skill", "SKILL.md")), true);
+});
+
 test("propose_new_skill: an underivable slug is rejected before writing anywhere", async (t) => {
   const skillsDir = await withTempSkillsDir(t);
 

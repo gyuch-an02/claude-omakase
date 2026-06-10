@@ -126,7 +126,12 @@ async function skillFromSearchItem(item: GitHubCodeSearchItem): Promise<GithubSk
     signal: AbortSignal.timeout(20_000),
     headers: buildHeaders(),
   });
-  if (!res.ok) return null;
+  if (!res.ok) {
+    // Leave a trace: a skill whose SKILL.md 404s (renamed branch, moved path)
+    // would otherwise vanish from the catalog with no signal in the build log.
+    console.error(`github-skills: skipping ${rawUrl}: HTTP ${res.status}`);
+    return null;
+  }
 
   const body = await res.text();
   const frontmatter = parseFrontmatter(body);

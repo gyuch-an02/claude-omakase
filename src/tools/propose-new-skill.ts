@@ -85,38 +85,19 @@ export async function handle(
   let triggers =
     args.triggers && args.triggers.length > 0 ? args.triggers : derive_triggers(args.task_description);
   let conceptEdited = false;
+  let conceptFormError: string | null = null;
 
   // Let the user edit the concept (id / what it does / triggers) BEFORE we draft
   // and write anything — but only if the client supports an interactive form.
+  // The form is an optional refinement step: if the picker errors or times out
+  // (e.g. no human attached), record it and proceed with the proposed concept
+  // rather than failing the whole tool.
   if (!args.draft_body && Boolean(server.getClientCapabilities?.()?.elicitation)) {
-    const res = await server.elicitInput({
-      message: "Review the new skill's concept — edit anything before I draft it:",
-      requestedSchema: {
-        type: "object",
-        properties: {
-          slug: {
-            type: "string",
-            title: "Skill id (slug)",
-            description: "kebab-case folder name under ~/.claude/skills/",
-            default: slug,
-          },
-          task_description: {
-            type: "string",
-            title: "What it does",
-            description: "One or two sentences describing the skill's job.",
-            default: taskDescription,
-          },
-          triggers: {
-            type: "string",
-            title: "Trigger phrases (comma-separated)",
-            description: "Phrases that should activate the skill later.",
-            default: triggers.join(", "),
-          },
-        },
-        required: [],
-      },
+    const res = await elicitConceptForm(server, { slug, taskDescription, triggers }).catch((e: unknown) => {
+      conceptFormError = e instanceof Error ? e.message : String(e);
+      return null;
     });
-    if (res.action === "accept" && res.content) {
+    if (res && res.action === "accept" && res.content) {
       const c = res.content as Record<string, unknown>;
       if (typeof c["slug"] === "string" && c["slug"].trim()) slug = slugify(c["slug"]);
       if (typeof c["task_description"] === "string" && c["task_description"].trim()) {
@@ -127,7 +108,7 @@ export async function handle(
       }
       conceptEdited = true;
     }
-    // declined/cancel → keep the originally proposed concept
+    // declined/cancel/error → keep the originally proposed concept
   }
 
   // slugify() can yield "" or a single char (e.g. a task_description with no
@@ -155,12 +136,52 @@ export async function handle(
     slug,
     path,
     concept_edited: conceptEdited,
+    ...(conceptFormError
+      ? {
+          concept_form_error:
+            `The interactive concept-edit form failed (${conceptFormError}); the draft used the proposed ` +
+            `concept as-is. Tell the user and offer to refine slug/description/triggers in text.`,
+        }
+      : {}),
     next_steps: [
       `Open ${path} and refine the instructions.`,
       "Test the skill by running a fresh Claude session.",
       "When happy, copy SKILL.md content into a PR under handpicked/ in the claude-omakase repo.",
     ],
   };
+}
+
+function elicitConceptForm(
+  server: Server,
+  current: { slug: string; taskDescription: string; triggers: string[] }
+): ReturnType<Server["elicitInput"]> {
+  return server.elicitInput({
+    message: "Review the new skill's concept — edit anything before I draft it:",
+    requestedSchema: {
+      type: "object",
+      properties: {
+        slug: {
+          type: "string",
+          title: "Skill id (slug)",
+          description: "kebab-case folder name under ~/.claude/skills/",
+          default: current.slug,
+        },
+        task_description: {
+          type: "string",
+          title: "What it does",
+          description: "One or two sentences describing the skill's job.",
+          default: current.taskDescription,
+        },
+        triggers: {
+          type: "string",
+          title: "Trigger phrases (comma-separated)",
+          description: "Phrases that should activate the skill later.",
+          default: current.triggers.join(", "),
+        },
+      },
+      required: [],
+    },
+  });
 }
 
 async function generateWithSampling(
