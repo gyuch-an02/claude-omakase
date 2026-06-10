@@ -53,6 +53,8 @@
 
 First time? Claude greets you with a **starter pack** of universally useful skills so you're not starting from zero.
 
+**Search that speaks your language.** `find_skill` ranks the catalog by keyword **plus LLM-generated synonyms in both English and Korean**, then returns the top candidates and lets **Claude rerank them by reading the descriptions** — so a query like `웹사이트 크롤링` or "scrape a site" both land on the right web-scraping skill, even when its description is in the other language. Search only has to surface the answer somewhere in the top few; Claude (already in the loop) picks the best fit — no extra model at serving time.
+
 ## Install
 
 ```bash
@@ -173,7 +175,7 @@ Install any of them: *"Install the Grill Me skill"* → Claude calls `install_sk
 
 | Tool | Description |
 |---|---|
-| `find_skill` | Search the catalog by task description |
+| `find_skill` | Search the catalog by task description (keyword + EN/KO synonym match, IDF-weighted); returns the top-K candidates for Claude to rerank and pick from |
 | `list_installed_skills` | List installed skills and install receipts |
 | `install_skill` | Download and install a skill to `~/.claude/skills/<id>/` |
 | `recommend_skills` | Ranked suggestions based on your profile, context, and install state. With no context it drives **starter-pack onboarding** — full pack for a new user, missing staples for a returning one — via a real checkbox picker (MCP elicitation), or a Markdown checklist on clients without it |
@@ -225,7 +227,7 @@ Three opt-in [Claude Code hooks](https://docs.claude.com/en/docs/claude-code/hoo
 | Hook | Event | What it does |
 |---|---|---|
 | `omakase-session-start.mjs` | `SessionStart` | At the start of a fresh session (`startup`/`clear`, not resume), tells Claude to run the chef's onboarding routine now — so new users get the starter pack without asking. Fires at most once per cooldown window. |
-| `omakase-repetition.mjs` | `PostToolUse` (Bash) | Tracks command workflows (single commands **and** multi-step chains via n-gram detection) in one **cross-session** file with timestamps; when a task recurs 3× within a rolling window, nudges Claude to find a matching skill. Primitive tools (`grep`, `cut`, `find`, …) and VCS/build plumbing (`git status`, `npm run`, `gh pr`, …) are filtered out, so it fires on real *tasks*, not on the commands you run to do them. Stays silent if no catalog is available. |
+| `omakase-repetition.mjs` | `PostToolUse` (Bash + edits) | Tracks command workflows (single commands **and** multi-step chains via n-gram detection) **and repeated edits to the same file** (`edit:<name>`, counted once per session) in one **cross-session** file with timestamps; when a task recurs 3× within a rolling window, nudges Claude to find a matching skill. Primitive tools (`grep`, `cut`, `find`, …) and VCS/build plumbing (`git status`, `npm run`, `gh pr`, …) are filtered out, so it fires on real *tasks*, not on the commands you run to do them. Stays silent if no catalog is available. |
 | `omakase-suggest.mjs` | `UserPromptSubmit` | Matches each prompt against the catalog; if a not-yet-installed skill clearly fits, suggests it once per session (with a cooldown). |
 
 Register them in your Claude Code `settings.json` (the installer prints this block with your real paths filled in):
@@ -239,7 +241,7 @@ Register them in your Claude Code `settings.json` (the installer prints this blo
       ] }
     ],
     "PostToolUse": [
-      { "matcher": "Bash", "hooks": [
+      { "matcher": "Bash|Edit|Write|MultiEdit|NotebookEdit", "hooks": [
         { "type": "command", "command": "node ~/.claude/hooks/omakase/omakase-repetition.mjs" }
       ] }
     ],
@@ -263,6 +265,8 @@ The catalog is federated from multiple sources in CI. Adapters generate entries,
 | `handpicked` | `handpicked/*.json` in this repo | Manually audited, `verified: true` |
 | `skillsmp` | [skillsmp.com](https://skillsmp.com) | Public marketplace, expanded daily in CI via category + intent seeds |
 | `github-skills` | GitHub code search | Public `SKILL.md` files, requires `GITHUB_TOKEN` during catalog builds |
+
+Only real Claude Code skills (entries with a resolvable `SKILL.md`) are kept — `build:catalog --probe` prunes anything that 404s. After federation, a build-time pass (`enrich:catalog`) asks an LLM for **English + Korean search synonyms** per skill and stores them on the entry, so search works in either language with no model at serving time.
 
 Want to add a source? See `src/adapters/README.md` and run:
 
@@ -300,10 +304,11 @@ rollback path: [`docs/TRUST.md`](docs/TRUST.md).
 git clone https://github.com/gyuch-an02/claude-omakase
 cd claude-omakase
 npm install
-npm run build           # compile TypeScript
-npm run build:catalog   # fetch all adapters → catalog.json
-npm run typecheck       # type check without emitting
-npm test                # run all tests
+npm run build              # compile TypeScript
+npm run build:catalog -- --probe   # fetch adapters → catalog.json, drop dead SKILL.md URLs
+npm run enrich:catalog     # (optional) add EN/KO search synonyms via an LLM endpoint
+npm run typecheck          # type check without emitting
+npm test                   # run all tests
 ```
 
 Register your local build with Claude Code:
