@@ -23,7 +23,13 @@ export async function fetch(): Promise<Entry[]> {
   for (const file of files) {
     try {
       const raw = await readFile(join(dir, file), "utf8");
-      const entry = JSON.parse(raw) as Entry;
+      const parsed = JSON.parse(raw) as unknown;
+      const problem = entryShapeProblem(parsed);
+      if (problem) {
+        console.error(`handpicked: skipping ${file}: ${problem}`);
+        continue;
+      }
+      const entry = parsed as Entry;
       entry.source ??= { adapter: "handpicked" };
       if (entry.source.adapter === undefined) entry.source.adapter = "handpicked";
       out.push(entry);
@@ -32,6 +38,26 @@ export async function fetch(): Promise<Entry[]> {
     }
   }
   return out;
+}
+
+// Minimal Entry-shape gate for hand-edited JSON. These files are written by
+// humans (and LLMs); a missing id/tags/install used to pass `as Entry` silently
+// and crash downstream (`entry.tags.includes` in recommend, `entry.install` in
+// install_skill). Returns a description of the first problem, or null if OK.
+function entryShapeProblem(x: unknown): string | null {
+  if (typeof x !== "object" || x === null || Array.isArray(x)) return "not a JSON object";
+  const e = x as Record<string, unknown>;
+  for (const key of ["id", "name", "type", "description"] as const) {
+    if (typeof e[key] !== "string" || (e[key] as string).trim() === "") {
+      return `missing or empty required string field: ${key}`;
+    }
+  }
+  if (!Array.isArray(e["tags"])) return "missing required array field: tags";
+  if (typeof e["install"] !== "object" || e["install"] === null) {
+    return "missing required object field: install";
+  }
+  if (typeof e["verified"] !== "boolean") return "missing required boolean field: verified";
+  return null;
 }
 
 function handpickedDir(): string {

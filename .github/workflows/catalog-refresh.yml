@@ -38,8 +38,6 @@ jobs:
           # already spent the day's requests iterating).
           OMAKASE_SKILLSMP_MAX_REQUESTS: "450"
           OMAKASE_SKILLSMP_MAX_PAGES_PER_SEED: "6"
-          OMAKASE_SKILLSMP_MAX_REQUESTS: "180"
-          OMAKASE_SKILLSMP_MAX_PAGES_PER_SEED: "2"
       - name: Adapter smoke test
         run: npm run test:adapter -- --out adapter-smoke-report.json
         continue-on-error: true

@@ -79,6 +79,32 @@ test("load: remote catalog failure falls back to bundled catalog", async () => {
   }
 });
 
+test("load: serving from the bundled catalog seeds the XDG cache copy for the hooks", async () => {
+  const cacheDir = await mkdtemp(join(tmpdir(), "omakase-cache-"));
+  const originalCache = process.env["XDG_CACHE_HOME"];
+  const originalRemote = process.env["CLAUDE_OMAKASE_CATALOG_URL"];
+  process.env["XDG_CACHE_HOME"] = cacheDir;
+  delete process.env["CLAUDE_OMAKASE_CATALOG_URL"];
+
+  try {
+    const catalog = await load();
+    assert.ok(Array.isArray(catalog.entries));
+    // The proactive hooks can only read the XDG cache copy (or a path relative
+    // to their own install dir) — never this package's bundled file. Serving
+    // from bundled must therefore refresh the cache copy.
+    const cached = JSON.parse(
+      await readFile(join(cacheDir, "claude-omakase", "catalog.json"), "utf8")
+    );
+    assert.ok(Array.isArray(cached.entries), "cache copy seeded from the bundled catalog");
+  } finally {
+    if (originalCache === undefined) delete process.env["XDG_CACHE_HOME"];
+    else process.env["XDG_CACHE_HOME"] = originalCache;
+    if (originalRemote === undefined) delete process.env["CLAUDE_OMAKASE_CATALOG_URL"];
+    else process.env["CLAUDE_OMAKASE_CATALOG_URL"] = originalRemote;
+    await rm(cacheDir, { recursive: true, force: true });
+  }
+});
+
 test("load: valid remote catalog writes cache atomically without leaving temp files", async () => {
   const cacheDir = await mkdtemp(join(tmpdir(), "omakase-cache-"));
   const originalCache = process.env["XDG_CACHE_HOME"];

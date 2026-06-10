@@ -1,4 +1,4 @@
-import { mkdirSync } from "node:fs";
+import { mkdirSync, renameSync, rmSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { z } from "zod";
@@ -81,9 +81,18 @@ function validateInputs(params: UserParam[], inputs: Record<string, string>): vo
   }
 }
 
+// Atomic temp+rename, matching blocklist/profile writes: a crash mid-write must
+// not leave a truncated receipt that doctor/update later fail to parse.
 async function writeReceipt(record: InstalledRecord): Promise<void> {
   const dir = installedRecordsDir();
   mkdirSync(dir, { recursive: true });
   const path = join(dir, `${record.id}.json`);
-  await writeFile(path, JSON.stringify(record, null, 2) + "\n", "utf8");
+  const tmp = join(dir, `.${record.id.replace(/\//g, "-")}.${process.pid}.${Date.now()}.tmp`);
+  try {
+    await writeFile(tmp, JSON.stringify(record, null, 2) + "\n", "utf8");
+    renameSync(tmp, path);
+  } catch (e) {
+    rmSync(tmp, { force: true });
+    throw e;
+  }
 }

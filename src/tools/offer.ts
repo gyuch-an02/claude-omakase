@@ -56,21 +56,38 @@ export async function handle(args: z.infer<typeof offerSkillInput>, server: Serv
           `then ask: install, not now, or never recommend it again? Call offer_skill again with decision set.`,
       };
     }
-    const result = await server.elicitInput({
-      message: `Install "${entry.name}"? — ${clip(entry.description)}`,
-      requestedSchema: {
-        type: "object",
-        properties: {
-          choice: {
-            type: "string",
-            title: entry.name,
-            description: "What would you like to do with this skill?",
-            enum: ["install", "not_now", "never"],
+    // The client advertised elicitation but the picker can still error or time
+    // out (e.g. no human attached to this session). Surface that loudly with an
+    // explicit text fallback — never let it bubble up as an opaque tool error.
+    let result: Awaited<ReturnType<Server["elicitInput"]>>;
+    try {
+      result = await server.elicitInput({
+        message: `Install "${entry.name}"? — ${clip(entry.description)}`,
+        requestedSchema: {
+          type: "object",
+          properties: {
+            choice: {
+              type: "string",
+              title: entry.name,
+              description: "What would you like to do with this skill?",
+              enum: ["install", "not_now", "never"],
+            },
           },
+          required: ["choice"],
         },
-        required: ["choice"],
-      },
-    });
+      });
+    } catch (err) {
+      return {
+        mode: "picker-error" as const,
+        id: entry.id,
+        error: (err as Error).message,
+        skill: { id: entry.id, name: entry.name, description: entry.description, verified: entry.verified },
+        next_step:
+          `The interactive picker failed (${(err as Error).message}). TELL THE USER the picker didn't come up, ` +
+          `then describe "${entry.name}" in one sentence with WHY and ask: install, not now, or never recommend ` +
+          `it again? Call offer_skill again with decision set.`,
+      };
+    }
     if (result.action !== "accept" || !result.content) {
       return { mode: "dismissed" as const, id: entry.id, next_step: "Picker dismissed. Don't install; move on." };
     }

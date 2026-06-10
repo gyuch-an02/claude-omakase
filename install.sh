@@ -55,8 +55,10 @@ install_chef_skill() {
 }
 
 # Copy the proactive hooks to a stable path. We never register them — the user
-# opts in via the snippet printed at the end.
-HOOK_FILES="omakase-session-start.mjs omakase-repetition.mjs omakase-suggest.mjs"
+# opts in via the snippet printed at the end. _shared.mjs and retrieval.mjs are
+# not hooks themselves but modules the three hooks import at runtime — without
+# them every hook dies with ERR_MODULE_NOT_FOUND.
+HOOK_FILES="omakase-session-start.mjs omakase-repetition.mjs omakase-suggest.mjs _shared.mjs retrieval.mjs"
 
 install_hooks() {
   local hooks_dir="$HOME/.claude/hooks/omakase"
@@ -70,6 +72,22 @@ install_hooks() {
     fi
   done
   green "Installed proactive hooks at $hooks_dir/"
+}
+
+# Seed the catalog the hooks read. Installed hooks live at
+# ~/.claude/hooks/omakase/, where the package-relative fallback in _shared.mjs
+# (../catalog.json) does not exist — they rely on the XDG cache copy, which the
+# MCP server only writes after its first remote/live fetch. Without this seed
+# the suggest/repetition hooks silently no-op until then.
+seed_catalog_cache() {
+  local cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/claude-omakase"
+  mkdir -p "$cache_dir"
+  local url="https://raw.githubusercontent.com/gyuch-an02/claude-omakase/main/catalog.json"
+  if curl -fsSL "$url" -o "$cache_dir/catalog.json"; then
+    green "Seeded catalog cache at $cache_dir/catalog.json"
+  else
+    ylw "could not seed catalog cache from $url — hooks stay quiet until the MCP server caches a catalog."
+  fi
 }
 
 print_registration_snippet() {
@@ -118,6 +136,7 @@ main() {
   require_node
   install_chef_skill
   install_hooks
+  seed_catalog_cache
 
   echo
   green "Done."

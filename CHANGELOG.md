@@ -9,6 +9,23 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Fixed
+- **Installed hooks actually run.** Both installers (`install.sh` and `claude-omakase-install`) copied the three hook entry points to `~/.claude/hooks/omakase/` but not `_shared.mjs`/`retrieval.mjs`, which all three import — every installed hook died with `ERR_MODULE_NOT_FOUND`. Both installers now ship the two modules alongside the hooks.
+- **Installed hooks can see a catalog.** From `~/.claude/hooks/omakase/`, the hooks' bundled-catalog fallback (`../catalog.json`) doesn't exist, and the XDG cache copy was only written after a remote/live fetch — so the suggest hook and the repetition hook's catalog gate silently no-oped on a fresh install. Now: both installers seed `~/.cache/claude-omakase/catalog.json`, and the server refreshes that cache copy whenever it serves from the bundled catalog.
+- **Picker failures in `offer_skill` / `propose_new_skill` no longer abort the tool.** Both called `elicitInput()` unguarded; a client that advertises elicitation but errors/times out (e.g. headless session) turned the whole call into an opaque error. `offer_skill` now returns a loud `picker-error` mode with a text fallback (matching `recommend_skills`); `propose_new_skill` treats the concept-edit form as optional and proceeds with the proposed concept, reporting `concept_form_error`.
+- **Partial catalog rebuilds can't emit duplicate ids.** `mergeSelectedAdapters` concatenated preserved + refreshed entries without dedupe, so an id owned by a non-selected adapter (e.g. handpicked) could appear twice after a selected adapter (e.g. skillsmp) started producing the same id. Preserved entries now win and each id appears once.
+- **Daily catalog refresh uses the intended skillsmp budget.** `catalog-refresh.yml` declared `OMAKASE_SKILLSMP_MAX_REQUESTS`/`MAX_PAGES_PER_SEED` twice; YAML last-key-wins silently downgraded the authenticated budget from 450/6 to 180/2. Duplicate keys removed.
+- **Handpicked entries are shape-validated.** A hand-edited `handpicked/*.json` missing `id`/`tags`/`install` used to pass `JSON.parse(...) as Entry` silently and crash downstream (`entry.tags.includes` in recommend). Invalid files are now skipped with a loud per-field reason.
+- **skillsmp adapter hardened against untrusted response data.** A null/non-object hit or non-string `id`/`name`/`description`/`author`/`skillUrl` no longer throws mid-page (which aborted the whole adapter); path-like ids (`owner/repo/...`) are slugified so install dirs stay flat; an invalid `OMAKASE_SKILLSMP_*` env value now warns and falls back instead of silently fetching zero pages.
+- **Atomic install receipts** — `install_skill` writes receipts via temp+rename like every other state file, so a crash mid-write can't leave a truncated receipt for `doctor`/`update` to choke on.
+- **Dev web server binds loopback by default.** `web-server.ts` exposes unauthenticated install/uninstall endpoints and used to listen on all interfaces; it now binds `127.0.0.1` unless `OMAKASE_WEB_HOST` is set explicitly.
+
+### Changed
+- **Zero-entry adapters log loudly** during federation — an adapter that quietly returns `[]` (broken auth, changed API shape) looked identical to a healthy run while the daily refresh preserved stale entries forever.
+- **`claude-omakase-install` hook snippet now registers the repetition hook for Edit/Write/MultiEdit/NotebookEdit too**, matching `install.sh` — the edit-tools signal (recurring doc updates) existed in the hook but the npm installer's snippet never wired it.
+- **github-skills adapter logs skipped SKILL.md fetches** (404/403) instead of silently dropping the entry.
+- **Lint ignores `web/dist/`** build artifacts.
+
 ### Added
 - **AI-usage log back at `docs/ai-log.md`** — reverses the 0.5.0 removal below. The team submission guideline requires the AI-usage log to live in the product repo for review. Seeded as the merged/frozen log (sourced from the out-of-repo `ai_log/ai-log-frozen.md`), then kept current per PR via a **soft PR-template checklist item** — append a dated bullet entry when AI tools materially shaped the PR, skip otherwise. This is a reminder, **not** a CI gate: the `ai-log-check` workflow and the `CLAUDE.md` "Skill: ai-usage-log" section stay gone, so a missing entry never fails CI.
 

@@ -72,6 +72,20 @@ test("offer_skill: explicit decision 'never' blocklists without eliciting", asyn
   assert.equal(elicited, false, "explicit decision skips the picker");
 });
 
+test("offer_skill: picker error surfaces loudly, installs nothing", async (t) => {
+  const env = await withState(t, [entry("pr-helper")]);
+  const server = {
+    getClientCapabilities: () => ({ elicitation: {} }),
+    elicitInput: async () => {
+      throw new Error("elicitation timed out");
+    },
+  } as never;
+  const res = await offer({ id: "pr-helper" }, server);
+  assert.equal(res.mode, "picker-error");
+  assert.match(res.next_step ?? "", /picker/i);
+  assert.equal(existsSync(join(env.skillsDir, "pr-helper")), false, "nothing installed");
+});
+
 test("offer_skill: already-declined short-circuits", async (t) => {
   await withState(t, [entry("pr-helper")]);
   blocklist.add("pr-helper");

@@ -242,7 +242,7 @@ async function checkSkillFile(_entry, file) {
       ok: false,
       source: file.source,
       target: file.target,
-      message: `skill file fetch failed: ${(e).message}`,
+      message: `skill file fetch failed: ${e instanceof Error ? e.message : String(e)}`,
     };
   }
 }

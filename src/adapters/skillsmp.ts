@@ -49,9 +49,21 @@ const CATEGORY_SEEDS: { category: string; q: string }[] = [
 ];
 
 const PER_PAGE = 100; // marketplace max
-const MAX_PAGES_PER_SEED = Number(process.env["OMAKASE_SKILLSMP_MAX_PAGES_PER_SEED"] ?? 2);
+// A typo'd env value (Number("garbage") → NaN) would make every loop bound
+// false and silently fetch ZERO pages — warn and fall back instead.
+function envInt(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (raw === undefined) return fallback;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 0) {
+    console.error(`skillsmp: ignoring invalid ${name}=${JSON.stringify(raw)}; using ${fallback}`);
+    return fallback;
+  }
+  return n;
+}
+const MAX_PAGES_PER_SEED = envInt("OMAKASE_SKILLSMP_MAX_PAGES_PER_SEED", 2);
 const DEFAULT_REQUEST_BUDGET = process.env["CLAUDE_OMAKASE_SKILLSMP_TOKEN"] ? 180 : 36;
-const MAX_REQUESTS = Number(process.env["OMAKASE_SKILLSMP_MAX_REQUESTS"] ?? DEFAULT_REQUEST_BUDGET);
+const MAX_REQUESTS = envInt("OMAKASE_SKILLSMP_MAX_REQUESTS", DEFAULT_REQUEST_BUDGET);
 
 // Spacing between requests to stay under the documented rate limit (authenticated
 // 30/min → 1 per 2s; anonymous 10/min → 1 per 6s). Without this the adapter fires
@@ -270,17 +282,27 @@ function buildHeaders(): Record<string, string> {
 // hierarchy. Returns null when id, description, or a derivable SKILL.md URL is
 // missing.
 export function normalize(hit: SkillsmpHit, category?: string, searchTerm?: string): Entry | null {
-  const id = (hit.id ?? slugify(hit.name ?? "")).trim();
+  // The API response is untrusted: a null/non-object element in the skills
+  // array must not throw mid-page (the throw would abort the whole adapter).
+  if (!hit || typeof hit !== "object") return null;
+
+  const rawName = typeof hit.name === "string" ? hit.name : "";
+  let id = (typeof hit.id === "string" ? hit.id : slugify(rawName)).trim();
+  // The id becomes the install directory under ~/.claude/skills/. The installer
+  // rejects traversal at its own choke point, but a slash/odd-char id would
+  // still install to a nested path Claude Code never loads — slugify it here so
+  // the catalog only ever carries flat, loadable ids.
+  if (!/^[a-z0-9][a-z0-9._-]*$/.test(id)) id = slugify(id);
   if (!id) return null;
 
-  const name = (hit.name ?? id).trim();
-  const description = (hit.description ?? "").trim();
+  const name = (rawName || id).trim();
+  const description = (typeof hit.description === "string" ? hit.description : "").trim();
   if (!description) return null;
 
   const skillMdUrl = deriveSkillMdUrl(hit);
   if (!skillMdUrl) return null;
 
-  const homepage = hit.skillUrl ?? skillMdUrl;
+  const homepage = typeof hit.skillUrl === "string" && hit.skillUrl ? hit.skillUrl : skillMdUrl;
   const catTag = category ? slugify(category) : null;
 
   const entry: Entry = {
@@ -290,7 +312,7 @@ export function normalize(hit: SkillsmpHit, category?: string, searchTerm?: stri
     description,
     tags: catTag ? ["skillsmp", catTag] : ["skillsmp"],
     verified: false,
-    author: { name: hit.author ?? "skillsmp community" },
+    author: { name: typeof hit.author === "string" && hit.author ? hit.author : "skillsmp community" },
     homepage,
     install: {
       skill_files: [{ source: skillMdUrl, target: "SKILL.md" }],
@@ -316,7 +338,7 @@ export function normalize(hit: SkillsmpHit, category?: string, searchTerm?: stri
 // Output: https://raw.githubusercontent.com/owner/repo/branch/some/path/SKILL.md
 function deriveSkillMdUrl(hit: SkillsmpHit): string | null {
   const url = hit.githubUrl;
-  if (!url) return null;
+  if (!url || typeof url !== "string") return null;
 
   const m = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/tree\/([^/]+)\/(.+)$/.exec(url);
   if (m) {

@@ -73,6 +73,41 @@ test("normalize: slugifies name when id is absent", () => {
   assert.equal(entry!.id, "mixed-case-name");
 });
 
+test("normalize: tolerates a null/non-object hit without throwing", () => {
+  assert.equal(normalize(null as never), null);
+  assert.equal(normalize("garbage" as never), null);
+});
+
+test("normalize: tolerates non-string fields from the untrusted API", () => {
+  const entry = normalize({
+    id: 42 as never,
+    name: { nested: true } as never,
+    description: "Valid description.",
+    githubUrl: "https://github.com/a/b",
+    author: 7 as never,
+    skillUrl: [] as never,
+  });
+  // id falls back to slugified name; non-string name slugifies to "" → null is
+  // also acceptable; the contract under test is "no throw, no garbage types".
+  if (entry) {
+    assert.equal(typeof entry.id, "string");
+    assert.equal(typeof entry.author.name, "string");
+    assert.equal(typeof entry.homepage, "string");
+  }
+});
+
+test("normalize: a path-like id is slugified into a flat install dir name", () => {
+  const entry = normalize({
+    id: "owner/repo/My Skill",
+    name: "My Skill",
+    description: "A skill with a hostile id.",
+    githubUrl: "https://github.com/a/b",
+  });
+  assert.ok(entry);
+  assert.equal(entry!.id, "owner-repo-my-skill");
+  assert.ok(!entry!.id.includes("/"));
+});
+
 test("fetch: handles nested data.skills response shape", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () =>
