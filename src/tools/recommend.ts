@@ -261,11 +261,21 @@ function installedIdSet(installed: Awaited<ReturnType<typeof listInstalled>>): S
 
 // Order all entries by relevance to `query` WITHOUT dropping any — used by the
 // starter-pack checklist modes, which must surface every staple, most-relevant
-// first. With no query, fall back to verified-then-breadth ordering.
+// Provenance tiebreak below `verified`: official-source entries sort above plain
+// community ones. Undefined source_trust is treated as community.
+function trustRank(e: Entry): number {
+  return e.source_trust === "official" ? 1 : 0;
+}
+
+// first. With no query, fall back to trust-then-breadth ordering
+// (verified > official > community).
 function orderAll(all: Entry[], query: string): Entry[] {
   if (query.length === 0) {
     return [...all].sort(
-      (a, b) => Number(b.verified) - Number(a.verified) || b.tags.length - a.tags.length
+      (a, b) =>
+        Number(b.verified) - Number(a.verified) ||
+        trustRank(b) - trustRank(a) ||
+        b.tags.length - a.tags.length
     );
   }
   const ranked = search(all, query, all.length).map((r) => r.entry);

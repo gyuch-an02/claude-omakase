@@ -34,6 +34,9 @@ test("uninstall_skill: input schema rejects path-traversal ids", () => {
   // traversal id never reaches the rmSync in handle().
   assert.throws(() => uninstallSkillInput.parse({ id: "../etc" }));
   assert.throws(() => uninstallSkillInput.parse({ id: "/abs/path" }));
+  // "." resolves to the skills root itself — rmSync would wipe EVERY skill.
+  assert.throws(() => uninstallSkillInput.parse({ id: "." }));
+  assert.throws(() => uninstallSkillInput.parse({ id: "a//b" }));
   assert.doesNotThrow(() => uninstallSkillInput.parse({ id: "grill-me" }));
 });
 

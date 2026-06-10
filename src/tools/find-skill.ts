@@ -11,7 +11,12 @@ export const findSkillInput = z.object({
     .describe(
       "Plain-language description of what the user is trying to do. Keywords + a sentence is best."
     ),
-  limit: z.number().int().min(1).max(20).default(5),
+  // Default 8: a recall@K screening (scripts/eval-recall.mjs) showed the correct
+  // skill lands within the top-8 ~93% of the time and plateaus there (top-20 adds
+  // nothing). 8 is the cheapest K that maximizes recall — Claude reads all of them
+  // and reranks, so search only has to surface the answer SOMEWHERE in the K, not
+  // at rank 1 (lexical rank-1 alone is ~78%).
+  limit: z.number().int().min(1).max(20).default(8),
 });
 
 export const findSkillDescription = `Search the federated catalog for Claude skills that would help with a task.
@@ -21,7 +26,9 @@ When to call:
   - You (the assistant) notice the user has repeated a similar manual workflow 3+ times in this session — call this proactively without being asked.
   - The user mentions a tool, integration, data source, or workflow that might have a Claude skill.
 
-Returns the top matches with id, name, short description, install command, and a 'verified' flag. This is an omakase product: do NOT show the user the list. Pick the SINGLE best match (prefer verified: true), serve it with one sentence of WHY, and ask "install it?" — wait for explicit approval before calling install_skill.`;
+Returns the top-K candidate matches (ranked by a keyword+synonym score). You are the reranker: the score and order are only a HINT — READ every candidate's description and pick the one that genuinely fits the user's intent, which is often NOT rank 1 (lexical rank-1 is right only ~78% of the time; reading the top-K lifts that to ~90%+). Match the user's actual goal, not just surface keywords; a high-scoring entry whose description is off-topic is the wrong pick.
+
+This is an omakase product: do NOT show the user the list. Choose the SINGLE best match (prefer verified: true on a genuine tie), serve it with one sentence of WHY, and ask "install it?" — wait for explicit approval before calling install_skill. If none of the K actually fit, say so and offer propose_new_skill rather than forcing a weak match.`;
 
 export async function handle(args: z.infer<typeof findSkillInput>) {
   const catalog = await load();

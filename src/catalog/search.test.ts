@@ -57,6 +57,26 @@ test("verified breaks ties", () => {
   assert.equal(results[0]?.entry.id, "b");
 });
 
+test("official source_trust breaks ties above community, below verified", () => {
+  const community = entry({ id: "a", name: "A", description: "fetches urls", tags: [] });
+  const official = entry({
+    id: "b",
+    name: "B",
+    description: "fetches urls",
+    tags: [],
+    source_trust: "official",
+  });
+  const verified = entry({
+    id: "c",
+    name: "C",
+    description: "fetches urls",
+    tags: [],
+    verified: true,
+  });
+  const order = search([community, official, verified], "fetches urls").map((r) => r.entry.id);
+  assert.deepEqual(order, ["c", "b", "a"], "verified > official > community");
+});
+
 test("empty query yields nothing", () => {
   assert.deepEqual(search([entry({ id: "x" })], ""), []);
 });

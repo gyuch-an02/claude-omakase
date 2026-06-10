@@ -12,8 +12,13 @@
 
 import type { Entry } from "../types.js";
 
-const SEARCH_URL =
-  "https://api.github.com/search/code?q=filename%3ASKILL.md+in%3Apath&type=code&per_page=20&page=1";
+const SEARCH_QUERY = "filename%3ASKILL.md+in%3Apath";
+const PER_PAGE = 100; // GitHub code-search max page size
+const MAX_PAGES = 10; // bound: up to 1000 results per build (GitHub caps total at 1000)
+
+function searchUrl(page: number): string {
+  return `https://api.github.com/search/code?q=${SEARCH_QUERY}&type=code&per_page=${PER_PAGE}&page=${page}`;
+}
 
 interface GitHubSearchResponse {
   items?: GitHubCodeSearchItem[];
@@ -44,21 +49,39 @@ interface GithubSkillsSkill {
 export async function fetch(): Promise<Entry[]> {
   if (!process.env["GITHUB_TOKEN"]) return [];
 
-  const res = await globalThis.fetch(SEARCH_URL, { headers: buildHeaders() });
-  if (!res.ok) throw new Error(`GitHub code search failed: HTTP ${res.status}`);
-
-  const body = (await res.json()) as GitHubSearchResponse;
-  const items = Array.isArray(body.items) ? body.items : [];
   const entries: Entry[] = [];
   const seen = new Set<string>();
 
-  for (const item of items) {
-    const skill = await skillFromSearchItem(item);
-    if (!skill) continue;
-    const entry = normalizeGithubSkills(skill);
-    if (!entry || seen.has(entry.id)) continue;
-    seen.add(entry.id);
-    entries.push(entry);
+  // Page through code search (GitHub caps the result set at 1000 total). Stop
+  // early on the first short/empty page so we don't burn the secondary rate
+  // limit. Code search counts SKILL.md files, so forks/personal copies inflate
+  // the apparent total massively — dedupe by entry id (repo+path) collapses the
+  // obvious duplicates within a build.
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const res = await globalThis.fetch(searchUrl(page), {
+      signal: AbortSignal.timeout(20_000),
+      headers: buildHeaders(),
+    });
+    if (!res.ok) {
+      if (page === 1) throw new Error(`GitHub code search failed: HTTP ${res.status}`);
+      console.error(`github-skills: page ${page} failed (HTTP ${res.status}); stopping`);
+      break;
+    }
+
+    const body = (await res.json()) as GitHubSearchResponse;
+    const items = Array.isArray(body.items) ? body.items : [];
+    if (items.length === 0) break;
+
+    for (const item of items) {
+      const skill = await skillFromSearchItem(item);
+      if (!skill) continue;
+      const entry = normalizeGithubSkills(skill);
+      if (!entry || seen.has(entry.id)) continue;
+      seen.add(entry.id);
+      entries.push(entry);
+    }
+
+    if (items.length < PER_PAGE) break;
   }
 
   return entries;
@@ -99,7 +122,10 @@ async function skillFromSearchItem(item: GitHubCodeSearchItem): Promise<GithubSk
   const rawUrl = rawSkillMdUrl(item);
   if (!rawUrl) return null;
 
-  const res = await globalThis.fetch(rawUrl, { headers: buildHeaders() });
+  const res = await globalThis.fetch(rawUrl, {
+    signal: AbortSignal.timeout(20_000),
+    headers: buildHeaders(),
+  });
   if (!res.ok) return null;
 
   const body = await res.text();

@@ -2,6 +2,7 @@
 import { copyFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
+import { fileURLToPath } from "node:url";
 
 const cyan  = (s: string) => `\x1b[0;36m${s}\x1b[0m`;
 const green = (s: string) => `\x1b[0;32m${s}\x1b[0m`;
@@ -16,7 +17,7 @@ function requireNode(): void {
 }
 
 function installChefSkill(): void {
-  const skillSrc = new URL("../../omakase-chef/SKILL.md", import.meta.url).pathname;
+  const skillSrc = fileURLToPath(new URL("../../omakase-chef/SKILL.md", import.meta.url));
   const targetDir = join(homedir(), ".claude", "skills", "omakase-chef");
   mkdirSync(targetDir, { recursive: true });
   copyFileSync(skillSrc, join(targetDir, "SKILL.md"));
@@ -38,12 +39,9 @@ function hooksTargetDir(): string {
 }
 
 function installHooks(): void {
-  // import.meta.url is a file:// URL: its pathname is percent-encoded (spaces →
-  // %20) and on Windows looks like /C:/…. Decode and strip the leading slash so
-  // copyFileSync sees a real filesystem path even under a username with spaces.
-  const srcDir = decodeURIComponent(
-    new URL("../../hooks/", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")
-  );
+  // fileURLToPath handles both percent-encoding (spaces → %20) and the Windows
+  // /C:/… form, so copyFileSync sees a real path even under a username with spaces.
+  const srcDir = fileURLToPath(new URL("../../hooks/", import.meta.url));
   const targetDir = hooksTargetDir();
   mkdirSync(targetDir, { recursive: true });
   for (const h of HOOK_FILES) {
