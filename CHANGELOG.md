@@ -7,7 +7,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
-## [Unreleased]
+## [0.7.1] — 2026-06-11
 
 ### Fixed
 - **Installed hooks actually run.** Both installers (`install.sh` and `claude-omakase-install`) copied the three hook entry points to `~/.claude/hooks/omakase/` but not `_shared.mjs`/`retrieval.mjs`, which all three import — every installed hook died with `ERR_MODULE_NOT_FOUND`. Both installers now ship the two modules alongside the hooks.
