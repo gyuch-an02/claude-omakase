@@ -1,43 +1,132 @@
 // Adapter for skillsmp.com — the public agent-skills marketplace.
 //
-// Endpoint:
-//   GET https://skillsmp.com/api/v1/skills/search?q=<query>&limit=<n>
+// Endpoint (from https://skillsmp.com/openapi.json, verified 2026-06-09):
+//   GET /api/v1/skills/search
+//     q*       required free-text query
+//     category one of the 12 marketplace categories (filter)
+//     sortBy   "stars" | "recent"
+//     page     1-based
+//     limit    page size (max 100)
 //
-// Actual response shape (verified 2026-05-31):
-//   { success: true, data: { skills: [...] }, meta: {...} }
+// Response: { success, data: { skills: [...] }, meta }
+// Each hit: { id, name, author, description, githubUrl, skillUrl, stars, updatedAt }
+// `category` is a FILTER input — it is NOT echoed per hit, so we tag each entry
+// with the category we queried under.
 //
-// Each hit:
-//   { id, name, author, description, githubUrl, skillUrl, stars, updatedAt }
+// Strategy — QUALITY-RANKED, BOUNDED, CI-EXPANDED:
+//   The marketplace indexes ~1.6M SKILL.md FILES across GitHub (forks +
+//   personal ~/.claude/skills copies inflate that hugely; it is NOT 1.6M
+//   distinct skills). We do NOT mirror it. CI runs a daily bounded federation:
+//   primary category seeds plus broad intent/query seeds, sorted by stars. We
+//   dedupe by installable SKILL.md source, preserving multi-skill repositories
+//   where each tree path is a separate install target.
 //
-// githubUrl is a GitHub tree URL (e.g. github.com/owner/repo/tree/main/path).
-// We convert it to a raw SKILL.md URL for install.skill_files.
-//
-// Anonymous rate limit: ~50 req/day. Seed set ≤14 queries → well under limit.
+//   `q` is REQUIRED, so per category we pass a broad representative term. This
+//   biases results toward that term — mitigated by many CI-side intent seeds.
+//   Anonymous limit is tight; set CLAUDE_OMAKASE_SKILLSMP_TOKEN in CI and tune
+//   OMAKASE_SKILLSMP_MAX_REQUESTS to expand the pool. End users never need a
+//   token because they consume the committed catalog.json.
 
 import type { Entry } from "../types.js";
 
 const BASE = "https://skillsmp.com/api/v1/skills/search";
 
-// Seed queries chosen to span common categories without authentication and
-// without hammering the endpoint. Tune in PRs.
-const SEED_QUERIES = [
-  "code",
-  "design",
-  "testing",
-  "deployment",
-  "research",
-  "writing",
-  "data",
-  "git",
-  "documentation",
-  "review",
-  "automation",
-  "scrape",
-  "summarize",
-  "translate",
+// The 12 primary marketplace categories, each with a broad representative query
+// to satisfy the required `q` param. (category as sent to the API, q seed.)
+const CATEGORY_SEEDS: { category: string; q: string }[] = [
+  { category: "Tools", q: "tool" },
+  { category: "Business", q: "business" },
+  { category: "Development", q: "code" },
+  { category: "Testing & Security", q: "test" },
+  { category: "Data & AI", q: "data" },
+  { category: "DevOps", q: "deploy" },
+  { category: "Documentation", q: "docs" },
+  { category: "Content & Media", q: "content" },
+  { category: "Research", q: "research" },
+  { category: "Lifestyle", q: "life" },
+  { category: "Databases", q: "database" },
+  { category: "Blockchain", q: "blockchain" },
 ];
 
-const PER_QUERY_LIMIT = 25; // marketplace max is 100; smaller keeps responses fast.
+const PER_PAGE = 100; // marketplace max
+const MAX_PAGES_PER_SEED = Number(process.env["OMAKASE_SKILLSMP_MAX_PAGES_PER_SEED"] ?? 2);
+const DEFAULT_REQUEST_BUDGET = process.env["CLAUDE_OMAKASE_SKILLSMP_TOKEN"] ? 180 : 36;
+const MAX_REQUESTS = Number(process.env["OMAKASE_SKILLSMP_MAX_REQUESTS"] ?? DEFAULT_REQUEST_BUDGET);
+
+// Spacing between requests to stay under the documented rate limit (authenticated
+// 30/min → 1 per 2s; anonymous 10/min → 1 per 6s). Without this the adapter fires
+// faster than the limit and gets 429'd even WITH a token, which is what made the
+// token look useless. Tunable for tests / faster endpoints.
+// Comfortable margin under the documented limits (authed 30/min, anon 10/min):
+// 3s ≈ 20/min, 7s ≈ 8.5/min. Tighter spacing (e.g. 2.1s ≈ 28/min) sat right at
+// the authed ceiling and drew intermittent 429s, so we trade a little speed for
+// a clean run. Read at call time so tests can set OMAKASE_SKILLSMP_INTERVAL_MS=0.
+function requestIntervalMs(): number {
+  const override = process.env["OMAKASE_SKILLSMP_INTERVAL_MS"];
+  if (override !== undefined) return Number(override);
+  return process.env["CLAUDE_OMAKASE_SKILLSMP_TOKEN"] ? 3000 : 7000;
+}
+
+const sleep = (ms: number) => (ms > 0 ? new Promise((r) => setTimeout(r, ms)) : Promise.resolve());
+
+const INTENT_SEEDS = [
+  "browser automation",
+  "code review",
+  "pull request",
+  "debugging",
+  "testing",
+  "security audit",
+  "documentation",
+  "api integration",
+  "database",
+  "sql",
+  "postgres",
+  "data analysis",
+  "data visualization",
+  "machine learning",
+  "llm",
+  "prompt engineering",
+  "research",
+  "web scraping",
+  "file management",
+  "git workflow",
+  "github",
+  "deployment",
+  "docker",
+  "kubernetes",
+  "aws",
+  "terraform",
+  "monitoring",
+  "logs",
+  "notion",
+  "slack",
+  "jira",
+  "figma",
+  "excel",
+  "csv",
+  "pdf",
+  "image",
+  "video",
+  "writing",
+  "translation",
+  "summarization",
+  "meeting notes",
+  "email",
+  "calendar",
+  "finance",
+  "blockchain",
+  "smart contract",
+  "mobile",
+  "frontend",
+  "backend",
+  "devops",
+];
+
+interface SeedJob {
+  q: string;
+  category?: string;
+  searchTerm?: string;
+}
 
 interface SkillsmpHit {
   id?: string;
@@ -60,28 +149,89 @@ interface SkillsmpResponse {
 
 export async function fetch(): Promise<Entry[]> {
   const headers = buildHeaders();
-  const byId = new Map<string, Entry>();
+  const bySource = new Map<string, Entry>();
+  let requests = 0;
 
-  for (const query of SEED_QUERIES) {
-    let hits: SkillsmpHit[];
-    try {
-      hits = await searchOnce(query, headers);
-    } catch (e) {
-      console.error(`skillsmp: query "${query}" failed: ${(e as Error).message}`);
-      continue;
-    }
-    for (const hit of hits) {
-      const entry = normalize(hit);
-      if (!entry) continue;
-      if (!byId.has(entry.id)) byId.set(entry.id, entry);
+  for (const seed of seedJobs()) {
+    for (let page = 1; page <= MAX_PAGES_PER_SEED && requests < MAX_REQUESTS; page++) {
+      let hits: SkillsmpHit[];
+      try {
+        if (requests > 0) await sleep(requestIntervalMs());
+        requests++;
+        hits = await searchOnce(seed.q, seed.category, page, headers);
+      } catch (e) {
+        console.error(
+          `skillsmp: ${seed.category ?? "all"} p${page} ("${seed.q}") failed: ${
+            (e as Error).message
+          }`
+        );
+        break; // stop this seed; move on
+      }
+      if (hits.length === 0) break;
+
+      for (const hit of hits) {
+        const entry = normalize(hit, seed.category, seed.searchTerm);
+        if (!entry) continue;
+        keepBest(bySource, skillSourceKey(entry), entry);
+      }
+
+      if (hits.length < PER_PAGE) break; // last page for this category
     }
   }
 
-  return [...byId.values()];
+  return [...bySource.values()];
 }
 
-async function searchOnce(query: string, headers: Record<string, string>): Promise<SkillsmpHit[]> {
-  const url = `${BASE}?q=${encodeURIComponent(query)}&limit=${PER_QUERY_LIMIT}`;
+// Keep the higher-starred entry per installable skill source.
+function keepBest(map: Map<string, Entry>, key: string, entry: Entry): void {
+  const existing = map.get(key);
+  if (!existing) {
+    map.set(key, entry);
+    return;
+  }
+
+  const primary = (entry.stars ?? 0) > (existing.stars ?? 0) ? entry : existing;
+  const secondary = primary === entry ? existing : entry;
+  map.set(key, mergeEntry(primary, secondary));
+}
+
+function skillSourceKey(entry: Entry): string {
+  return entry.install.skill_files?.[0]?.source.toLowerCase() ?? entry.id;
+}
+
+function mergeEntry(primary: Entry, secondary: Entry): Entry {
+  return {
+    ...secondary,
+    ...primary,
+    tags: dedupe([...(primary.tags ?? []), ...(secondary.tags ?? [])]),
+    search_terms: dedupe([...(primary.search_terms ?? []), ...(secondary.search_terms ?? [])]),
+  };
+}
+
+function seedJobs(): SeedJob[] {
+  const jobs: SeedJob[] = [
+    ...CATEGORY_SEEDS.map((seed) => ({ ...seed })),
+    ...INTENT_SEEDS.map((q) => ({ q, searchTerm: q })),
+  ];
+  const seen = new Set<string>();
+  return jobs.filter((job) => {
+    const key = `${job.category ?? ""}\0${job.q}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+async function searchOnce(
+  query: string,
+  category: string | undefined,
+  page: number,
+  headers: Record<string, string>
+): Promise<SkillsmpHit[]> {
+  const url =
+    `${BASE}?q=${encodeURIComponent(query)}` +
+    (category ? `&category=${encodeURIComponent(category)}` : "") +
+    `&sortBy=stars&page=${page}&limit=${PER_PAGE}`;
   const res = await globalThis.fetch(url, {
     signal: AbortSignal.timeout(20_000),
     headers,
@@ -91,7 +241,7 @@ async function searchOnce(query: string, headers: Record<string, string>): Promi
   }
   const body = (await res.json()) as SkillsmpResponse;
 
-  // Handle nested shape: { data: { skills: [...] } }  (current API as of 2026-05)
+  // Handle nested shape: { data: { skills: [...] } }  (current API as of 2026-06)
   if (body.data && !Array.isArray(body.data) && Array.isArray((body.data as { skills?: unknown }).skills)) {
     return (body.data as { skills: SkillsmpHit[] }).skills;
   }
@@ -108,14 +258,18 @@ function buildHeaders(): Record<string, string> {
     Accept: "application/json",
     "User-Agent": "claude-omakase-adapter (+https://github.com/gyuch-an02/claude-omakase)",
   };
+  // skillsmp authenticates via HTTP Bearer (openapi.json securityScheme
+  // `bearerAuth`, scheme: bearer). Verified against the live spec 2026-06-10.
   const token = process.env["CLAUDE_OMAKASE_SKILLSMP_TOKEN"];
   if (token) headers["Authorization"] = `Bearer ${token}`;
   return headers;
 }
 
-// Map a skillsmp hit to our Entry shape.
-// Returns null when id, description, or a derivable SKILL.md URL is missing.
-export function normalize(hit: SkillsmpHit): Entry | null {
+// Map a skillsmp hit to our Entry shape. `category` is the marketplace category
+// we queried under (skillsmp does not echo it per hit), used for the tier-1
+// hierarchy. Returns null when id, description, or a derivable SKILL.md URL is
+// missing.
+export function normalize(hit: SkillsmpHit, category?: string, searchTerm?: string): Entry | null {
   const id = (hit.id ?? slugify(hit.name ?? "")).trim();
   if (!id) return null;
 
@@ -127,13 +281,14 @@ export function normalize(hit: SkillsmpHit): Entry | null {
   if (!skillMdUrl) return null;
 
   const homepage = hit.skillUrl ?? skillMdUrl;
+  const catTag = category ? slugify(category) : null;
 
-  return {
+  const entry: Entry = {
     id,
     name,
     type: "claude_code_skill",
     description,
-    tags: ["skillsmp"],
+    tags: catTag ? ["skillsmp", catTag] : ["skillsmp"],
     verified: false,
     author: { name: hit.author ?? "skillsmp community" },
     homepage,
@@ -146,6 +301,14 @@ export function normalize(hit: SkillsmpHit): Entry | null {
       fetched_at: new Date().toISOString(),
     },
   };
+
+  if (category) entry.category = category;
+  if (typeof hit.stars === "number" && Number.isFinite(hit.stars)) {
+    entry.stars = hit.stars;
+  }
+  if (searchTerm) entry.search_terms = [searchTerm];
+
+  return entry;
 }
 
 // Convert a GitHub tree URL to a raw SKILL.md URL.
@@ -179,3 +342,6 @@ function slugify(s: string): string {
     .slice(0, 60);
 }
 
+function dedupe(values: string[]): string[] {
+  return [...new Set(values.map((value) => value.trim()).filter(Boolean))];
+}

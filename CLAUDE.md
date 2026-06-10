@@ -29,7 +29,7 @@ Catalog + adapter workflow:
 
 ```bash
 npm run build:catalog                       # run all adapters → catalog.json
-npm run build:catalog -- --adapters handpicked,mcp-servers-repo   # subset
+npm run build:catalog -- --adapters handpicked,skillsmp   # subset
 npm run test:adapter -- --fail-on-error     # resolvability gate; writes adapter-smoke-report.json
 npm run scaffold:adapter <name>             # new adapter from template
 ```
@@ -42,12 +42,13 @@ npm run web:install && npm run web:dev      # express API + vite UI (concurrentl
 
 ## Architecture (the big picture)
 
-Two-phase: **federation at build time → serving at runtime.** They never run
-together — the server reads a pre-built `catalog.json`, it does not fetch live.
+Two-phase: **federation in CI/build time → serving at runtime.** They do not
+run together on the user's machine — the server reads a pre-built `catalog.json`,
+it does not fetch upstream sources live.
 
 **Build time — `scripts/build-catalog.mjs` → `catalog.json`**
 - `src/adapters/index.ts` is the registry. Each adapter (`handpicked`,
-  `mcp-servers-repo`, `awesome-mcp`, `skillsmp`, `github-skills`) returns
+  `skillsmp`, `github-skills`) returns
   `Entry[]`. **Order matters**: `fetchAll` dedupes by `id`, first-listed adapter
   wins on collision, later adapters only *upgrade* omitted fields (tags etc.).
   Put trusted sources first.

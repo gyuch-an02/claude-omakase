@@ -1,5 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+// No real rate-limit delay in tests — the adapter sleeps between live requests.
+process.env["OMAKASE_SKILLSMP_INTERVAL_MS"] = "0";
 import { fetch as fetchSkillsmp, normalize } from "./skillsmp.js";
 
 test("normalize: real skillsmp hit with githubUrl tree path", () => {
@@ -97,6 +99,88 @@ test("fetch: handles nested data.skills response shape", async () => {
     const entries = await fetchSkillsmp();
     assert.ok(entries.length > 0, "should parse nested data.skills");
     assert.equal(entries[0]!.id, "test-skill");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("fetch: preserves distinct skill paths from the same repository", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () =>
+    new Response(
+      JSON.stringify({
+        success: true,
+        data: {
+          skills: [
+            {
+              id: "collection-alpha",
+              name: "Alpha",
+              author: "skills",
+              description: "Alpha skill.",
+              githubUrl: "https://github.com/org/skill-collection/tree/main/alpha",
+              stars: 100,
+            },
+            {
+              id: "collection-beta",
+              name: "Beta",
+              author: "skills",
+              description: "Beta skill.",
+              githubUrl: "https://github.com/org/skill-collection/tree/main/beta",
+              stars: 10,
+            },
+          ],
+        },
+      }),
+      { status: 200, headers: { "content-type": "application/json" } }
+    );
+
+  try {
+    const entries = await fetchSkillsmp();
+    assert.equal(entries.length, 2);
+    assert.deepEqual(
+      entries.map((entry) => entry.id).sort(),
+      ["collection-alpha", "collection-beta"]
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("fetch: includes CI-side intent seeds as deterministic search terms", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (input) => {
+    const url = new URL(String(input));
+    if (url.searchParams.get("q") !== "browser automation") {
+      return new Response(JSON.stringify({ success: true, data: { skills: [] } }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data: {
+          skills: [
+            {
+              id: "remote-debugger",
+              name: "Remote Debugger",
+              author: "skills",
+              description: "Debug remote sessions.",
+              githubUrl: "https://github.com/org/browser-skills/tree/main/debugger",
+              stars: 10,
+            },
+          ],
+        },
+      }),
+      { status: 200, headers: { "content-type": "application/json" } }
+    );
+  };
+
+  try {
+    const entries = await fetchSkillsmp();
+    const entry = entries.find((candidate) => candidate.id === "remote-debugger");
+    assert.ok(entry);
+    assert.deepEqual(entry!.search_terms, ["browser automation"]);
   } finally {
     globalThis.fetch = originalFetch;
   }

@@ -2,6 +2,7 @@
 
 import { homedir, platform } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 export type Platform = "darwin" | "win32" | "linux";
 
@@ -51,9 +52,11 @@ export function observationsPath(): string {
 export function bundledCatalogPath(): string {
   // catalog.json bundled into the npm package, used as offline fallback.
   // Built by scripts/build-catalog.mjs into the package root.
-  return new URL("../catalog.json", import.meta.url).pathname;
+  // fileURLToPath (not .pathname) so this resolves correctly on Windows
+  // (/C:/…) and under paths containing spaces (percent-encoded in .pathname).
+  return fileURLToPath(new URL("../catalog.json", import.meta.url));
 }
 
 export function packageTemplatesDir(): string {
-  return new URL("../templates", import.meta.url).pathname;
+  return fileURLToPath(new URL("../templates", import.meta.url));
 }

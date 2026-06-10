@@ -30,20 +30,17 @@ import {
   writeStateAtomic,
   cleanText,
 } from "./_shared.mjs";
+// Same relevance engine the MCP find_skill / recommend tools use, so the skill
+// this hook suggests automatically matches what an explicit search would pick —
+// including matching the user's words against each skill's DESCRIPTION, not just
+// its id/tags/name (which is all this hook compared before).
+import { rank } from "./retrieval.mjs";
 
 const THRESHOLD = Number(process.env.OMAKASE_SUGGEST_THRESHOLD || 5);
 const COOLDOWN = Number(process.env.OMAKASE_SUGGEST_COOLDOWN || 3); // prompts between suggestions
 const MIN_PROMPT_CHARS = 12;
 // Cap tracked sessions so suggest.json can't grow unbounded; env-tunable for tests.
 const MAX_SESSIONS = Number(process.env.OMAKASE_SUGGEST_MAX_SESSIONS || 200);
-
-// Words too generic to imply any particular skill.
-const STOP = new Set([
-  "the", "a", "an", "to", "of", "and", "or", "for", "in", "on", "is", "it", "this",
-  "that", "with", "my", "me", "i", "you", "do", "can", "how", "what", "please",
-  "help", "want", "need", "make", "get", "use", "have", "be", "will", "should",
-  "claude", "code", "skill", "skills", "omakase", "file", "files",
-]);
 
 function installedIds() {
   const dir = process.env["CLAUDE_OMAKASE_SKILLS_DIR"] || join(homedir(), ".claude", "skills");
@@ -57,45 +54,6 @@ function installedIds() {
   } catch {
     return new Set();
   }
-}
-
-function tokenize(text) {
-  return new Set(
-    text
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, " ")
-      .split(/\s+/)
-      .filter((w) => w.length >= 3 && !STOP.has(w))
-  );
-}
-
-// Score how well an entry fits the prompt tokens. Tags and id are the strongest
-// signals; name words are moderate. Generic/starter-pack tags don't count.
-function scoreEntry(entry, tokens) {
-  let score = 0;
-  const reasons = [];
-  const idWords = String(entry.id || "").toLowerCase().split(/[-_]/);
-  for (const w of idWords) {
-    if (tokens.has(w)) {
-      score += 4;
-      reasons.push(w);
-    }
-  }
-  for (const tag of entry.tags || []) {
-    const t = String(tag).toLowerCase();
-    if (t === "starter-pack") continue;
-    if (tokens.has(t)) {
-      score += 3;
-      reasons.push(t);
-    }
-  }
-  for (const w of String(entry.name || "").toLowerCase().split(/\s+/)) {
-    if (w.length >= 3 && tokens.has(w)) {
-      score += 2;
-      reasons.push(w);
-    }
-  }
-  return { score, reasons: [...new Set(reasons)] };
 }
 
 // Evict the least-recently-touched sessions once the map exceeds MAX_SESSIONS,
@@ -120,9 +78,6 @@ function main() {
   const prompt = String(input.prompt || "").trim();
   if (prompt.length < MIN_PROMPT_CHARS) process.exit(0);
 
-  const tokens = tokenize(prompt);
-  if (tokens.size === 0) process.exit(0);
-
   const catalog = loadCatalogEntries();
   if (catalog.length === 0) process.exit(0);
 
@@ -139,14 +94,16 @@ function main() {
   // Cooldown: only consider suggesting once every COOLDOWN prompts.
   let context = null;
   if (sess.sincelast >= COOLDOWN) {
+    // rank() returns entries sorted best→worst, scored against the prompt by the
+    // shared engine (name + description + tags + category, IDF-weighted). The
+    // first eligible entry above THRESHOLD is the best suggestion.
     let best = null;
-    for (const entry of catalog) {
-      if (installed.has(entry.id)) continue;
-      if (sess.suggested.includes(entry.id)) continue;
-      const { score, reasons } = scoreEntry(entry, tokens);
-      if (score >= THRESHOLD && (!best || score > best.score)) {
-        best = { entry, score, reasons };
-      }
+    for (const r of rank(catalog, prompt)) {
+      if (r.score < THRESHOLD) break; // sorted desc — nothing below clears it
+      if (installed.has(r.entry.id)) continue;
+      if (sess.suggested.includes(r.entry.id)) continue;
+      best = r;
+      break;
     }
     if (best) {
       sess.suggested.push(best.entry.id);

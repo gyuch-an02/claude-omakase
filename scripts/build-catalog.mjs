@@ -7,12 +7,25 @@
 //   node scripts/build-catalog.mjs --adapter handpicked
 
 import { readFile, writeFile } from "node:fs/promises";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseCatalogArgs } from "./catalog-options.mjs";
 import { mergeSelectedAdapters } from "./catalog-merge.mjs";
+import { loadDotEnv } from "./enrich-catalog.mjs";
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
+
+// Load .env (gitignored) so a maintainer can keep CLAUDE_OMAKASE_SKILLSMP_TOKEN
+// / GITHUB_TOKEN there and have adapters pick them up — they read process.env.
+// Real env vars win. (CI passes tokens as real env, so this is a no-op there.)
+const envPath = join(repoRoot, ".env");
+if (existsSync(envPath)) {
+  for (const [k, v] of Object.entries(loadDotEnv(readFileSync(envPath, "utf8")))) {
+    if (process.env[k] === undefined) process.env[k] = v;
+  }
+}
+
 const { probe, adapterNames } = parseCatalogArgs(process.argv.slice(2));
 
 // Build the TS first so we can import adapter logic from dist/.
@@ -38,9 +51,10 @@ const entries =
     ? mergeSelectedAdapters(previousEntries, refreshedEntries, adapterNames)
     : refreshedEntries;
 
+let finalEntries = entries;
 if (probe) {
   console.log(`\nProbing skill_files URLs (${entries.length} entries) …`);
-  await probeEntries(entries);
+  finalEntries = await probeEntries(entries);
 }
 
 const previousGeneratedAtValid = typeof previous?.generated_at === "string";
@@ -50,8 +64,8 @@ const entriesChanged =
   !previousEntries ||
   !previousGeneratedAtValid ||
   JSON.stringify(stableEntries(previousEntries)) !==
-    JSON.stringify(stableEntries(entries));
-const catalogEntries = entriesChanged ? entries : previousEntries;
+    JSON.stringify(stableEntries(finalEntries));
+const catalogEntries = entriesChanged ? finalEntries : previousEntries;
 
 const catalog = {
   version: 1,
@@ -62,10 +76,10 @@ const catalog = {
 await writeFile(outPath, JSON.stringify(catalog, null, 2) + "\n");
 
 if (entriesChanged) {
-  console.log(`Wrote ${entries.length} entries to ${outPath}`);
+  console.log(`Wrote ${finalEntries.length} entries to ${outPath}`);
 } else {
   console.log(
-    `Catalog entries unchanged; preserved generated_at and wrote ${entries.length} entries to ${outPath}`
+    `Catalog entries unchanged; preserved generated_at and wrote ${finalEntries.length} entries to ${outPath}`
   );
 }
 
@@ -126,6 +140,18 @@ async function probeEntries(entries) {
       console.log(`  ${d.id} [${d.target}]: ${d.status} — ${d.url}`);
     }
   }
+
+  // Drop entries with any dead skill_file. An entry that declares skill_files but
+  // can't fetch one of them is uninstallable — keeping it only pollutes search
+  // and 404s at install time. Entries WITHOUT skill_files are kept (they install
+  // a SKILL.md stub, which is a valid, intentional state).
+  const survivors = entries.filter((e) => !deadEntries.has(e.id));
+  console.log(
+    `\nPruned ${deadEntries.size} uninstallable entr${
+      deadEntries.size === 1 ? "y" : "ies"
+    }: ${entries.length} → ${survivors.length}`
+  );
+  return survivors;
 }
 
 async function readPreviousCatalog(path) {
