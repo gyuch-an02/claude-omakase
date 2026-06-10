@@ -70,6 +70,15 @@ export async function fetchAll(adapterNames?: string[]): Promise<Entry[]> {
       console.error(`adapter ${adapter.name} failed: ${(e as Error).message}`);
       continue;
     }
+    if (entries.length === 0) {
+      // Loud zero-entry signal: an adapter that quietly returns [] (auth broke,
+      // API shape changed, rate-limited to nothing) looks identical to a healthy
+      // run in the merged output — the daily refresh would just keep stale
+      // entries forever without anyone noticing.
+      console.error(
+        `adapter ${adapter.name} returned 0 entries — possible upstream breakage (auth, API shape, rate limit).`
+      );
+    }
     for (const entry of entries) {
       const existing = byId.get(entry.id);
       if (!existing) {

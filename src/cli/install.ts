@@ -1,8 +1,10 @@
 #!/usr/bin/env node
-import { copyFileSync, mkdirSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import { fileURLToPath } from "node:url";
+
+const yellow = (s: string) => `\x1b[0;33m${s}\x1b[0m`;
 
 const cyan  = (s: string) => `\x1b[0;36m${s}\x1b[0m`;
 const green = (s: string) => `\x1b[0;32m${s}\x1b[0m`;
@@ -28,10 +30,15 @@ function installChefSkill(): void {
 // location so the registration snippet can reference a durable path (the npm
 // package itself may live in an ephemeral npx cache). We do NOT register them —
 // the user opts in by pasting the printed snippet into settings.json.
+// _shared.mjs and retrieval.mjs are not hooks themselves but modules the three
+// hooks import at runtime — omit them and every hook dies with
+// ERR_MODULE_NOT_FOUND from its new home.
 const HOOK_FILES = [
   "omakase-session-start.mjs",
   "omakase-repetition.mjs",
   "omakase-suggest.mjs",
+  "_shared.mjs",
+  "retrieval.mjs",
 ];
 
 function hooksTargetDir(): string {
@@ -48,6 +55,24 @@ function installHooks(): void {
     copyFileSync(join(srcDir, h), join(targetDir, h));
   }
   console.log(green(`Installed proactive hooks at ${targetDir}/`));
+}
+
+// Seed the catalog the hooks read. Installed hooks live at
+// ~/.claude/hooks/omakase/, where _shared.mjs's package-relative fallback
+// (../catalog.json) does not exist — they rely on the XDG cache copy, which the
+// MCP server only writes after a remote/live fetch. Seed it from the bundled
+// catalog so the suggest/repetition hooks work before the server's first run.
+function seedCatalogCache(): void {
+  const bundled = fileURLToPath(new URL("../../catalog.json", import.meta.url));
+  if (!existsSync(bundled)) {
+    console.log(yellow("no bundled catalog.json found — hooks stay quiet until the MCP server caches a catalog."));
+    return;
+  }
+  const base = process.env["XDG_CACHE_HOME"] ?? join(homedir(), ".cache");
+  const cacheDir = join(base, "claude-omakase");
+  mkdirSync(cacheDir, { recursive: true });
+  copyFileSync(bundled, join(cacheDir, "catalog.json"));
+  console.log(green(`Seeded catalog cache at ${join(cacheDir, "catalog.json")}`));
 }
 
 function printRegistrationSnippet(): void {
@@ -81,7 +106,8 @@ for you:
       { "hooks": [ { "type": "command", "command": ${command("omakase-session-start.mjs")} } ] }
     ],
     "PostToolUse": [
-      { "matcher": "Bash", "hooks": [ { "type": "command", "command": ${command("omakase-repetition.mjs")} } ] }
+      { "matcher": "Bash", "hooks": [ { "type": "command", "command": ${command("omakase-repetition.mjs")} } ] },
+      { "matcher": "Edit|Write|MultiEdit|NotebookEdit", "hooks": [ { "type": "command", "command": ${command("omakase-repetition.mjs")} } ] }
     ],
     "UserPromptSubmit": [
       { "hooks": [ { "type": "command", "command": ${command("omakase-suggest.mjs")} } ] }
@@ -96,6 +122,7 @@ function main(): void {
   requireNode();
   installChefSkill();
   installHooks();
+  seedCatalogCache();
 
   console.log();
   console.log(green("Done."));

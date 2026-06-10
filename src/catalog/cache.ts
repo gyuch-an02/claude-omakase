@@ -39,7 +39,19 @@ async function loadRaw(): Promise<Catalog> {
   if (cached) return cached;
 
   const bundled = readBundled();
-  if (bundled) return bundled;
+  if (bundled) {
+    // Refresh the XDG cache copy from the bundled catalog. The proactive hooks
+    // (hooks/_shared.mjs catalogPath) read ONLY the cache copy or a path
+    // relative to their own install dir — they can't see this package's
+    // bundled file. Best-effort: serving the catalog never fails over a cache
+    // write.
+    try {
+      await writeCache(bundled);
+    } catch (e) {
+      console.error(`catalog: could not refresh cache copy for hooks: ${(e as Error).message}`);
+    }
+    return bundled;
+  }
 
   // No remote, no fresh cache, no bundled catalog. By design the serving path
   // does NOT fetch sources live (see claude-omakase/CLAUDE.md) — federation is a

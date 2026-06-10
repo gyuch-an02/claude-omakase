@@ -89,6 +89,10 @@ if (existsSync(webDist)) {
   });
 }
 
-app.listen(PORT, () => {
-  console.log(`Claude Omakase UI → http://localhost:${PORT}`);
+// Loopback only by default: this dev server exposes install/uninstall (writes
+// under ~/.claude/skills/) with no auth, so it must not listen on all
+// interfaces. Set OMAKASE_WEB_HOST=0.0.0.0 to expose it deliberately.
+const HOST = process.env["OMAKASE_WEB_HOST"] ?? "127.0.0.1";
+app.listen(PORT, HOST, () => {
+  console.log(`Claude Omakase UI → http://${HOST}:${PORT}`);
 });

@@ -11,7 +11,7 @@ const nodeGlobals = {
 
 export default [
   {
-    ignores: ["dist/**", "node_modules/**", "coverage/**"],
+    ignores: ["dist/**", "node_modules/**", "coverage/**", "web/dist/**", "web/node_modules/**"],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
