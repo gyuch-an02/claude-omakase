@@ -24,6 +24,12 @@
   <a href="docs/ai-protocol.md"><b>AI protocol</b></a>
 </p>
 
+<!-- DEMO — uncomment once assets/demo.gif is recorded (kit: docs/demo/)
+<p align="center">
+  <img src="assets/demo.gif" alt="Claude notices a repeated task and offers the matching skill — the user just says yes." width="720">
+</p>
+-->
+
 <!-- ──────────────────────────────────────────────────────────────── -->
 
 ```
