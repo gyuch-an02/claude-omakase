@@ -1,7 +1,7 @@
 {
   "name": "claude-omakase",
   "displayName": "Claude Omakase",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "Omakase-style skill discovery for Claude Code: the chef observes your work, finds matching skills in a federated catalog, and installs them after your approval. Bundles the Skill Suggester MCP server, the omakase-chef behavior skill, and three proactive hooks.",
   "author": {
     "name": "gyuch-an02",

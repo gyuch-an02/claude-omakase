@@ -7,7 +7,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
-## [Unreleased]
+## [0.7.3] — 2026-06-11
 
 ### Added
 - **Claude Code plugin packaging.** The repo is now installable as a plugin (and hosts its own marketplace): `/plugin marketplace add gyuch-an02/claude-omakase` → `/plugin install claude-omakase@omakase`. One command bundles the MCP server (`.mcp.json` → `npx -y claude-omakase`), the omakase-chef skill, and all three proactive hooks **auto-registered** via `hooks/hooks.json` — no `settings.json` editing, no separate installer. Plugin hooks resolve the committed `catalog.json` via their bundled-path fallback, so no cache seeding is needed on this channel.
