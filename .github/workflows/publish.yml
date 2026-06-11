@@ -11,7 +11,8 @@ jobs:
     environment: npm
     permissions:
       id-token: write
-      contents: read
+      # write: the release step below creates a GitHub Release for the tag.
+      contents: write
 
     steps:
       - uses: actions/checkout@v6
@@ -30,3 +31,17 @@ jobs:
         run: npm publish --access public --provenance
         env:
           NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
+
+      # v0.7.1–v0.7.3 shipped to npm without a GitHub Release because this was
+      # a manual step. Runs AFTER npm publish, so a failure here never blocks
+      # the package — it just surfaces loudly in the run.
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes \
+            --notes "Full notes: [CHANGELOG.md](https://github.com/$GITHUB_REPOSITORY/blob/main/CHANGELOG.md)"
