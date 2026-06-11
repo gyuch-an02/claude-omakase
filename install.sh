@@ -46,7 +46,7 @@ require_node() {
 install_chef_skill() {
   local target_dir="$HOME/.claude/skills/omakase-chef"
   mkdir -p "$target_dir"
-  local url="https://raw.githubusercontent.com/gyuch-an02/claude-omakase/main/omakase-chef/SKILL.md"
+  local url="https://raw.githubusercontent.com/gyuch-an02/claude-omakase/main/skills/omakase-chef/SKILL.md"
   if ! curl -fsSL "$url" -o "$target_dir/SKILL.md"; then
     red "failed to download SKILL.md from $url"
     exit 1
