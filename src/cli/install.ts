@@ -19,7 +19,7 @@ function requireNode(): void {
 }
 
 function installChefSkill(): void {
-  const skillSrc = fileURLToPath(new URL("../../omakase-chef/SKILL.md", import.meta.url));
+  const skillSrc = fileURLToPath(new URL("../../skills/omakase-chef/SKILL.md", import.meta.url));
   const targetDir = join(homedir(), ".claude", "skills", "omakase-chef");
   mkdirSync(targetDir, { recursive: true });
   copyFileSync(skillSrc, join(targetDir, "SKILL.md"));

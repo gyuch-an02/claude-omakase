@@ -85,6 +85,75 @@ test("installer contract: both installers seed the hooks' catalog cache", () => 
   assert.match(ts, /seedCatalogCache\(\);/, "cli/install.ts must call seedCatalogCache()");
 });
 
+// --- plugin packaging contract ---
+// The repo doubles as a Claude Code plugin (+ its own marketplace). These seams
+// break silently: a hook command pointing at a renamed file, a stale version,
+// or a skill dir that drifted from the installers' copy source.
+
+function pluginJson() {
+  return JSON.parse(readFileSync(join(repoRoot, ".claude-plugin", "plugin.json"), "utf8"));
+}
+
+test("plugin contract: plugin.json version matches package.json", () => {
+  const pkg = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8"));
+  assert.equal(
+    pluginJson().version,
+    pkg.version,
+    "bump .claude-plugin/plugin.json together with package.json — plugin users only update on a version change"
+  );
+});
+
+test("plugin contract: hooks.json references only files shipped in hooks/", () => {
+  const cfg = JSON.parse(readFileSync(join(repoRoot, "hooks", "hooks.json"), "utf8"));
+  const present = new Set(readdirSync(join(repoRoot, "hooks")));
+  const commands = Object.values(cfg.hooks)
+    .flat()
+    .flatMap((g) => g.hooks)
+    .map((h) => h.command);
+  assert.ok(commands.length >= 3, "expected the three omakase hook registrations");
+  for (const cmd of commands) {
+    const m = /\$\{CLAUDE_PLUGIN_ROOT\}\/hooks\/([A-Za-z0-9._-]+\.mjs)/.exec(cmd);
+    assert.ok(m, `hooks.json command must reference \${CLAUDE_PLUGIN_ROOT}/hooks/<file>.mjs: ${cmd}`);
+    assert.ok(present.has(m[1]), `hooks.json references hooks/${m[1]}, which does not exist`);
+  }
+});
+
+test("plugin contract: hooks.json registers the same events/matcher as the installer snippet", () => {
+  const cfg = JSON.parse(readFileSync(join(repoRoot, "hooks", "hooks.json"), "utf8"));
+  assert.deepEqual(
+    Object.keys(cfg.hooks).sort(),
+    ["PostToolUse", "SessionStart", "UserPromptSubmit"],
+    "plugin hooks must cover the same three events as the manual settings.json snippet"
+  );
+  const postToolUse = cfg.hooks.PostToolUse[0];
+  // The repetition hook handles Bash AND the edit tools; registering Bash only
+  // silently kills the recurring-document-edit signal for plugin users.
+  for (const tool of ["Bash", "Edit", "Write", "MultiEdit", "NotebookEdit"]) {
+    assert.match(postToolUse.matcher, new RegExp(`\\b${tool}\\b`), `PostToolUse matcher must include ${tool}`);
+  }
+});
+
+test("plugin contract: the chef skill lives at the plugin's default skills path", () => {
+  // Plugins auto-load skills/<name>/SKILL.md; the installers copy from the same
+  // location (src/cli/install.ts URL + install.sh raw URL). If the directory
+  // moves again, BOTH distribution channels break at once.
+  const present = new Set(readdirSync(join(repoRoot, "skills", "omakase-chef")));
+  assert.ok(present.has("SKILL.md"), "skills/omakase-chef/SKILL.md must exist");
+  const ts = readFileSync(join(repoRoot, "src", "cli", "install.ts"), "utf8");
+  assert.match(ts, /skills\/omakase-chef\/SKILL\.md/, "cli/install.ts must copy from skills/omakase-chef/");
+  const sh = readFileSync(join(repoRoot, "install.sh"), "utf8");
+  assert.match(sh, /skills\/omakase-chef\/SKILL\.md/, "install.sh must download from skills/omakase-chef/");
+});
+
+test("plugin contract: marketplace.json points at this plugin", () => {
+  const mp = JSON.parse(
+    readFileSync(join(repoRoot, ".claude-plugin", "marketplace.json"), "utf8")
+  );
+  const entry = mp.plugins.find((p) => p.name === pluginJson().name);
+  assert.ok(entry, "marketplace.json must list the plugin by its plugin.json name");
+  assert.equal(entry.source, "./", "the marketplace entry must source the repo root");
+});
+
 test("workflows: no duplicate keys within a YAML mapping block", () => {
   const dir = join(repoRoot, ".github", "workflows");
   for (const file of readdirSync(dir).filter((f) => /\.ya?ml$/.test(f))) {
