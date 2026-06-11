@@ -71,10 +71,23 @@ it does not fetch upstream sources live.
   to stdout in server-path code.
 
 **Behavior layer (not code)**
-- `omakase-chef/SKILL.md` is the proactive logic Claude follows ("observe →
-  pick one → serve → install on approval"). `hooks/*.mjs` (session-start,
-  repetition detector) nudge the chef. The MCP never auto-installs — approval
-  happens at the LLM layer.
+- `skills/omakase-chef/SKILL.md` is the proactive logic Claude follows
+  ("observe → pick one → serve → install on approval"). `hooks/*.mjs`
+  (session-start, repetition detector) nudge the chef. The MCP never
+  auto-installs — approval happens at the LLM layer.
+
+**Plugin packaging (the repo is also a Claude Code plugin + marketplace)**
+- `.claude-plugin/plugin.json` + `.claude-plugin/marketplace.json` make the repo
+  installable via `/plugin marketplace add gyuch-an02/claude-omakase` →
+  `/plugin install claude-omakase@omakase`. The plugin bundles the MCP server
+  (`.mcp.json`, runs `npx -y claude-omakase`), the chef skill
+  (`skills/omakase-chef/`, the plugin default path), and the three hooks
+  auto-registered via `hooks/hooks.json`.
+- Plugin hooks read `${CLAUDE_PLUGIN_ROOT}/hooks/`, whose `../catalog.json`
+  fallback resolves to the committed catalog — no cache seeding needed.
+- `scripts/installer-contract.test.mjs` pins the seams: plugin.json version ==
+  package.json version, hooks.json files exist, events/matcher parity with the
+  manual snippet, chef skill path shared by both install channels.
 
 ## Conventions
 

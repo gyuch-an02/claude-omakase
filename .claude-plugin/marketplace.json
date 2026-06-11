@@ -1,0 +1,17 @@
+{
+  "name": "omakase",
+  "owner": {
+    "name": "gyuch-an02",
+    "url": "https://github.com/gyuch-an02"
+  },
+  "description": "Claude Omakase — proactive skill discovery for Claude Code.",
+  "plugins": [
+    {
+      "name": "claude-omakase",
+      "source": "./",
+      "description": "The chef observes your work, finds matching skills in a federated catalog, and installs them after your approval. MCP server + behavior skill + proactive hooks in one install.",
+      "category": "productivity",
+      "tags": ["skills", "discovery", "mcp", "proactive"]
+    }
+  ]
+}

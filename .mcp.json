@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "omakase": {
+      "command": "npx",
+      "args": ["-y", "claude-omakase"]
+    }
+  }
+}

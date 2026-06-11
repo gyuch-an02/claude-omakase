@@ -57,17 +57,30 @@ First time? Claude greets you with a **starter pack** of universally useful skil
 
 ## Install
 
+### As a Claude Code plugin (recommended)
+
+One command installs everything — the MCP server, the omakase-chef skill, and all three proactive hooks, auto-registered:
+
+```
+/plugin marketplace add gyuch-an02/claude-omakase
+/plugin install claude-omakase@omakase
+```
+
+Restart your Claude session and the chef is active. No `settings.json` editing, no separate installer.
+
+### Manual install (Claude Desktop / other MCP hosts, or à la carte)
+
 ```bash
-# 1. Install the omakase-chef skill
+# 1. Install the omakase-chef skill + copy the hooks
 npx -y -p claude-omakase claude-omakase-install
 
 # 2. Add the MCP server to your Claude Code config
 claude mcp add omakase -- npx -y claude-omakase
 ```
 
-**Requirements:** Node.js 20+, Claude Code (or another MCP host that supports stdio servers).
+The manual path copies the hooks but **does not register them** — opt in by pasting the printed snippet into your `settings.json` (see [Proactive hooks](#proactive-hooks-optional)). Don't combine both paths: the plugin already registers the hooks, so adding the snippet too would run every hook twice.
 
-That's it. Restart your Claude session and the chef is active.
+**Requirements:** Node.js 20+, Claude Code (or another MCP host that supports stdio servers).
 
 <details>
 <summary>Manual MCP config (Claude Desktop or other hosts)</summary>
@@ -224,7 +237,7 @@ The same operations are available to Claude as the `find_skill`/`install_skill`,
 
 ## Proactive hooks (optional)
 
-Three opt-in [Claude Code hooks](https://docs.claude.com/en/docs/claude-code/hooks) make discovery deterministic instead of relying on Claude noticing on its own. The installer copies them to `~/.claude/hooks/omakase/` (a stable path), but **never registers them for you** — you opt in by pasting the snippet it prints into your `settings.json`.
+Three [Claude Code hooks](https://docs.claude.com/en/docs/claude-code/hooks) make discovery deterministic instead of relying on Claude noticing on its own. **Plugin installs register them automatically** (`hooks/hooks.json`) — skip this section. On the manual path, the installer copies them to `~/.claude/hooks/omakase/` (a stable path) but **never registers them for you** — you opt in by pasting the snippet it prints into your `settings.json`.
 
 | Hook | Event | What it does |
 |---|---|---|
