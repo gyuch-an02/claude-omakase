@@ -14,6 +14,8 @@ docs/*
 !docs/TRUST.md
 !docs/ai-log.md
 !docs/demo-script.md
+!docs/demo/
+!docs/demo/*
 !docs/distribution/
 !docs/distribution/*.md
 !docs/adr/
