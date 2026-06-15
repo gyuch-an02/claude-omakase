@@ -5,8 +5,45 @@ import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { signatures, stripQuotedBodies, buildNote } from "./omakase-repetition.mjs";
 
 const HOOK = fileURLToPath(new URL("./omakase-repetition.mjs", import.meta.url));
+
+// --- Regression: trigger extraction (reported by a real user, BISLian) ---
+// The quote-blind splitter turned words INSIDE quoted command bodies into fake
+// "task signatures": `python -c "...; system call"` became a recurring "system"
+// workflow; `node -e "const ..."` became "const". Garbage in → garbage nudge.
+
+test("quoted body separators don't fragment the line", () => {
+  assert.equal(stripQuotedBodies(`python -c "import os; system call"`), `python -c ""`);
+  assert.equal(stripQuotedBodies(`grep "a|b" f`), `grep "" f`);
+  assert.equal(stripQuotedBodies(`echo "oops`), `echo "`); // unbalanced → blank to EOL
+});
+
+test("inline-eval interpreters never leak body words as signatures", () => {
+  assert.deepEqual(signatures(`node -e "const x=1; foo bar()"`), []);
+  assert.deepEqual(signatures(`python -c "import os; system call"`), []);
+  assert.deepEqual(signatures(`python3 --eval "x; y"`), []);
+  assert.deepEqual(signatures(`bash -c "while true; do work; done"`), []);
+  assert.deepEqual(signatures(`psql -c "select 1; truncate logs"`), []);
+});
+
+test("ssh records only the bare command, never the remote body", () => {
+  assert.deepEqual(signatures(`ssh host "cd /x; deploy now; rm -rf y"`), ["ssh"]);
+});
+
+test("genuine repeatable commands still produce clean signatures", () => {
+  assert.deepEqual(signatures(`pytest tests/`), ["pytest"]);
+  assert.deepEqual(signatures(`git diff HEAD~1`), ["git diff"]);
+  assert.deepEqual(signatures(`ruff check . && pytest`), ["ruff", "pytest"]);
+});
+
+test("the injected note is an ignorable hint, not an imperative", () => {
+  const note = buildNote({ kind: "single", pattern: ["pytest"], reps: 3 });
+  assert.doesNotMatch(note, /pick the single best match/i); // no order to act
+  assert.match(note, /ignore/i);                            // permits ignoring
+  assert.match(note, /do not interrupt|never run a tool|keep working/i);
+});
 
 // Run the hook once with a Bash command. HOME isolates the repetition state file
 // so counts never touch the real ~/.claude/omakase-state.
@@ -51,7 +88,7 @@ test("a real domain command repeated to threshold nudges once", () => {
   assert.equal(run("pytest tests/", home), "", "2nd run silent (default threshold 3)");
   const third = run("pytest tests/", home);
   const json = JSON.parse(third);
-  assert.match(json.hookSpecificOutput.additionalContext, /omakase auto-detect/);
+  assert.match(json.hookSpecificOutput.additionalContext, /omakase hint/);
   assert.match(json.hookSpecificOutput.additionalContext, /pytest/);
   // Already nudged for this signature → stays silent on the 4th.
   assert.equal(run("pytest tests/", home), "", "no re-nudge for the same signature");
@@ -83,7 +120,7 @@ test("a repeated multi-step workflow nudges as a composite", () => {
   // pytest then ruff: a two-step domain workflow (neither is denied/skipped).
   const out = repeat("pytest && ruff check", 3, home);
   const ctx = JSON.parse(out).hookSpecificOutput.additionalContext;
-  assert.match(ctx, /multi-step workflow/);
+  assert.match(ctx, /multi-step sequence/);
   assert.match(ctx, /pytest/);
   assert.match(ctx, /ruff/);
 });
@@ -110,9 +147,9 @@ test("editing the same doc across separate sessions nudges once", () => {
   assert.equal(runEdit("/repo/docs/CHANGELOG.md", home, "s2"), "", "session 2 silent");
   const third = runEdit("/repo/docs/CHANGELOG.md", home, "s3");
   const ctx = JSON.parse(third).hookSpecificOutput.additionalContext;
-  assert.match(ctx, /omakase auto-detect/);
+  assert.match(ctx, /omakase hint/);
   assert.match(ctx, /CHANGELOG\.md/);
-  assert.match(ctx, /separate sessions/);
+  assert.match(ctx, /sessions/);
   // Already nudged → silent on a 4th session.
   assert.equal(runEdit("/repo/docs/CHANGELOG.md", home, "s4"), "", "no re-nudge");
 });

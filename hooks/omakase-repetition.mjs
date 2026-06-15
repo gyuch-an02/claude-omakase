@@ -49,6 +49,7 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   readStdin,
   stateDir,
@@ -112,6 +113,18 @@ const MULTI = new Set([
   "gh", "go", "pip", "pip3", "poetry", "uv", "brew", "terraform",
 ]);
 
+// Interpreters running INLINE code (`node -e`, `python -c`, `bash -c`, `psql -c`,
+// `ssh host "..."`). The body is ad-hoc one-off code, never a repeatable "task a
+// skill replaces" — and worse, the old quote-blind splitter leaked words out of
+// that body ("system", "const", "truncate") as fake signatures. We drop the
+// whole segment: an interpreter whose argument is an inline script is not a
+// workflow worth detecting.
+const INLINE_EVAL_CMDS = new Set([
+  "node", "deno", "bun", "python", "python3", "ruby", "perl", "php",
+  "bash", "sh", "zsh", "fish", "ssh", "psql", "mysql", "sqlite3", "Rscript",
+]);
+const INLINE_EVAL_FLAGS = new Set(["-e", "-c", "--eval", "--exec", "--command"]);
+
 // A plausible command name: starts with a letter, then letters/digits/._-.
 // Rejects fragments like `5.`, `##`, `)"`, `-d)`, `$NODE`, `mk()`, `auth"`.
 const COMMAND_RE = /^[a-zA-Z][a-zA-Z0-9._-]*$/;
@@ -156,6 +169,16 @@ function classifyOne(segment) {
   if (!head || !COMMAND_RE.test(head)) return null;
   if (SKIP.has(head)) return null;
 
+  // Interpreter running an inline script (`python -c …`, `ssh host "…"`): the
+  // argument is one-off code, not a task. Drop the whole segment so its words
+  // never become signatures.
+  if (INLINE_EVAL_CMDS.has(head)) {
+    if (tokens.slice(i + 1).some((t) => INLINE_EVAL_FLAGS.has(t))) return null;
+    // `ssh host "remote; cmds"` carries no eval flag but the quoted body is
+    // still remote code we shouldn't mine — recording bare "ssh" is enough.
+    if (head === "ssh") return "ssh";
+  }
+
   const next = tokens[i + 1];
   if (MULTI.has(head) && next && COMMAND_RE.test(next)) {
     const sig = `${head} ${next}`;
@@ -164,17 +187,44 @@ function classifyOne(segment) {
   return DENY_SIG.has(head) ? null : head;
 }
 
+// Blank out the CONTENTS of single/double-quoted spans, keeping the quotes as
+// empty "" / ''. Without this, a `;` `|` or `&&` INSIDE a quoted argument
+// (`python -c "a; b"`, `grep "x|y"`) was treated as a command separator and the
+// quoted words leaked out as fake signatures. The quote characters stay so a
+// later token like `"const` still fails COMMAND_RE. Unbalanced trailing quote:
+// blank to end of line.
+function stripQuotedBodies(s) {
+  let out = "";
+  let quote = null;
+  for (const ch of s) {
+    if (quote) {
+      if (ch === quote) {
+        out += ch;
+        quote = null;
+      }
+      // else: drop the body char
+    } else if (ch === '"' || ch === "'") {
+      quote = ch;
+      out += ch;
+    } else {
+      out += ch;
+    }
+  }
+  return out;
+}
+
 /**
  * Decompose a command line into ordered task signatures. Heredoc bodies are
  * dropped entirely (everything from the first `<<` on), so prose lines never
- * become signatures. Chained commands yield one signature per segment.
+ * become signatures. Quoted argument bodies are blanked so separators inside
+ * them don't fragment the line. Chained commands yield one signature per segment.
  */
 function signatures(rawCommand) {
   if (!rawCommand) return [];
   // Cut the heredoc body: keep only the command up to the first `<<`.
   const heredoc = rawCommand.indexOf("<<");
   const head = heredoc >= 0 ? rawCommand.slice(0, heredoc) : rawCommand;
-  return head
+  return stripQuotedBodies(head)
     .split(/&&|\|\||;|\||\n/)
     .map((s) => s.trim())
     .filter(Boolean)
@@ -183,6 +233,32 @@ function signatures(rawCommand) {
 }
 
 const SEP = "";
+
+// Build the injected note. Framing is DELIBERATELY non-imperative: a hard
+// PostToolUse hook fires mid-task, so an order like "call find_skill, propose,
+// ask" hijacks the agent loop on noise. Instead this is a quiet, ignorable
+// observation — the default is to keep working; act ONLY if a skill obviously
+// fits. The signature is shown so Claude can sanity-check it isn't a shell
+// fragment before doing anything.
+function buildNote(payload) {
+  let what;
+  if (payload.kind === "composite") {
+    const flow = payload.pattern.map((s) => `\`${s}\``).join(" → ");
+    what = `the multi-step sequence ${flow} (${payload.reps}×)`;
+  } else if (payload.pattern[0].startsWith("edit:")) {
+    what = `edits to \`${payload.pattern[0].slice("edit:".length)}\` across ${payload.reps} sessions`;
+  } else {
+    what = `\`${payload.pattern[0]}\`-type commands (${payload.reps}×)`;
+  }
+  return (
+    `[omakase hint — optional, do not interrupt the current task] A possible recurring pattern: ${what}. ` +
+    `FIRST judge whether this is a real, repeatable task worth a skill — if the signature looks like a shell/output ` +
+    `fragment, a one-off, or unrelated to the user's actual goal, IGNORE this silently and keep working. ` +
+    `Only if it is clearly a genuine recurring task AND you are already about to reply: you MAY, in one sentence, ` +
+    `mention that omakase.find_skill could look for a skill, and ask if they want that. Never run a tool or stop ` +
+    `the user's work just to act on this hint.`
+  );
+}
 
 /** How many times the last-k block of `seq` repeats contiguously from the end. */
 function trailingRepeats(seq, k) {
@@ -317,29 +393,7 @@ function main() {
   // once a catalog exists — we just don't fire a fruitless find_skill now.
   if (payload && !state.nudged.includes(key) && catalogHasEntries()) {
     state.nudged.push(key);
-    if (payload.kind === "composite") {
-      const flow = payload.pattern.map((s) => `\`${s}\``).join(" → ");
-      context =
-        `[omakase auto-detect] The user has repeated a multi-step workflow ${payload.reps} times: ${flow}. ` +
-        `Per the omakase-chef skill, call omakase.find_skill describing this end-to-end workflow (not just one step), ` +
-        `pick the single best match (prefer verified), and propose installing it in one sentence with WHY. ` +
-        `Ask before installing. Do this once; no menu. If nothing fits, offer omakase.propose_new_skill or stay quiet.`;
-    } else if (payload.pattern[0].startsWith("edit:")) {
-      const fileName = payload.pattern[0].slice("edit:".length);
-      context =
-        `[omakase auto-detect] The user has updated \`${fileName}\` in ${payload.reps} separate sessions ` +
-        `(within the rolling window) — a recurring document/file task. Per the omakase-chef skill, call ` +
-        `omakase.find_skill describing this "update ${fileName}" workflow, pick the single best match (prefer ` +
-        `verified), and propose installing it in one sentence with WHY. Ask before installing. Do this once; no menu. ` +
-        `If nothing fits, offer omakase.propose_new_skill or stay quiet.`;
-    } else {
-      context =
-        `[omakase auto-detect] The user has run \`${payload.pattern[0]}\`-type commands ${payload.reps} times ` +
-        `(across recent sessions) — a recurring manual task. Per the omakase-chef skill, call omakase.find_skill with ` +
-        `a task description for this "${payload.pattern[0]}" workflow, pick the single best match (prefer verified), ` +
-        `and propose installing it in one sentence with WHY. Ask before installing. Do this once; no menu. ` +
-        `If nothing fits, stay quiet.`;
-    }
+    context = buildNote(payload);
   }
 
   try {
@@ -358,4 +412,11 @@ function main() {
   process.exit(0);
 }
 
-main();
+// Exposed for tests; the hook itself still self-runs when invoked directly.
+export { signatures, classifyOne, stripQuotedBodies, buildNote };
+
+// Only consume stdin / exit when run as the hook entrypoint — importing this
+// module in a test must not block on fd 0 or kill the test process.
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  main();
+}

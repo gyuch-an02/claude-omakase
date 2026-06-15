@@ -30,6 +30,13 @@ export const STOPWORDS = new Set([
   "please", "help", "want", "need", "make", "get", "use", "have", "be", "will",
   "should", "would", "could", "are", "was", "as", "by", "from", "into", "your",
   "claude", "code", "skill", "skills", "omakase", "file", "files", "tool", "tools",
+  // Generic tech words too common to signal any particular skill. They were
+  // matching skill-id segments ("data-visualization-system" on a stray "system")
+  // and firing suggestions on noise. A real intent still carries its meaningful
+  // token ("visualization"); these alone never should.
+  "system", "data", "app", "apps", "run", "running", "build", "test", "tests",
+  "server", "client", "service", "script", "scripts", "line", "lines",
+  "project", "function", "value", "string", "number", "output", "input",
 ]);
 
 // Field weights: the prior on WHERE a term matched. id/tag are strong signals;
@@ -48,19 +55,28 @@ export const FIELD_WEIGHTS = {
   descSubstring: 0.8,
 };
 
-/** Lowercase, split on non-alphanumeric (keep Hangul), drop stopwords + 1-char. */
+// A token must carry MEANING to drive a match. Pure numbers and number-ish
+// fragments ("06", "00", "2024", "v2") are almost never the user's intent — they
+// were matching skill-id segments like `csv-to-sif-06-00` and burying the real
+// signal. Require at least one letter (Latin or Hangul); a 2+ char alnum token
+// with no letter is dropped from BOTH the query and the document-frequency stats.
+function hasLetter(t) {
+  return /[a-z가-힣]/.test(t);
+}
+
+/** Lowercase, split on non-alphanumeric (keep Hangul), drop stopwords, 1-char, and number-only tokens. */
 export function tokenize(text) {
   return String(text ?? "")
     .toLowerCase()
     .split(/[^a-z0-9가-힣]+/)
-    .filter((t) => t.length >= 2 && !STOPWORDS.has(t));
+    .filter((t) => t.length >= 2 && hasLetter(t) && !STOPWORDS.has(t));
 }
 
 function idSegments(id) {
   return String(id ?? "")
     .toLowerCase()
     .split(/[-_/]+/)
-    .filter(Boolean);
+    .filter((t) => t.length >= 2 && hasLetter(t));
 }
 
 // Per-entry token bags, computed once per entry and reused across query terms.

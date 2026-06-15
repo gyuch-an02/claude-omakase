@@ -7,6 +7,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
+## [Unreleased]
+
+### Fixed (signal quality — from real-world user feedback)
+- **Trigger extraction no longer mistakes shell fragments for tasks (root cause).** The repetition detector split commands on `;` `|` `&&` *without respecting quotes*, so words inside a quoted body leaked out as fake "task signatures": `python -c "...; system call"` became a recurring `system` workflow, `node -e "const ..."` became `const`. Quoted bodies are now blanked before splitting, and interpreters running inline code (`node -e`, `python -c`, `bash -c`, `psql -c`, `ssh "…"`) are dropped entirely — an ad-hoc inline script is never a repeatable task worth a skill. This was the source of most false nudges.
+- **Matching ignores meaningless tokens.** Pure-number/number-ish tokens (`06`, `00`, `2024`) and a set of over-generic tech words (`system`, `data`, `server`, `script`, …) were matching skill-id segments (e.g. `csv-to-sif-06-00`, `data-visualization-system`) and burying the genuinely relevant skill at score 0. Tokens now require a letter and skip the generic set, on both the query and the document-frequency side. Shared by the hook and the MCP `find_skill`/`recommend_skills`.
+- **Hooks no longer try to hijack the agent loop.** The injected PostToolUse context was imperative ("call `omakase.find_skill`, pick the best, propose, ask") — firing mid-task on noise. It is now a quiet, explicitly *ignorable* hint: judge first, default to staying silent and continuing the user's task, and never run a tool or interrupt just to act on it.
+
+### Added
+- `hooks/omakase-repetition.test.mjs` regression tests for the above: quote-aware segmentation, inline-eval rejection, clean signatures for real commands, and the non-imperative note framing. `signatures`/`stripQuotedBodies`/`buildNote` are now exported (the hook still self-runs only as the entrypoint).
+
 ## [0.7.3] — 2026-06-11
 
 ### Added
