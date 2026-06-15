@@ -7,7 +7,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
-## [Unreleased]
+## [0.7.4] — 2026-06-15
 
 ### Fixed (signal quality — from real-world user feedback)
 - **Trigger extraction no longer mistakes shell fragments for tasks (root cause).** The repetition detector split commands on `;` `|` `&&` *without respecting quotes*, so words inside a quoted body leaked out as fake "task signatures": `python -c "...; system call"` became a recurring `system` workflow, `node -e "const ..."` became `const`. Quoted bodies are now blanked before splitting, and interpreters running inline code (`node -e`, `python -c`, `bash -c`, `psql -c`, `ssh "…"`) are dropped entirely — an ad-hoc inline script is never a repeatable task worth a skill. This was the source of most false nudges.
