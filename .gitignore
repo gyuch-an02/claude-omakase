@@ -14,8 +14,7 @@ docs/*
 !docs/TRUST.md
 !docs/ai-log.md
 !docs/demo-script.md
-!docs/demo/
-!docs/demo/*
+# docs/demo/ is local promo WIP — intentionally NOT tracked (falls under docs/*).
 !docs/distribution/
 !docs/distribution/*.md
 !docs/adr/
