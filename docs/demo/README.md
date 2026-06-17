@@ -16,6 +16,62 @@ Claude brings a skill up unprompted.** That moment can't be conveyed in text.
 
 The 10–20s frame is also the thumbnail.
 
+## Research demo — "It curates the tool. You approve." (`demo-research.tape`)
+
+Aimed at a research audience (e.g. a PI). One recurring chore — turning raw
+results into **publication-quality figures** — shown through both omakase
+mechanisms, each as a clean off/on before/after. The served skill is the REAL
+catalog entry `delphine-l-…-data-visualization` (scientific matplotlib/seaborn,
+publication-quality figures).
+
+### Beat A — recommendation (intent → a tool you'd never have found)
+
+| | Without omakase | With omakase |
+|---|---|---|
+| find a plotting approach | search blogs, copy matplotlib boilerplate, guess chart type | ask in plain words |
+| quality | trial-and-error styling, non-publication output | skill applies chart-type choice + publication styling |
+| discovery | never learn the skill exists | Claude offers it, you say "yes" |
+
+Prompt that reproducibly surfaces the scientific data-visualization skill at
+rank 1 (score ~93, far ahead): **"my matplotlib plots look bad — help me make
+clear, publication-quality figures with seaborn"**. Recorded by
+`demo-research.tape`.
+
+### Beat B — hook (the chore you didn't realize was automatable)
+
+A researcher hand-edits their plotting script `make_figures.py` every time the
+data changes. Across three sessions the repetition hook notices and offers the
+same data-visualization skill — unprompted.
+
+```bash
+node docs/demo/seed-repetition.mjs --file make_figures.py   # plant 2 prior sessions
+# then, in a FRESH Claude session, have it edit make_figures.py ONCE →
+# the 3rd-session strike fires the hint; Claude offers the skill in one line
+node docs/demo/seed-repetition.mjs --reset                  # restore real state
+```
+
+| | Without omakase | With omakase |
+|---|---|---|
+| recurring figure edits | redo by hand every session, forever | caught on the 3rd, offered a skill |
+| trigger | you must notice it's repetitive | the hook notices for you |
+
+### The off/on contrast cut
+
+Record each beat twice — once with the omakase hooks/MCP disabled (the "before":
+nothing happens, you do it by hand), once enabled (the "after": the offer
+appears). Cut side by side under a single title card. The asymmetry — *nothing*
+vs *a one-line offer* — is the whole pitch; it reads better than any
+time-saved number.
+
+### Honest scope (useful when a researcher asks "does it know MY field?")
+
+The catalog covers the **generic research scaffolding** — visualization,
+statistics, web/literature research, academic translation — strongly. It does
+NOT (yet) carry bioinformatics-specific skills (FASTA/VCF), PubMed/arXiv search,
+or formal lab notebooks. That gap is the case for omakase's `propose_new_skill`
+and for keeping domain-core skills in-house: omakase serves the scaffolding, you
+own the domain.
+
 ## Prerequisites
 
 - [vhs](https://github.com/charmbracelet/vhs) (`brew install vhs` / `go install github.com/charmbracelet/vhs@latest`)
